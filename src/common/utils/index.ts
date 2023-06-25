@@ -686,17 +686,6 @@ function setScore(data: any, pjz: any, type: 'profit' | 'loss') {
 	return tScore
 }
 
-function fixedData(
-	target: number | null,
-	value: number,
-	type: 'profit' | 'loss'
-) {
-	let res = 0
-	if (target) {
-		res = target!
-	}
-	return res
-}
 function getTotal(data: SingleZhiShu[]) {
 	const res: any = {
 		profit: {},
@@ -745,6 +734,7 @@ function getPJZ(total: any, len: number) {
 	return res
 }
 export function extend(def: any, obj: any) {
+	const res = JSON.parse(JSON.stringify(def))
 	function getObj(def1: any, obj1: any) {
 		Object.keys(obj1).forEach((key) => {
 			if (!def1[key]) {
@@ -755,23 +745,29 @@ export function extend(def: any, obj: any) {
 				} else if (
 					Object.prototype.toString.call(obj1[key]) === '[object Array]'
 				) {
-					obj1[key].forEach((item: any, i: number) => {
-						if (!def1[key][i]) {
-							def1[key][i] = item
-						} else {
-							if (Object.prototype.toString.call(item) === '[object Object]') {
-								getObj(def1[key][i], item)
-							} else {
+					if (!obj1[key].length) {
+						def1[key] = obj1[key]
+					} else {
+						obj1[key].forEach((item: any, i: number) => {
+							if (!def1[key][i]) {
 								def1[key][i] = item
+							} else {
+								if (
+									Object.prototype.toString.call(item) === '[object Object]'
+								) {
+									getObj(def1[key][i], item)
+								} else {
+									def1[key][i] = item
+								}
 							}
-						}
-					})
+						})
+					}
 				} else {
 					def1[key] = obj1[key]
 				}
 			}
 		})
 	}
-	getObj(def, obj)
-	return def
+	getObj(res, obj)
+	return res
 }

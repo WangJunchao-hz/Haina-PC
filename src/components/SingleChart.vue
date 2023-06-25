@@ -83,7 +83,7 @@ watch(
 			if (options) {
 				chart.clear()
 				chart.setOption(extend(defaultOptions, options))
-				// console.log(extend(defaultOptions, options))
+				// console.log(options)
 			}
 		})
 	},
