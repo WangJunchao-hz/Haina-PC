@@ -4,24 +4,24 @@ export const FirstZtColumns: SimpleTableColumn[] = [
 		prop: 'num',
 	},
 	{
-		label: '晋级',
-		prop: 'zrjj',
+		label: '晋级率',
+		prop: 'zrjjl',
 	},
 	{
-		label: '红盘',
-		prop: 'zrhp',
+		label: '红盘比',
+		prop: 'zrhpb',
 	},
 	{
-		label: '绿盘',
-		prop: 'zrlp',
+		label: '绿盘比',
+		prop: 'zrlpb',
 	},
 	{
-		label: '涨5',
-		prop: 'zrz5',
+		label: '涨5比',
+		prop: 'zrz5b',
 	},
 	{
-		label: '跌5',
-		prop: 'zrd5',
+		label: '跌5比',
+		prop: 'zrd5b',
 	},
 ]
 export const LbZtColumns: SimpleTableColumn[] = [
@@ -30,24 +30,24 @@ export const LbZtColumns: SimpleTableColumn[] = [
 		prop: 'num',
 	},
 	{
-		label: '晋级',
-		prop: 'zrjj',
+		label: '晋级率',
+		prop: 'zrjjl',
 	},
 	{
-		label: '红盘',
-		prop: 'zrhp',
+		label: '红盘比',
+		prop: 'zrhpb',
 	},
 	{
-		label: '绿盘',
-		prop: 'zrlp',
+		label: '绿盘比',
+		prop: 'zrlpb',
 	},
 	{
-		label: '涨5',
-		prop: 'zrz5',
+		label: '涨5比',
+		prop: 'zrz5b',
 	},
 	{
-		label: '跌5',
-		prop: 'zrd5',
+		label: '跌5比',
+		prop: 'zrd5b',
 	},
 ]
 export const FbZtColumns: SimpleTableColumn[] = [
@@ -56,24 +56,24 @@ export const FbZtColumns: SimpleTableColumn[] = [
 		prop: 'num',
 	},
 	{
-		label: '晋级',
-		prop: 'zrjj',
+		label: '晋级率',
+		prop: 'zrjjl',
 	},
 	{
-		label: '红盘',
-		prop: 'zrhp',
+		label: '红盘比',
+		prop: 'zrhpb',
 	},
 	{
-		label: '绿盘',
-		prop: 'zrlp',
+		label: '绿盘比',
+		prop: 'zrlpb',
 	},
 	{
-		label: '涨5',
-		prop: 'zrz5',
+		label: '涨5比',
+		prop: 'zrz5b',
 	},
 	{
-		label: '跌5',
-		prop: 'zrd5',
+		label: '跌5比',
+		prop: 'zrd5b',
 	},
 ]
 export const DbColumns: SimpleTableColumn[] = [
@@ -82,24 +82,24 @@ export const DbColumns: SimpleTableColumn[] = [
 		prop: 'num',
 	},
 	{
-		label: '反包',
-		prop: 'fb',
+		label: '反包率',
+		prop: 'fbl',
 	},
 	{
-		label: '红盘',
-		prop: 'hp',
+		label: '红盘比',
+		prop: 'hpb',
 	},
 	{
-		label: '绿盘',
-		prop: 'lp',
+		label: '绿盘比',
+		prop: 'lpb',
 	},
 	{
-		label: '涨5',
-		prop: 'z5',
+		label: '涨5比',
+		prop: 'z5b',
 	},
 	{
-		label: '跌5',
-		prop: 'd5',
+		label: '跌5比',
+		prop: 'd5b',
 	},
 ]
 export const SCColumns: SimpleTableColumn[] = [

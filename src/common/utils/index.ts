@@ -526,6 +526,32 @@ export function resolutionEmotionSC(data: any) {
 	return res
 }
 export function resolutionEmotion(data: any[]) {
+	data.forEach((item: SingleZhiShu) => {
+		item.profit!.first!.zrhp = item.profitEffect?.first?.zrhpb!
+		item.profit!.first!.zrjj = item.profitEffect?.first?.zrjjl!
+		item.profit!.first!.zrz5 = item.profitEffect?.first?.zrz5b!
+		item.loss!.first!.zrd5 = item.lossEffect?.first?.zrd5b!
+		item.loss!.first!.zrlp = item.lossEffect?.first?.zrlpb!
+
+		item.profit!.lb!.zrhp = item.profitEffect?.lb?.zrhpb!
+		item.profit!.lb!.zrjj = item.profitEffect?.lb?.zrjjl!
+		item.profit!.lb!.zrz5 = item.profitEffect?.lb?.zrz5b!
+		item.loss!.lb!.zrd5 = item.lossEffect?.lb?.zrd5b!
+		item.loss!.lb!.zrlp = item.lossEffect?.lb?.zrlpb!
+
+		item.profit!.fb!.zrhp = item.profitEffect?.fb?.zrhpb!
+		item.profit!.fb!.zrjj = item.profitEffect?.fb?.zrjjl!
+		item.profit!.fb!.zrz5 = item.profitEffect?.fb?.zrz5b!
+		item.loss!.fb!.zrd5 = item.lossEffect?.fb?.zrd5b!
+		item.loss!.fb!.zrlp = item.lossEffect?.fb?.zrlpb!
+
+		item.profit!.db!.hp = item.profitEffect?.db?.hpb!
+		item.profit!.db!.fb = item.profitEffect?.db?.fbl!
+		item.profit!.db!.z5 = item.profitEffect?.db?.z5b!
+		item.loss!.db!.d5 = item.lossEffect?.db?.d5b!
+		item.loss!.db!.lp = item.lossEffect?.db?.lpb!
+	})
+	console.log('源数据：', data)
 	let res = null
 	const total = getTotal(data)
 	const pjz: any = getPJZ(total, data.length)
@@ -580,7 +606,11 @@ export function resolutionEmotion(data: any[]) {
 	}
 	const lbH: any[] = []
 	const ltH: any[] = []
+	const hot: any[] = []
+	const scare: any[] = []
 	data.forEach((item: SingleZhiShu) => {
+		hot.push(item.today?.ztNum)
+		scare.push(item.today?.d5Num)
 		dates.push(item.date!)
 		const profit = item.profit
 		const loss = item.loss
@@ -623,6 +653,8 @@ export function resolutionEmotion(data: any[]) {
 		fbzs,
 		dbzs,
 		sczs,
+		hot,
+		scare,
 	}
 	return res
 }

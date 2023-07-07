@@ -5,7 +5,7 @@
 			@click="analysis()"
 			size="small"
 			type="primary"
-			:disabled="!(hasGetNum === btns.length * 2)"
+			:disabled="!(hasGetNum >= btns.length * 2)"
 			style="margin-left: 8px"
 		>
 			分析
@@ -94,8 +94,10 @@ const today: any = {
 	dbQ: '昨日涨停，今日非涨停，' + fixed,
 	hpQ: '今日涨跌幅大于0，' + fixed,
 	lpQ: '今日涨跌幅小于0，' + fixed,
-	z5Q: '今日涨跌幅大于等于5，' + fixed,
-	d5Q: '今日涨跌幅小于等于-5，' + fixed,
+	z5Q: '今日涨跌幅大于5，' + fixed,
+	d5Q: '今日涨跌幅小于-5，' + fixed,
+	z9Q: '今日涨跌幅大于9，' + fixed,
+	d9Q: '今日涨跌幅小于-9，' + fixed,
 }
 const btns = ref<
 	{
@@ -163,6 +165,22 @@ const btns = ref<
 			t: false,
 		},
 	},
+	{
+		label: '涨9',
+		value: 'z9Q',
+		hasClick: {
+			y: false,
+			t: false,
+		},
+	},
+	{
+		label: '跌9',
+		value: 'd9Q',
+		hasClick: {
+			y: false,
+			t: false,
+		},
+	},
 ])
 const hasGetNum = ref<number>(0)
 const zhishu = ref<SingleZhiShu>({})
@@ -218,37 +236,31 @@ function dateChange(d: string) {
 	GetEmotionStatistics({ date: d }).then((res) => {
 		if (res.data.data.length) {
 			zhishu.value = res.data.data[0]
-			console.log(res.data.data[0])
-
 			if ((zhishu.value as any)._id) {
 				delete (zhishu.value as any)._id
 			}
 			firstZt.value.data = [
 				{
-					...zhishu.value.profitEffect?.first,
-					...zhishu.value.lossEffect?.first,
-					num: zhishu.value.profit?.first?.num,
+					...zhishu.value.profit?.first,
+					...zhishu.value.loss?.first,
 				},
 			]
 			lbZt.value.data = [
 				{
-					...zhishu.value.profitEffect?.lb,
-					...zhishu.value.lossEffect?.lb,
-					num: zhishu.value.profit?.lb?.num,
+					...zhishu.value.profit?.lb,
+					...zhishu.value.loss?.lb,
 				},
 			]
 			fbZt.value.data = [
 				{
-					...zhishu.value.profitEffect?.fb,
-					...zhishu.value.lossEffect?.fb,
-					num: zhishu.value.profit?.fb?.num,
+					...zhishu.value.profit?.fb,
+					...zhishu.value.loss?.fb,
 				},
 			]
 			db.value.data = [
 				{
-					...zhishu.value.profitEffect?.db,
-					...zhishu.value.lossEffect?.db,
-					num: zhishu.value.loss?.db?.num,
+					...zhishu.value.profit?.db,
+					...zhishu.value.loss?.db,
 				},
 			]
 			sc.value.data = [

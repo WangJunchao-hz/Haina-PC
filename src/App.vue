@@ -65,6 +65,11 @@ const menus = ref<MenuItem[]>([
 		key: 'replay',
 		children: [
 			{
+				label: '情绪分析',
+				key: 'emotion',
+				icon: RadarChartOutlined,
+			},
+			{
 				label: '情绪统计',
 				key: 'emotionStatistics',
 				icon: RadarChartOutlined,

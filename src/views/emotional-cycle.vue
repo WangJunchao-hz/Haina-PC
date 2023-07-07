@@ -220,7 +220,7 @@ function getEmotionData(param: {
 		analysis.value.data = []
 		if (res.data) {
 			const resData = resolutionEmotion(res.data.data)
-			console.log(resData)
+			console.log('分析完：', resData)
 			const len = resData.dates.length
 			analysis.value.data.push({
 				name: '全情',
@@ -295,7 +295,6 @@ function getEmotionData(param: {
 						{ type: 'min', name: '最小值' },
 					],
 				},
-				...areaOpts,
 			}
 			;(charts.value.qqzs as any).xAxis.data = resData.dates
 			;(charts.value.qqzs as any).series.push(
@@ -303,30 +302,46 @@ function getEmotionData(param: {
 					name: '全情指数',
 					data: resData.qqzs,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '市场指数',
 					data: resData.sczs.data,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '连板指数',
 					data: resData.lbzs.data,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '首板指数',
 					data: resData.firstZs.data,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '反包指数',
 					data: resData.fbzs.data,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '断板指数',
 					data: resData.dbzs.data,
+					...commonOpts,
+					...areaOpts,
+				},
+				{
+					name: '狂热指数',
+					data: resData.hot,
+					...commonOpts,
+				},
+				{
+					name: '恐慌指数',
+					data: resData.scare,
 					...commonOpts,
 				}
 			)

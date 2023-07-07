@@ -3,6 +3,7 @@ const EmotionalCycle = () => import('@/views/emotional-cycle.vue')
 const MainlineCycle = () => import('@/views/mainline-cycle.vue')
 const EmotionStatistics = () => import('@/views/emotion-statistics.vue')
 const ThemeStatistics = () => import('@/views/theme-statistics.vue')
+const Emotion = () => import('@/views/emotion.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
@@ -22,6 +23,11 @@ const routersConfig: Readonly<RouteRecordRaw[]> = [
 		name: 'emotionStatistics',
 		path: '/emotion-statistics',
 		component: EmotionStatistics,
+	},
+	{
+		name: 'emotion',
+		path: '/emotion',
+		component: Emotion,
 	},
 	{
 		name: 'themeStatistics',

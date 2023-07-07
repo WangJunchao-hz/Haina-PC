@@ -27,3 +27,15 @@ export function GetEmotionStatistics(params: {
 		params,
 	})
 }
+export function SetEmotion(data: any) {
+	return http.post(`${url}/emotion-set`, data)
+}
+export function GetEmotion(params: {
+	date?: string
+	endDate?: string
+	startDate?: string
+}) {
+	return http.get(`${url}/emotion-get`, {
+		params,
+	})
+}

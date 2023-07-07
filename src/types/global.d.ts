@@ -198,3 +198,50 @@ declare interface SingleZhiShu {
 		}
 	}
 }
+declare interface SingleEmotion {
+	date?: string // 日期
+	hot?: number // 狂热指数 每日涨停数，不包含ST股,不包含新股
+	scare?: number // 恐慌指数 每天盘跌幅大于5%的股票数
+	lb?: {
+		// 连板指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	sc?: {
+		// 市场指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	sb?: {
+		// 首板指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	main?: {
+		// 主板指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	cy?: {
+		// 创业板指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	kc?: {
+		// 科创板指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+	bjs?: {
+		// 北交所指数
+		score?: number
+		profit?: {}
+		loss?: {}
+	}
+}
