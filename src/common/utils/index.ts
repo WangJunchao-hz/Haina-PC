@@ -554,7 +554,7 @@ export function resolutionEmotion(data: any[]) {
 	console.log('源数据：', data)
 	let res = null
 	const total = getTotal(data)
-	const pjz: any = getPJZ(total, data.length)
+	const pjz: any = getPJZ(total)
 	const dates: string[] = []
 	const qqzs: number[] = []
 	const profitzs: number[] = []
@@ -614,8 +614,8 @@ export function resolutionEmotion(data: any[]) {
 		dates.push(item.date!)
 		const profit = item.profit
 		const loss = item.loss
-		const ps = setScore(profit, pjz.profit, 'profit')
-		const ls = setScore(loss, pjz.loss, 'loss')
+		const ps = setScore(profit, pjz.profit, total.lenMap, 'profit')
+		const ls = setScore(loss, pjz.loss, total.lenMap, 'loss')
 		item.score = ps - ls
 		profitzs.push(ps)
 		losszs.push(ls)
@@ -659,13 +659,15 @@ export function resolutionEmotion(data: any[]) {
 	return res
 }
 
-function setScore(data: any, pjz: any, type: 'profit' | 'loss') {
+function setScore(data: any, pjz: any, lenMap: any, type: 'profit' | 'loss') {
 	let tScore = 0
+	const totalLen = lenMap.sc
 	Object.keys(data).forEach((key) => {
 		const itemPjz = pjz[key]
 		if (itemPjz) {
 			const item = data[key]
 			let score = 0
+			const len = lenMap[key]
 			if (Object.prototype.toString.call(item) === '[object Object]') {
 				Object.keys(item).forEach((key1) => {
 					if (!['diffRate', 'score', 'ltHeight', 'lbHeight'].includes(key1)) {
@@ -676,19 +678,38 @@ function setScore(data: any, pjz: any, type: 'profit' | 'loss') {
 							}
 							item.pjz[key1] = p
 							const value = item[key1]
-							if (value > p) {
-								// if (type === 'profit') {
-								score += 10
-								// } else {
-								// score -= 10
-								// }
-							}
-							if (value < p) {
-								// if (type === 'profit') {
-								score -= 10
-								// } else {
-								// score += 10
-								// }
+							if (len === totalLen) {
+								if (value > p) {
+									// if (type === 'profit') {
+									score += 10
+									// } else {
+									// score -= 10
+									// }
+								}
+								if (value < p) {
+									// if (type === 'profit') {
+									score -= 10
+									// } else {
+									// score += 10
+									// }
+								}
+							} else {
+								if (value !== null) {
+									if (value > p) {
+										// if (type === 'profit') {
+										score += 10
+										// } else {
+										// score -= 10
+										// }
+									}
+									if (value < p) {
+										// if (type === 'profit') {
+										score -= 10
+										// } else {
+										// score += 10
+										// }
+									}
+								}
 							}
 						}
 					}
@@ -722,12 +743,26 @@ function getTotal(data: SingleZhiShu[]) {
 	const res: any = {
 		profit: {},
 		loss: {},
+		lenMap: {},
 	}
 	data.forEach((item: any) => {
 		const { profit, loss } = item
 		Object.keys(profit!).forEach((key) => {
 			if (!res.profit[key]) {
 				res.profit[key] = {}
+			}
+			if (key !== 'db') {
+				const num = profit[key].num
+				if (!res.lenMap[key]) {
+					res.lenMap[key] = 1
+				} else {
+					if (num) {
+						res.lenMap[key] += 1
+					} else if (key === 'sc') {
+						res.lenMap[key] += 1
+					}
+					// res.lenMap[key] += 1
+				}
 			}
 			Object.keys(profit[key]).forEach((subKey) => {
 				if (!res.profit[key][subKey]) {
@@ -740,6 +775,17 @@ function getTotal(data: SingleZhiShu[]) {
 			if (!res.loss[key]) {
 				res.loss[key] = {}
 			}
+			if (key === 'db') {
+				const num = loss[key].num
+				if (!res.lenMap[key]) {
+					res.lenMap[key] = 1
+				} else if (num) {
+					res.lenMap[key] += 1
+				}
+				// } else {
+				// 	res.lenMap[key] += 1
+				// }
+			}
 			Object.keys(loss[key]).forEach((subKey) => {
 				if (!res.loss[key][subKey]) {
 					res.loss[key][subKey] = 0
@@ -748,21 +794,29 @@ function getTotal(data: SingleZhiShu[]) {
 			})
 		})
 	})
+	console.log('total', res)
 	return res
 }
-function getPJZ(total: any, len: number) {
+function getPJZ(total: any) {
 	const res = {}
-	getObj(total, res)
-	function getObj(obj: any, res: any) {
+	getObj(
+		{
+			profit: total.profit,
+			loss: total.loss,
+		},
+		res
+	)
+	function getObj(obj: any, res: any, len?: number) {
 		Object.keys(obj).forEach((key) => {
 			if (Object.prototype.toString.call(obj[key]) === '[object Object]') {
 				res[key] = {}
-				getObj(obj[key], res[key])
+				getObj(obj[key], res[key], total.lenMap[key])
 			} else {
-				res[key] = Number((obj[key] / len).toFixed(2))
+				res[key] = Number((obj[key] / len!).toFixed(2))
 			}
 		})
 	}
+	// console.log(res)
 	return res
 }
 export function extend(def: any, obj: any) {
