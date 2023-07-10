@@ -661,39 +661,24 @@ export function resolutionEmotion(data: any[]) {
 
 function setScore(data: any, pjz: any, lenMap: any, type: 'profit' | 'loss') {
 	let tScore = 0
-	const totalLen = lenMap.sc
+	// const totalLen = lenMap.sc
 	Object.keys(data).forEach((key) => {
-		const itemPjz = pjz[key]
-		if (itemPjz) {
-			const item = data[key]
-			let score = 0
-			const len = lenMap[key]
-			if (Object.prototype.toString.call(item) === '[object Object]') {
-				Object.keys(item).forEach((key1) => {
-					if (!['diffRate', 'score', 'ltHeight', 'lbHeight'].includes(key1)) {
-						const p = itemPjz[key1]
-						if (p) {
-							if (!item.pjz) {
-								item.pjz = {}
-							}
-							item.pjz[key1] = p
-							const value = item[key1]
-							if (len === totalLen) {
-								if (value > p) {
-									// if (type === 'profit') {
-									score += 10
-									// } else {
-									// score -= 10
-									// }
+		if (key === 'sc' || key === 'lb' || key === 'first') {
+			const itemPjz = pjz[key]
+			if (itemPjz) {
+				const item = data[key]
+				let score = 0
+				// const len = lenMap[key]
+				if (Object.prototype.toString.call(item) === '[object Object]') {
+					Object.keys(item).forEach((key1) => {
+						if (!['diffRate', 'score', 'ltHeight', 'lbHeight'].includes(key1)) {
+							const p = itemPjz[key1]
+							if (p) {
+								if (!item.pjz) {
+									item.pjz = {}
 								}
-								if (value < p) {
-									// if (type === 'profit') {
-									score -= 10
-									// } else {
-									// score += 10
-									// }
-								}
-							} else {
+								item.pjz[key1] = p
+								const value = item[key1]
 								if (value !== null) {
 									if (value > p) {
 										// if (type === 'profit') {
@@ -712,27 +697,27 @@ function setScore(data: any, pjz: any, lenMap: any, type: 'profit' | 'loss') {
 								}
 							}
 						}
+					})
+					let diffRate = 1
+					switch (key) {
+						case 'first':
+						case 'lb':
+						// case 'fb':
+						// 	diffRate = type === 'profit' ? 1 : 2
+						// 	break
+						// case 'db':
+						// 	diffRate = 1.33
+						// 	break
+						case 'sc':
+							diffRate = 1
+							break
 					}
-				})
-				let diffRate = 1
-				switch (key) {
-					case 'first':
-					case 'lb':
-					case 'fb':
-						diffRate = type === 'profit' ? 1 : 2
-						break
-					case 'db':
-						diffRate = 1.33
-						break
-					case 'sc':
-						diffRate = 1
-						break
+					item.score = Number((score * (diffRate || 1)).toFixed(0))
+					// // item.score = score
+					// console.log(score, diffRate, item.score, key, type)
 				}
-				item.score = Number((score * (diffRate || 1)).toFixed(0))
-				// // item.score = score
-				// console.log(score, diffRate, item.score, key, type)
+				tScore += item.score
 			}
-			tScore += score
 		}
 	})
 	data.score = tScore

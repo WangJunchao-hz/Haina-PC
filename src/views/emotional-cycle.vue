@@ -248,20 +248,20 @@ function getEmotionData(param: {
 				loss: resData.firstZs.loss[len - 1],
 				action: 'firstQ',
 			})
-			analysis.value.data.push({
-				name: '反包',
-				value: resData.fbzs.data[len - 1],
-				profit: resData.fbzs.profit[len - 1],
-				loss: resData.fbzs.loss[len - 1],
-				action: 'fbQ',
-			})
-			analysis.value.data.push({
-				name: '断板',
-				value: resData.dbzs.data[len - 1],
-				profit: resData.dbzs.profit[len - 1],
-				loss: resData.dbzs.loss[len - 1],
-				action: 'dbQ',
-			})
+			// analysis.value.data.push({
+			// 	name: '反包',
+			// 	value: resData.fbzs.data[len - 1],
+			// 	profit: resData.fbzs.profit[len - 1],
+			// 	loss: resData.fbzs.loss[len - 1],
+			// 	action: 'fbQ',
+			// })
+			// analysis.value.data.push({
+			// 	name: '断板',
+			// 	value: resData.dbzs.data[len - 1],
+			// 	profit: resData.dbzs.profit[len - 1],
+			// 	loss: resData.dbzs.loss[len - 1],
+			// 	action: 'dbQ',
+			// })
 			const h1 = resData.lbH[len - 1]
 			const h2 = resData.lbH[len - 2]
 			let lossText = '-'
@@ -322,18 +322,18 @@ function getEmotionData(param: {
 					...commonOpts,
 					...areaOpts,
 				},
-				{
-					name: '反包指数',
-					data: resData.fbzs.data,
-					...commonOpts,
-					...areaOpts,
-				},
-				{
-					name: '断板指数',
-					data: resData.dbzs.data,
-					...commonOpts,
-					...areaOpts,
-				},
+				// {
+				// 	name: '反包指数',
+				// 	data: resData.fbzs.data,
+				// 	...commonOpts,
+				// 	...areaOpts,
+				// },
+				// {
+				// 	name: '断板指数',
+				// 	data: resData.dbzs.data,
+				// 	...commonOpts,
+				// 	...areaOpts,
+				// },
 				{
 					name: '狂热指数',
 					data: resData.hot,
@@ -366,32 +366,36 @@ function getEmotionData(param: {
 					name: '总赚钱效应',
 					data: resData.profitzs,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '市场赚钱效应',
 					data: resData.sczs.profit,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '连板赚钱效应',
 					data: resData.lbzs.profit,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '首板赚钱效应',
 					data: resData.firstZs.profit,
 					...commonOpts,
-				},
-				{
-					name: '反包赚钱效应',
-					data: resData.fbzs.profit,
-					...commonOpts,
-				},
-				{
-					name: '断板赚钱效应',
-					data: resData.dbzs.profit,
-					...commonOpts,
+					...areaOpts,
 				}
+				// {
+				// 	name: '反包赚钱效应',
+				// 	data: resData.fbzs.profit,
+				// 	...commonOpts,
+				// },
+				// {
+				// 	name: '断板赚钱效应',
+				// 	data: resData.dbzs.profit,
+				// 	...commonOpts,
+				// }
 			)
 			;(charts.value.kqzs as any).xAxis.data = resData.dates
 			;(charts.value.kqzs as any).series.push(
@@ -399,32 +403,36 @@ function getEmotionData(param: {
 					name: '总亏钱效应',
 					data: resData.losszs,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '市场亏钱效应',
 					data: resData.sczs.loss,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '连板亏钱效应',
 					data: resData.lbzs.loss,
 					...commonOpts,
+					...areaOpts,
 				},
 				{
 					name: '首板亏钱效应',
 					data: resData.firstZs.loss,
 					...commonOpts,
-				},
-				{
-					name: '反包亏钱效应',
-					data: resData.fbzs.loss,
-					...commonOpts,
-				},
-				{
-					name: '断板亏钱效应',
-					data: resData.dbzs.loss,
-					...commonOpts,
+					...areaOpts,
 				}
+				// {
+				// 	name: '反包亏钱效应',
+				// 	data: resData.fbzs.loss,
+				// 	...commonOpts,
+				// },
+				// {
+				// 	name: '断板亏钱效应',
+				// 	data: resData.dbzs.loss,
+				// 	...commonOpts,
+				// }
 			)
 		}
 	})
