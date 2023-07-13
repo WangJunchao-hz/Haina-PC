@@ -47,6 +47,7 @@ import {
 	AreaChartOutlined,
 	LineChartOutlined,
 	RadarChartOutlined,
+	StockOutlined,
 } from '@ant-design/icons-vue'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -65,19 +66,16 @@ const menus = ref<MenuItem[]>([
 		key: 'replay',
 		children: [
 			{
-				label: '情绪分析',
-				key: 'emotion',
-				icon: RadarChartOutlined,
-			},
-			{
 				label: '情绪统计',
 				key: 'emotionStatistics',
-				icon: RadarChartOutlined,
 			},
 			{
 				label: '题材统计',
 				key: 'themeStatistics',
-				icon: RadarChartOutlined,
+			},
+			{
+				label: '趋势统计',
+				key: 'trendStatistics',
 			},
 		],
 	},
@@ -90,6 +88,11 @@ const menus = ref<MenuItem[]>([
 		icon: LineChartOutlined,
 		label: '主线周期',
 		key: 'mainlineCycle',
+	},
+	{
+		icon: StockOutlined,
+		label: '趋势周期',
+		key: 'trendCycle',
 	},
 ])
 const menuMap = new Map()

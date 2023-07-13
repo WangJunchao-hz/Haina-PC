@@ -27,15 +27,16 @@ export function GetEmotionStatistics(params: {
 		params,
 	})
 }
-export function SetEmotion(data: any) {
-	return http.post(`${url}/emotion-set`, data)
+export function UniCloudSet(data: { _tableName: string; [name: string]: any }) {
+	return http.post(`${url}/unicloud-set`, data)
 }
-export function GetEmotion(params: {
+export function UniCloudGet(params: {
 	date?: string
 	endDate?: string
 	startDate?: string
+	_tableName: string
 }) {
-	return http.get(`${url}/emotion-get`, {
+	return http.get(`${url}/unicloud-get`, {
 		params,
 	})
 }

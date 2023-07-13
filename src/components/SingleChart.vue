@@ -58,8 +58,8 @@ const defaultOptions = {
 		{
 			data: [],
 			type: 'line',
-			smooth: false,
-			areaStyle: {},
+			// smooth: false,
+			// areaStyle: {},
 			// markPoint: {
 			// 	data: [
 			// 		{ type: 'max', name: '最大值' },

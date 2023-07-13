@@ -39,6 +39,34 @@ export function replaceTpl(str: string, reStr: string) {
 	while (cache.includes(q2)) {
 		q2 = dayjs(q2).subtract(1, 'd').format('YYYY-MM-DD')
 	}
+	if (str.includes('10日区间')) {
+		let index = 1
+		if (str.includes('今日') && !str.includes('昨日')) {
+			let start = ''
+			while (index < 10) {
+				start = dayjs(start ? start : reStr)
+					.subtract(1, 'd')
+					.format('YYYY-MM-DD')
+				if (!cache.includes(start)) {
+					index++
+				}
+			}
+			str = str.replace('10日区间', `${start}到${reStr}`)
+		}
+		if (str.includes('昨日')) {
+			let start = ''
+			while (index < 10) {
+				start = dayjs(start ? start : q1)
+					.subtract(1, 'd')
+					.format('YYYY-MM-DD')
+				if (!cache.includes(start)) {
+					index++
+					// console.log(index, start)
+				}
+			}
+			str = str.replace('10日区间', `${start}到${q1}`)
+		}
+	}
 	return str
 		.replace(/\今日/g, reStr ? reStr : '今日')
 		.replace(/\昨日/g, q1 ? q1 : '昨日')
@@ -230,6 +258,157 @@ export function resolutionThemes(data: any, date: Dayjs) {
 	// console.log(res)
 
 	return res
+}
+export function resolutionTrendStocksCycle(data: any) {
+	// console.log(data)
+	const pjz = getCustomPJZ(data)
+	const dates: string[] = []
+	const zhiShuScore: number[] = []
+	const profitScore: number[] = []
+	const lossScore: number[] = []
+	data.forEach((item: any) => {
+		dates.push(item.date)
+		const ps = setCustomScore(item.zhishu.profit, pjz['profit'])
+		const ls = setCustomScore(item.zhishu.loss, pjz['loss'])
+		item.score = ps - ls
+		zhiShuScore.push(item.score)
+		profitScore.push(ps)
+		lossScore.push(ls)
+	})
+	return {
+		dates,
+		zhiShuScore,
+		profitScore,
+		lossScore,
+	}
+}
+export function resolutionTrendGnsCycle(data: any, currentDate: string) {
+	const gnMap = new Map()
+	const dates: string[] = []
+	data.forEach((item: any) => {
+		const date = item.date
+		dates.push(date)
+		const gnList = item.gnlists
+		gnList.forEach((gn: any) => {
+			if (gn.zhishu) {
+				gn.date = date
+				const has = gnMap.get(gn.label)
+				if (has) {
+					has.num += 1
+					has.list.push(gn)
+				} else {
+					gnMap.set(gn.label, {
+						label: gn.label,
+						num: 1,
+						score: 0,
+						list: [gn],
+					})
+				}
+			}
+		})
+	})
+	const gns = Array.from(gnMap)
+		.map((item) => {
+			const list = item[1].list
+			const pjz = getCustomPJZ(list)
+			const zhiShuScore: number[] = []
+			const profitScore: number[] = []
+			const lossScore: number[] = []
+			let score: number = 0
+			let profit: number = 0
+			let loss: number = 0
+			const gndate: string[] = []
+			dates.forEach((d) => {
+				const gn = list.find((l: any) => l.date === d)
+				if (gn) {
+					const ps = setCustomScore(gn.zhishu.profit, pjz['profit'])
+					const ls = setCustomScore(gn.zhishu.loss, pjz['loss'])
+					gn.score = ps - ls
+					zhiShuScore.push(gn.score)
+					profitScore.push(ps)
+					lossScore.push(ls)
+					gndate.push(gn.date)
+					if (gn.date === currentDate) {
+						score = gn.score
+						profit = ps
+						loss = ls
+					}
+				} else {
+					zhiShuScore.push(0)
+					profitScore.push(0)
+					lossScore.push(0)
+				}
+			})
+			return {
+				label: item[1].label,
+				num: item[1].num,
+				zhiShuScore,
+				profitScore,
+				lossScore,
+				list,
+				score,
+				profit,
+				loss,
+				gndate,
+			}
+		})
+		.sort((a, b) => {
+			return b.score - a.score
+		})
+	// console.log(gns)
+
+	return gns
+}
+function setCustomScore(data: any, pjz: any) {
+	let tScore = 0
+	Object.keys(data).forEach((key) => {
+		const p = pjz[key]
+		if (!data.pjz) {
+			data.pjz = {}
+		}
+		data.pjz[key] = p
+		const value = data[key]
+		if (value > p) {
+			tScore += 10
+		}
+		if (value < p) {
+			tScore -= 10
+		}
+	})
+	return tScore
+}
+function getCustomPJZ(data: any) {
+	const res: any = {
+		profit: {},
+		loss: {},
+	}
+	data.forEach((item: any) => {
+		const { profit, loss } = item.zhishu
+		Object.keys(profit!).forEach((key) => {
+			if (!res.profit[key]) {
+				res.profit[key] = 0
+			}
+			res.profit[key] += profit[key]
+		})
+		Object.keys(loss!).forEach((key) => {
+			if (!res.loss[key]) {
+				res.loss[key] = 0
+			}
+			res.loss[key] += loss[key]
+		})
+	})
+	// console.log('total', res)
+	const pjz: any = {}
+	Object.keys(res).forEach((key) => {
+		if (!pjz[key]) {
+			pjz[key] = {}
+		}
+		Object.keys(res[key]).forEach((subkey) => {
+			pjz[key][subkey] = Number((res[key][subkey] / data.length).toFixed(2))
+		})
+	})
+	// console.log('pjz', pjz, data.length)
+	return pjz
 }
 export function resolutionEmotionZT(data: any) {
 	let res = null
@@ -841,4 +1020,281 @@ export function extend(def: any, obj: any) {
 	}
 	getObj(res, obj)
 	return res
+}
+export function resolutionTrend(data: any) {
+	let res = null
+	if (data) {
+		try {
+			const extra =
+				data.data.answer[0].txt[0].content.components[0].data.meta.extra
+			const datas = data.data.answer[0].txt[0].content.components[0].data.datas
+			const iwc_column_info = extra.iwc_column_info
+			const indexID = Object.keys(iwc_column_info)
+			let nameIndex: string,
+				codeIndex: string,
+				qjzdfIndex: string, // 区间涨跌幅
+				zdfIndex: string,
+				sclxIndex: string, // 市场类型
+				gnIndex: string // 概念
+			indexID.forEach((item: any) => {
+				if (item.includes('股票简称')) {
+					nameIndex = item
+				}
+				if (item.includes('股票代码')) {
+					codeIndex = item
+				}
+				if (item.indexOf('涨跌幅:前复权[') > 0) {
+					qjzdfIndex = item
+				}
+				if (item === '所属概念') {
+					gnIndex = item
+				}
+				if (item.indexOf('涨跌幅:前复权[') === 0) {
+					zdfIndex = item
+				}
+				if (item.includes('股票市场类型')) {
+					sclxIndex = item
+				}
+			})
+			const stocks: any = []
+			const gnMap = new Map()
+			datas.forEach((item: any, i: number) => {
+				const name = item[nameIndex]
+				const code = item[codeIndex]
+				const qjzdf = Number(Number(item[qjzdfIndex]).toFixed(2))
+				const zdf = Number(Number(item[zdfIndex]).toFixed(2))
+				const gns = item[gnIndex]
+				const sclxs = item[sclxIndex]
+				let sclx = '主板'
+				if (sclxs.includes('创业')) {
+					sclx = '创业板'
+				}
+				if (sclxs.includes('科创')) {
+					sclx = '科创板'
+				}
+				if (sclxs.includes('北证')) {
+					sclx = '北交所'
+				}
+				const stock = {
+					ranking: i + 1,
+					change: 0,
+					nameAndCode: `${name}(${code})`,
+					name,
+					code,
+					qjzdf,
+					gns: gns ? gns : [],
+					sclx,
+					zdf,
+				}
+				const gnList: string[] = []
+				gns &&
+					gns.split(';').forEach((gn: string) => {
+						if (
+							![
+								'转融券标的',
+								'融资融券',
+								'深股通',
+								'富时罗素概念股',
+								'标普道琼斯A股',
+								'富时罗素概念',
+								'沪股通',
+							].includes(gn)
+						) {
+							gnList.push(gn)
+							stock.gns = gnList
+							const has = gnMap.get(gn)
+							if (has) {
+								has.stocks.push(stock.code)
+								has.num += 1
+							} else {
+								gnMap.set(gn, {
+									label: gn,
+									num: 1,
+									change: 0,
+									stocks: [stock.code],
+								})
+							}
+						}
+					})
+				stocks.push(stock)
+			})
+			stocks.forEach((stock: any) => {
+				const gnArray: any[] = []
+				stock.gns.forEach((gn: string) => {
+					const gnInfo = gnMap.get(gn)
+					if (gnInfo.num > 2) {
+						gnArray.push({
+							label: gnInfo.label,
+							num: gnInfo.num,
+						})
+					}
+				})
+				stock.gns = gnArray.sort((a, b) => {
+					return b.num - a.num
+				})
+			})
+			const gnlists = Array.from(gnMap)
+				.filter((gn) => {
+					return gn[1].num > 2
+				})
+				.sort((a, b) => {
+					return b[1].num - a[1].num
+				})
+				.map((gn, i) => {
+					// console.log(gn)
+					gn[1].ranking = i + 1
+					return gn[1]
+				})
+			res = {
+				stocks,
+				gnlists,
+			}
+			console.log(res)
+		} catch (error) {
+			console.error(error)
+			res = false as any
+		}
+	}
+	return res
+}
+export function resolutionTrendData(trendData: {
+	today: {
+		gnlists: any[]
+		stocks: any[]
+	}
+	yesterday: {
+		gnlists: any[]
+		stocks: any[]
+	}
+}) {
+	const TStocks = trendData.today.stocks
+	const YStocks = trendData.yesterday.stocks
+	if (TStocks && YStocks) {
+		TStocks.forEach((stock) => {
+			const code = stock.code
+			const yStock = YStocks.find((s) => s.code === code)
+			if (yStock) {
+				stock.change = yStock.ranking - stock.ranking
+			} else {
+				stock.change = TStocks.length + 1
+			}
+		})
+		const zhishu = {
+			score: 0,
+			hp: 0,
+			lp: 0,
+			z5: 0,
+			d5: 0,
+			z9_8: 0,
+			d9_8: 0,
+			profit: {
+				hpb: 0,
+				z5b: 0,
+				z9_8b: 0,
+			},
+			loss: {
+				lpb: 0,
+				d5b: 0,
+				d9_8b: 0,
+			},
+		}
+		const len = YStocks.length
+		YStocks.forEach((stock) => {
+			const zdf = stock.zdf
+			if (zdf > 0) {
+				zhishu.hp += 1
+				if (zdf > 5) {
+					zhishu.z5 += 1
+				}
+				if (zdf > 9.8) {
+					zhishu.z9_8 += 1
+				}
+			}
+			if (zdf < 0) {
+				zhishu.lp += 1
+				if (zdf < -5) {
+					zhishu.d5 += 1
+				}
+				if (zdf < -9.8) {
+					zhishu.d9_8 += 1
+				}
+			}
+		})
+		zhishu.profit.hpb = Number((zhishu.hp / len).toFixed(2))
+		zhishu.profit.z5b = Number((zhishu.z5 / len).toFixed(2))
+		zhishu.profit.z9_8b = Number((zhishu.z9_8 / len).toFixed(2))
+		zhishu.loss.lpb = Number((zhishu.lp / len).toFixed(2))
+		zhishu.loss.d5b = Number((zhishu.d5 / len).toFixed(2))
+		zhishu.loss.d9_8b = Number((zhishu.d9_8 / len).toFixed(2))
+		;(trendData.today as any).zhishu = zhishu
+	}
+	const TGns = trendData.today.gnlists
+	const YGns = trendData.yesterday.gnlists
+	if (TGns && YGns) {
+		TGns.forEach((gn) => {
+			const label = gn.label
+			const yGn = YGns.find((g) => g.label === label)
+			if (yGn) {
+				gn.change = yGn.ranking - gn.ranking
+			} else {
+				gn.change = TGns.length + 1
+			}
+		})
+		YGns.forEach((gn) => {
+			const zhishu = {
+				score: 0,
+				hp: 0,
+				lp: 0,
+				z5: 0,
+				d5: 0,
+				z9_8: 0,
+				d9_8: 0,
+				profit: {
+					hpb: 0,
+					z5b: 0,
+					z9_8b: 0,
+				},
+				loss: {
+					lpb: 0,
+					d5b: 0,
+					d9_8b: 0,
+				},
+			}
+			const len = gn.stocks.length
+			gn.stocks.forEach((code: any) => {
+				const stock = YStocks.find((s) => s.code === code)
+				const zdf = stock.zdf
+				if (zdf > 0) {
+					zhishu.hp += 1
+					if (zdf > 5) {
+						zhishu.z5 += 1
+					}
+					if (zdf > 9.8) {
+						zhishu.z9_8 += 1
+					}
+				}
+				if (zdf < 0) {
+					zhishu.lp += 1
+					if (zdf < -5) {
+						zhishu.d5 += 1
+					}
+					if (zdf < -9.8) {
+						zhishu.d9_8 += 1
+					}
+				}
+			})
+			zhishu.profit.hpb = Number((zhishu.hp / len).toFixed(2))
+			zhishu.profit.z5b = Number((zhishu.z5 / len).toFixed(2))
+			zhishu.profit.z9_8b = Number((zhishu.z9_8 / len).toFixed(2))
+			zhishu.loss.lpb = Number((zhishu.lp / len).toFixed(2))
+			zhishu.loss.d5b = Number((zhishu.d5 / len).toFixed(2))
+			zhishu.loss.d9_8b = Number((zhishu.d9_8 / len).toFixed(2))
+			gn.zhishu = zhishu
+			const tGn = TGns.find((g) => g.label === gn.label)
+			if (tGn) {
+				tGn.zhishu = zhishu
+			}
+		})
+	}
+	return trendData
 }

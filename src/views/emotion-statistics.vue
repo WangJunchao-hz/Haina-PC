@@ -687,26 +687,30 @@ function analysis() {
 	)
 	firstZt.value.data = [
 		{
-			...zhishu.value.profit?.first,
-			...zhishu.value.loss?.first,
+			...zhishu.value.profitEffect?.first,
+			...zhishu.value.lossEffect?.first,
+			num: zhishu.value.profit?.first?.num,
 		},
 	]
 	lbZt.value.data = [
 		{
-			...zhishu.value.profit?.lb,
-			...zhishu.value.loss?.lb,
+			...zhishu.value.profitEffect?.lb,
+			...zhishu.value.lossEffect?.lb,
+			num: zhishu.value.profit?.lb?.num,
 		},
 	]
 	fbZt.value.data = [
 		{
-			...zhishu.value.profit?.fb,
-			...zhishu.value.loss?.fb,
+			...zhishu.value.profitEffect?.fb,
+			...zhishu.value.lossEffect?.fb,
+			num: zhishu.value.profit?.fb?.num,
 		},
 	]
 	db.value.data = [
 		{
-			...zhishu.value.profit?.db,
-			...zhishu.value.loss?.db,
+			...zhishu.value.profitEffect?.db,
+			...zhishu.value.lossEffect?.db,
+			num: zhishu.value.loss?.db?.num,
 		},
 	]
 	sc.value.data = [

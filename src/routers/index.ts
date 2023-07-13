@@ -1,9 +1,10 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 const EmotionalCycle = () => import('@/views/emotional-cycle.vue')
 const MainlineCycle = () => import('@/views/mainline-cycle.vue')
+const TrendCycle = () => import('@/views/trend-cycle.vue')
 const EmotionStatistics = () => import('@/views/emotion-statistics.vue')
 const ThemeStatistics = () => import('@/views/theme-statistics.vue')
-const Emotion = () => import('@/views/emotion.vue')
+const TrendStatistics = () => import('@/views/trend-statistics.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
@@ -20,14 +21,19 @@ const routersConfig: Readonly<RouteRecordRaw[]> = [
 		component: MainlineCycle,
 	},
 	{
+		name: 'trendCycle',
+		path: '/trend-cycle',
+		component: TrendCycle,
+	},
+	{
 		name: 'emotionStatistics',
 		path: '/emotion-statistics',
 		component: EmotionStatistics,
 	},
 	{
-		name: 'emotion',
-		path: '/emotion',
-		component: Emotion,
+		name: 'trendStatistics',
+		path: '/trend-statistics',
+		component: TrendStatistics,
 	},
 	{
 		name: 'themeStatistics',

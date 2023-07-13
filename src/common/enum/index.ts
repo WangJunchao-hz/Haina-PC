@@ -136,3 +136,95 @@ export const SCColumns: SimpleTableColumn[] = [
 		prop: 'ltHeight',
 	},
 ]
+export const TrendStockColumns: {
+	title: string
+	dataIndex: string
+	[name: string]: any
+}[] = [
+	{
+		title: '排名',
+		dataIndex: 'ranking',
+		sorter: (a: any, b: any) => b.ranking - a.ranking,
+	},
+	{
+		title: '变化',
+		dataIndex: 'change',
+		sorter: (a: any, b: any) => b.change - a.change,
+	},
+	{
+		title: '股票',
+		dataIndex: 'nameAndCode',
+	},
+	{
+		title: '10日区间涨幅',
+		dataIndex: 'qjzdf',
+		width: 118,
+	},
+	{
+		title: '涨跌幅',
+		dataIndex: 'zdf',
+	},
+	{
+		title: '类型',
+		dataIndex: 'sclx',
+	},
+	{
+		title: '所属概念',
+		dataIndex: 'gns',
+		width: 388,
+	},
+]
+export const TrendGnColumns: {
+	title: string
+	dataIndex: string
+	[name: string]: any
+}[] = [
+	{
+		title: '排名',
+		dataIndex: 'ranking',
+		sorter: (a: any, b: any) => b.ranking - a.ranking,
+	},
+	{
+		title: '变化',
+		dataIndex: 'change',
+		sorter: (a: any, b: any) => b.change - a.change,
+	},
+	{
+		title: '概念',
+		dataIndex: 'label',
+	},
+	{
+		title: '个股数量',
+		dataIndex: 'num',
+	},
+]
+export const TrendCycleGnColumns: {
+	title: string
+	dataIndex: string
+	[name: string]: any
+}[] = [
+	{
+		title: '概念',
+		dataIndex: 'label',
+	},
+	{
+		title: '天数',
+		dataIndex: 'num',
+		sorter: (a: any, b: any) => b.num - a.num,
+	},
+	{
+		title: '指数',
+		dataIndex: 'score',
+		sorter: (a: any, b: any) => b.score - a.score,
+	},
+	{
+		title: '赚钱效应',
+		dataIndex: 'profit',
+		sorter: (a: any, b: any) => b.profit - a.profit,
+	},
+	{
+		title: '亏钱效应',
+		dataIndex: 'loss',
+		sorter: (a: any, b: any) => b.loss - a.loss,
+	},
+]
