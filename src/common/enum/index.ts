@@ -174,6 +174,59 @@ export const TrendStockColumns: {
 		width: 388,
 	},
 ]
+export const TrendStockListColumns: {
+	title: string
+	dataIndex: string
+	[name: string]: any
+}[] = [
+	{
+		title: '排名',
+		dataIndex: 'ranking',
+		sorter: (a: any, b: any) => b.ranking - a.ranking,
+	},
+	{
+		title: '变化',
+		dataIndex: 'change',
+		sorter: (a: any, b: any) => b.change - a.change,
+	},
+	{
+		title: '股票',
+		dataIndex: 'nameAndCode',
+	},
+	{
+		title: '10日区间涨幅',
+		dataIndex: 'qjzdf',
+		width: 118,
+	},
+	{
+		title: '涨跌幅',
+		dataIndex: 'zdf',
+	},
+	{
+		title: '指数',
+		dataIndex: 'score',
+		sorter: (a: any, b: any) => b.score - a.score,
+	},
+	{
+		title: '赚钱效应',
+		dataIndex: 'profit',
+		sorter: (a: any, b: any) => b.profit - a.profit,
+	},
+	{
+		title: '亏钱效应',
+		dataIndex: 'loss',
+		sorter: (a: any, b: any) => b.loss - a.loss,
+	},
+	{
+		title: '类型',
+		dataIndex: 'sclx',
+	},
+	{
+		title: '所属概念',
+		dataIndex: 'gns',
+		width: 388,
+	},
+]
 export const TrendGnColumns: {
 	title: string
 	dataIndex: string
@@ -226,5 +279,43 @@ export const TrendCycleGnColumns: {
 		title: '亏钱效应',
 		dataIndex: 'loss',
 		sorter: (a: any, b: any) => b.loss - a.loss,
+	},
+]
+export const GNAColumns: SimpleTableColumn[] = [
+	{
+		label: '指数',
+		prop: 'score',
+	},
+	{
+		label: '赚钱效应',
+		prop: 'profit',
+	},
+	{
+		label: '亏钱效应',
+		prop: 'loss',
+	},
+	{
+		label: '红盘',
+		prop: 'hpb',
+	},
+	{
+		label: 'lp',
+		prop: 'lpb',
+	},
+	{
+		label: '涨5',
+		prop: 'z5b',
+	},
+	{
+		label: '跌5',
+		prop: 'd5b',
+	},
+	{
+		label: '涨9.8',
+		prop: 'z9_8b',
+	},
+	{
+		label: '跌9.8',
+		prop: 'd9_8b',
 	},
 ]

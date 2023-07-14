@@ -1119,6 +1119,9 @@ export function resolutionTrend(data: any) {
 				stocks.push(stock)
 			})
 			stocks.forEach((stock: any) => {
+				if (Object.prototype.toString.call(stock.gns) !== '[object Array]') {
+					stock.gns = []
+				}
 				const gnArray: any[] = []
 				stock.gns.forEach((gn: string) => {
 					const gnInfo = gnMap.get(gn)

@@ -51,6 +51,7 @@
 							type="link"
 							size="small"
 							v-for="gn in record[column.dataIndex]"
+							@click="seeStocks(gn)"
 						>
 							{{ gn.label }}({{ gn.num }})
 						</a-button>
@@ -74,7 +75,7 @@
 			>
 				<template #bodyCell="{ column, record }">
 					<template v-if="column.dataIndex === 'num'">
-						<a-button type="link">
+						<a-button type="link" @click="seeStocks(record)">
 							{{ record[column.dataIndex] }}
 						</a-button>
 					</template>
@@ -85,6 +86,39 @@
 			</a-table>
 		</a-tab-pane>
 	</a-tabs>
+	<a-modal
+		v-model:visible="stockModel.visible"
+		:title="stockModel.title"
+		@ok="stockModel.visible = false"
+		:width="1288"
+	>
+		<a-table
+			:columns="gnToStock.columns"
+			:data-source="gnToStock.data"
+			:pagination="false"
+			style="height: 100%"
+			:scroll="{ y: 588 }"
+		>
+			<template #bodyCell="{ column, record }">
+				<template v-if="column.dataIndex === 'gns'">
+					<a-button
+						type="link"
+						size="small"
+						v-for="gn in record[column.dataIndex]"
+						@click="seeStocks(gn)"
+					>
+						{{ gn.label }}({{ gn.num }})
+					</a-button>
+				</template>
+				<template v-else>
+					<span v-if="column.dataIndex.includes('zdf')">
+						{{ record[column.dataIndex] }}%
+					</span>
+					<span v-else>{{ record[column.dataIndex] }}</span>
+				</template>
+			</template>
+		</a-table>
+	</a-modal>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -106,6 +140,13 @@ const today: any = {
 	q100Q: '今日涨跌幅，10日区间涨跌幅前100，今日 ' + fixed,
 }
 const activeTab = ref<string>('1')
+const stockModel = ref<{
+	title: string
+	visible: boolean
+}>({
+	title: '',
+	visible: false,
+})
 const btns = ref<
 	{
 		label: string
@@ -145,6 +186,13 @@ const gns = ref<{
 	columns: TrendGnColumns,
 	data: [],
 })
+const gnToStock = ref<{
+	columns: any[]
+	data: any[]
+}>({
+	columns: TrendStockColumns,
+	data: [],
+})
 function dateChange(d: string) {
 	date.value = d
 	stocks.value.data = []
@@ -153,6 +201,10 @@ function dateChange(d: string) {
 		btn.hasClick.t = false
 		btn.hasClick.y = false
 	})
+	trendData.value.today = {}
+	trendData.value.yesterday = {}
+	stocks.value.data = []
+	gns.value.data = []
 	UniCloudGet({ date: d, _tableName: 'trend-stocks' }).then((res) => {
 		if (res.data.data.length) {
 			const data = res.data.data[0]
@@ -229,6 +281,14 @@ function analysis() {
 		_tableName: 'trend-gns',
 		gnlists: trendData.value.today.gnlists,
 	})
+}
+function seeStocks(item: any) {
+	const label = item.label
+	stockModel.value.title = label
+	gnToStock.value.data = stocks.value.data.filter((stock) => {
+		return stock.gns.find((gn: any) => gn.label === label)
+	})
+	stockModel.value.visible = true
 }
 </script>
 <style lang="scss" scoped>
