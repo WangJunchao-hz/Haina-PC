@@ -203,19 +203,19 @@ export const TrendStockListColumns: {
 		dataIndex: 'zdf',
 	},
 	{
-		title: '指数',
+		title: '指数率',
+		dataIndex: 'scoreL',
+		sorter: (a: any, b: any) => b.scoreL - a.scoreL,
+	},
+	{
+		title: '平均指数',
+		dataIndex: 'scoreP',
+		sorter: (a: any, b: any) => b.scoreP - a.scoreP,
+	},
+	{
+		title: '总指数',
 		dataIndex: 'score',
 		sorter: (a: any, b: any) => b.score - a.score,
-	},
-	{
-		title: '赚钱效应',
-		dataIndex: 'profit',
-		sorter: (a: any, b: any) => b.profit - a.profit,
-	},
-	{
-		title: '亏钱效应',
-		dataIndex: 'loss',
-		sorter: (a: any, b: any) => b.loss - a.loss,
 	},
 	{
 		title: '类型',

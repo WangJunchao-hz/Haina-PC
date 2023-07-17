@@ -342,23 +342,49 @@ function getTrendData(param: {
 						let score = 0
 						let profit = 0
 						let loss = 0
+						let len = 0
+						let scoreL = 0
+						let profitL = 0
+						let lossL = 0
 						s.gns.forEach((g: any) => {
 							const row = gnsRes.find((gn) => gn.label === g.label)!
 							if (row) {
 								score += row.score
 								profit += row.profit
 								loss += row.loss
+								if (row.score > 0) {
+									scoreL += 1
+								}
+								if (row.profit > 0) {
+									profitL += 1
+								}
+								if (row.loss > 0) {
+									lossL += 1
+								}
+								len += 1
 							}
 						})
+						scoreL = Number((scoreL / len).toFixed(2))
+						profitL = Number((profitL / len).toFixed(2))
+						lossL = Number((lossL / len).toFixed(2))
+						const scoreP = Number((score / len).toFixed(2))
+						const profitP = Number((profit / len).toFixed(2))
+						const lossP = Number((loss / len).toFixed(2))
 						return {
 							...s,
 							score,
 							profit,
 							loss,
+							scoreL,
+							profitL,
+							lossL,
+							scoreP,
+							profitP,
+							lossP,
 						}
 					})
 					.sort((a: any, b: any) => {
-						return b.score - a.score
+						return b.scoreL - a.scoreL
 					})
 			}
 		}
