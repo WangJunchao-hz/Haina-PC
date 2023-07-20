@@ -180,6 +180,38 @@ export const TrendStockListColumns: {
 	[name: string]: any
 }[] = [
 	{
+		title: '总指数',
+		dataIndex: 'score',
+		sorter: (a: any, b: any) => b.score - a.score,
+	},
+	{
+		title: '股票',
+		dataIndex: 'nameAndCode',
+	},
+	{
+		title: '涨跌幅',
+		dataIndex: 'zdf',
+	},
+	{
+		title: '10日区间涨幅',
+		dataIndex: 'qjzdf',
+		width: 118,
+	},
+	{
+		title: '类型',
+		dataIndex: 'sclx',
+	},
+	{
+		title: '平均指数',
+		dataIndex: 'scoreP',
+		sorter: (a: any, b: any) => b.scoreP - a.scoreP,
+	},
+	{
+		title: '指数率',
+		dataIndex: 'scoreL',
+		sorter: (a: any, b: any) => b.scoreL - a.scoreL,
+	},
+	{
 		title: '排名',
 		dataIndex: 'ranking',
 		sorter: (a: any, b: any) => b.ranking - a.ranking,
@@ -188,38 +220,6 @@ export const TrendStockListColumns: {
 		title: '变化',
 		dataIndex: 'change',
 		sorter: (a: any, b: any) => b.change - a.change,
-	},
-	{
-		title: '股票',
-		dataIndex: 'nameAndCode',
-	},
-	{
-		title: '10日区间涨幅',
-		dataIndex: 'qjzdf',
-		width: 118,
-	},
-	{
-		title: '涨跌幅',
-		dataIndex: 'zdf',
-	},
-	{
-		title: '指数率',
-		dataIndex: 'scoreL',
-		sorter: (a: any, b: any) => b.scoreL - a.scoreL,
-	},
-	{
-		title: '平均指数',
-		dataIndex: 'scoreP',
-		sorter: (a: any, b: any) => b.scoreP - a.scoreP,
-	},
-	{
-		title: '总指数',
-		dataIndex: 'score',
-		sorter: (a: any, b: any) => b.score - a.score,
-	},
-	{
-		title: '类型',
-		dataIndex: 'sclx',
 	},
 	{
 		title: '所属概念',

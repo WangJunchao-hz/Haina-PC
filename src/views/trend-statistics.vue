@@ -281,6 +281,55 @@ function analysis() {
 		_tableName: 'trend-gns',
 		gnlists: trendData.value.today.gnlists,
 	})
+	updateTimeData()
+}
+function updateTimeData() {
+	const currentD = dayjs().format('YYYY-MM-DD')
+	if (currentD === date.value) {
+		UniCloudGet({
+			_tableName: 'trend-time',
+			date: date.value,
+		}).then((res) => {
+			let data: any = {}
+			const time = dayjs().format('HH:mm:ss')
+			trendData.value.today.stocks.forEach((stock: any) => {
+				const { code } = stock
+				const key = code.split('.')[0]
+				data[key] = [
+					{
+						time,
+						score: 0,
+					},
+				]
+			})
+			if (res.data.data.length) {
+				const { stocks, isNeedUpdate } = res.data.data[0]
+				Object.keys(stocks).forEach((key) => {
+					const last = stocks[key]
+					const current = data[key]
+					if (isNeedUpdate) {
+						if (current) {
+							const len = last.length - 1
+							last[len].time = time
+							data[key] = last
+						}
+					} else {
+						last.push({
+							time,
+							score: 0,
+						})
+						data[key] = last
+					}
+				})
+			}
+			UniCloudSet({
+				_tableName: 'trend-time',
+				date: date.value,
+				stocks: data,
+				isNeedUpdate: true,
+			})
+		})
+	}
 }
 function seeStocks(item: any) {
 	const label = item.label

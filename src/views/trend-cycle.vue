@@ -11,8 +11,8 @@
 			/>
 			天
 		</span>
-		<a-button @click="seeCalendar" type="primary" style="margin-left: 8px">
-			日历
+		<a-button @click="todayRefresh" type="primary" style="margin-left: 8px">
+			刷新
 		</a-button>
 	</div>
 	<a-tabs
@@ -21,10 +21,6 @@
 	>
 		<a-tab-pane key="1" tab="个股" style="height: 100%">
 			<a-card title="趋势情绪" class="chart-card">
-				<single-chart
-					:options="charts.stock"
-					style="height: 518px"
-				></single-chart>
 				<div>
 					<span style="padding-right: 18px"
 						>指数：{{ currentZhiShu.score }}</span
@@ -52,6 +48,11 @@
 								{{ gn.label }}({{ gn.num }})
 							</a-button>
 						</template>
+						<template v-else-if="column.dataIndex === 'score'">
+							<a-button type="link" size="small" @click="seeTime(record)">
+								{{ record[column.dataIndex] }}
+							</a-button>
+						</template>
 						<template v-else>
 							<span v-if="column.dataIndex.includes('zdf')">
 								{{ record[column.dataIndex] }}%
@@ -60,6 +61,10 @@
 						</template>
 					</template>
 				</a-table>
+				<single-chart
+					:options="charts.stock"
+					style="height: 518px"
+				></single-chart>
 			</a-card>
 		</a-tab-pane>
 		<a-tab-pane key="2" tab="板块">
@@ -95,6 +100,14 @@
 		:width="888"
 	>
 		<single-chart :options="charts.gn" style="height: 518px"></single-chart>
+	</a-modal>
+	<a-modal
+		v-model:visible="timeQS.visible"
+		:title="timeQS.title"
+		@ok="timeQS.visible = false"
+		:width="888"
+	>
+		<single-chart :options="charts.time" style="height: 518px"></single-chart>
 	</a-modal>
 	<a-modal
 		v-model:visible="stockModel.visible"
@@ -133,7 +146,10 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { UniCloudGet } from '@/common/api/uni-cloud-api'
+import { UniCloudGet, UniCloudSet } from '@/common/api/uni-cloud-api'
+import { GetRobotData } from '@/common/api/ths-wen-cai-api'
+import { message } from 'ant-design-vue'
+import 'ant-design-vue/es/message/style/css'
 import {
 	TrendCycleGnColumns,
 	TrendStockColumns,
@@ -145,12 +161,16 @@ import {
 	resolutionTrendStocksCycle,
 	resolutionTrendGnsCycle,
 	Cache,
+	replaceTpl,
+	resolutionTrend,
+	resolutionTrendData,
 } from '@/common/utils'
 import SingleChart from '@/components/SingleChart.vue'
 import dayjs, { Dayjs } from 'dayjs'
 import HolidayDate from '@/components/HolidayDate.vue'
 const dateRange = ref<number>(28)
 const activeTab = ref<string>('1')
+let stockTimesInfo: any = {}
 let currentStockInfo: any = {}
 let currentGnInfo: any = {}
 const currentZhiShu = ref<{
@@ -197,6 +217,13 @@ const gnQS = ref<{
 	title: '',
 	visible: false,
 })
+const timeQS = ref<{
+	title: string
+	visible: boolean
+}>({
+	title: '',
+	visible: false,
+})
 const gnsArray = ref<{
 	columns: any[]
 	data: any[]
@@ -217,6 +244,12 @@ const charts = ref<{
 		}
 		series: any[]
 	}
+	time: {
+		xAxis: {
+			data: string[]
+		}
+		series: any[]
+	}
 }>({
 	stock: {
 		xAxis: {
@@ -225,6 +258,12 @@ const charts = ref<{
 		series: [],
 	},
 	gn: {
+		xAxis: {
+			data: [],
+		},
+		series: [],
+	},
+	time: {
 		xAxis: {
 			data: [],
 		},
@@ -331,10 +370,7 @@ function getTrendData(param: {
 		}
 		if (gns && gns.data.data) {
 			currentGnInfo = gns.data.data.find((gn: any) => gn.date === d)
-			const gnsRes = resolutionTrendGnsCycle(
-				gns.data.data,
-				currentDate.value.format('YYYY-MM-DD')
-			)
+			const gnsRes = resolutionTrendGnsCycle(gns.data.data, d)
 			gnsArray.value.data = gnsRes
 			if (currentStockInfo.stocks) {
 				stockList.value.data = currentStockInfo.stocks
@@ -384,9 +420,48 @@ function getTrendData(param: {
 						}
 					})
 					.sort((a: any, b: any) => {
-						return b.scoreL - a.scoreL
+						return b.score - a.score
 					})
+				UniCloudGet({
+					_tableName: 'trend-time',
+					date: d,
+				}).then((res) => {
+					if (res.data.data.length) {
+						const { stocks: timeStocks, isNeedUpdate } = res.data.data[0]
+						if (isNeedUpdate) {
+							stockList.value.data.forEach((item) => {
+								const { score, code } = item
+								const key = code.split('.')[0]
+								if (timeStocks[key]) {
+									const len = timeStocks[key].length - 1
+									timeStocks[key][len].score = score
+								} else {
+									console.log(key)
+								}
+							})
+							stockTimesInfo = timeStocks
+							UniCloudSet({
+								_tableName: 'trend-time',
+								date: d,
+								stocks: timeStocks,
+								isNeedUpdate: false,
+							})
+						} else {
+							stockTimesInfo = timeStocks
+						}
+					}
+				})
+			} else {
+				UniCloudGet({
+					_tableName: 'trend-time',
+					date: d,
+				}).then((res) => {
+					if (res.data.data.length) {
+						stockTimesInfo = res.data.data[0].stocks
+					}
+				})
 			}
+			message.success('加载成功！')
 		}
 	})
 }
@@ -399,7 +474,115 @@ onMounted(() => {
 		})
 	}
 })
-function seeCalendar() {}
+const fixed = '非st，非新股，非停牌，非退市，概念，市场类型'
+const yesterday: any = {
+	q100Q: '今日涨跌幅，10日区间涨跌幅前100，昨日 ' + fixed,
+}
+const today: any = {
+	q100Q: '今日涨跌幅，10日区间涨跌幅前100，今日 ' + fixed,
+}
+function todayRefresh() {
+	const d = currentDate.value.format('YYYY-MM-DD')
+	const trendData: any = {
+		yesterday: {},
+		today: {},
+	}
+	Promise.all([
+		GetRobotData({ question: replaceTpl(yesterday.q100Q, d) }),
+		GetRobotData({ question: replaceTpl(today.q100Q, d) }),
+	]).then((res) => {
+		try {
+			trendData.yesterday = resolutionTrend(res[0].data)
+			trendData.today = resolutionTrend(res[1].data)
+			resolutionTrendData(trendData)
+			// console.log(trendData)
+			Promise.all([
+				UniCloudSet({
+					_tableName: 'trend-stocks',
+					date: d,
+					stocks: trendData.today.stocks,
+					zhishu: trendData.today.zhishu,
+				}),
+				UniCloudSet({
+					date: d,
+					_tableName: 'trend-gns',
+					gnlists: trendData.today.gnlists,
+				}),
+			]).then(() => {
+				const currentD = dayjs().format('YYYY-MM-DD')
+				if (currentD === d) {
+					UniCloudGet({
+						_tableName: 'trend-time',
+						date: d,
+					}).then((res) => {
+						let data: any = {}
+						const time = dayjs().format('HH:mm:ss')
+						trendData.today.stocks.forEach((stock: any) => {
+							const { code } = stock
+							const key = code.split('.')[0]
+							data[key] = [
+								{
+									time,
+									score: 0,
+								},
+							]
+						})
+						if (res.data.data.length) {
+							const { stocks, isNeedUpdate } = res.data.data[0]
+							Object.keys(stocks).forEach((key) => {
+								const last = stocks[key]
+								const current = data[key]
+								if (isNeedUpdate) {
+									if (current) {
+										const len = last.length - 1
+										last[len].time = time
+										data[key] = last
+									}
+								} else {
+									last.push({
+										time,
+										score: 0,
+									})
+									data[key] = last
+								}
+							})
+						}
+						UniCloudSet({
+							_tableName: 'trend-time',
+							date: d,
+							stocks: data,
+							isNeedUpdate: true,
+						}).then(() => {
+							getTrendData({
+								startDate,
+								endDate,
+							})
+						})
+					})
+				}
+			})
+		} catch (error) {
+			console.error('刷新失败', error)
+		}
+	})
+}
+function seeTime(row: any) {
+	const { name, code } = row
+	timeQS.value.visible = true
+	timeQS.value.title = name
+	const timeInfo = stockTimesInfo[code.split('.')[0]]
+	charts.value.time.xAxis.data = []
+	charts.value.time.series = [
+		{
+			name: '指数',
+			data: [],
+		},
+	]
+	timeInfo.forEach((t: any) => {
+		charts.value.time.xAxis.data.push(t.time)
+		charts.value.time.series[0].data.push(t.score)
+	})
+}
 function seeStocks(gn: any) {
 	const label = gn.label
 	stockModel.value.visible = true
