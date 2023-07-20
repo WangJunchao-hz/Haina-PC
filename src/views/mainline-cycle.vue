@@ -51,15 +51,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { GetThemeStatistics } from '@/common/api/uni-cloud-api'
-import { resolutionThemes, Cache } from '@/common/utils'
+import { resolutionThemes, Cache, getStartDate } from '@/common/utils'
 import dayjs, { Dayjs } from 'dayjs'
 import HolidayDate from '@/components/HolidayDate.vue'
 const hots = ref<any[]>([])
-const dateRange = ref<number>(28)
+const dateRange = ref<number>(20)
 let endDate: string = dayjs().format('YYYY-MM-DD')
-let startDate: string = dayjs(endDate)
-	.subtract(dateRange.value, 'd')
-	.format('YYYY-MM-DD')
+let startDate: string = getStartDate(endDate, dateRange.value)
 getThemeData({
 	startDate,
 	endDate,
@@ -160,14 +158,14 @@ function getHotInfo(date: Dayjs) {
 function dateChange(date: string) {
 	endDate = date
 	currentDate.value = dayjs(date)
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getThemeData({
 		startDate,
 		endDate,
 	})
 }
 function onSearch() {
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getThemeData({
 		startDate,
 		endDate,

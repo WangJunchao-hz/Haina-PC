@@ -164,11 +164,12 @@ import {
 	replaceTpl,
 	resolutionTrend,
 	resolutionTrendData,
+	getStartDate,
 } from '@/common/utils'
 import SingleChart from '@/components/SingleChart.vue'
 import dayjs, { Dayjs } from 'dayjs'
 import HolidayDate from '@/components/HolidayDate.vue'
-const dateRange = ref<number>(28)
+const dateRange = ref<number>(20)
 const activeTab = ref<string>('1')
 let stockTimesInfo: any = {}
 let currentStockInfo: any = {}
@@ -271,9 +272,7 @@ const charts = ref<{
 	},
 })
 let endDate: string = dayjs().format('YYYY-MM-DD')
-let startDate: string = dayjs(endDate)
-	.subtract(dateRange.value, 'd')
-	.format('YYYY-MM-DD')
+let startDate: string = getStartDate(endDate, dateRange.value)
 getTrendData({
 	startDate,
 	endDate,
@@ -282,14 +281,14 @@ const currentDate = ref<Dayjs>(dayjs())
 function dateChange(date: string) {
 	endDate = date
 	currentDate.value = dayjs(date)
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getTrendData({
 		startDate,
 		endDate,
 	})
 }
 function onSearch() {
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getTrendData({
 		startDate,
 		endDate,

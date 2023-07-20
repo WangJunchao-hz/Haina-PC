@@ -72,6 +72,29 @@ export function replaceTpl(str: string, reStr: string) {
 		.replace(/\昨日/g, q1 ? q1 : '昨日')
 		.replace(/\前日/g, q2 ? q2 : '前日')
 }
+export function getStartDate(end: string, range: number) {
+	if (!end || !range) {
+		console.error('params is error')
+		return dayjs().format('YYYY-MM-DD')
+	}
+	const y = end.split('-')[0]
+	let cache = Cache.get('holiday', y)
+	if (!cache) {
+		console.error('cache not find')
+		cache = []
+	}
+	let start = ''
+	let index = 1
+	while (index < range) {
+		start = dayjs(start ? start : end)
+			.subtract(1, 'd')
+			.format('YYYY-MM-DD')
+		if (!cache.includes(start)) {
+			index++
+		}
+	}
+	return start
+}
 export function resolutionWenCaiData(data: any) {
 	let res = null
 	if (data) {

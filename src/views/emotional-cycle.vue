@@ -62,7 +62,7 @@ import useClipboard from 'vue-clipboard3'
 import { GetEmotionStatistics } from '@/common/api/uni-cloud-api'
 import HolidayDate from '@/components/HolidayDate.vue'
 import SingleChart from '@/components/SingleChart.vue'
-import { replaceTpl, resolutionEmotion } from '@/common/utils'
+import { replaceTpl, resolutionEmotion, getStartDate } from '@/common/utils'
 const charts = ref<{
 	[name: string]: EChartsOption
 }>({
@@ -177,12 +177,10 @@ const analysis = ref<{
 	res: '',
 })
 const currentDate = ref<string>('')
-const dateRange = ref<number>(28)
+const dateRange = ref<number>(20)
 let endDate: string = dayjs().format('YYYY-MM-DD')
 currentDate.value = endDate
-let startDate: string = dayjs(endDate)
-	.subtract(dateRange.value, 'd')
-	.format('YYYY-MM-DD')
+let startDate: string = getStartDate(endDate, dateRange.value)
 getEmotionData({
 	startDate,
 	endDate,
@@ -190,14 +188,14 @@ getEmotionData({
 function dateChange(d: string) {
 	endDate = d
 	currentDate.value = d
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getEmotionData({
 		startDate,
 		endDate,
 	})
 }
 function onSearch() {
-	startDate = dayjs(endDate).subtract(dateRange.value, 'd').format('YYYY-MM-DD')
+	startDate = getStartDate(endDate, dateRange.value)
 	getEmotionData({
 		startDate,
 		endDate,
