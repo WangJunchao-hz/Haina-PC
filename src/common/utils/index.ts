@@ -1,4 +1,5 @@
 import dayjs, { Dayjs } from 'dayjs'
+import { GetHoliday } from '@/common/api/third-party-api'
 export const Cache = {
 	set(type: string, key: string | number, value: any) {
 		let newValue: any = {}
@@ -1323,4 +1324,21 @@ export function resolutionTrendData(trendData: {
 		})
 	}
 	return trendData
+}
+export function SetHoliday() {
+	const y = dayjs().format('YYYY')
+	const cache = Cache.get('holiday', y)
+	if (!cache) {
+		GetHoliday(y).then((res) => {
+			if (res.data.code === 0) {
+				const rawHoliday = res.data.holiday
+				const hday: string[] = []
+				Object.keys(rawHoliday).forEach((key) => {
+					const d = rawHoliday[key]
+					hday.push(d.date)
+				})
+				Cache.set('holiday', y, hday)
+			}
+		})
+	}
 }
