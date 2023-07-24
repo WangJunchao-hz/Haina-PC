@@ -39,7 +39,7 @@ const defaultOptions = {
 	},
 	grid: {
 		left: 48,
-		right: 28,
+		right: 48,
 		top: 48,
 		bottom: 28,
 	},
@@ -81,9 +81,9 @@ watch(
 				chart = echarts.init(ChartDom.value!) as any
 			}
 			if (options) {
+				// console.log(extend(defaultOptions, options), options)
 				chart.clear()
 				chart.setOption(extend(defaultOptions, options))
-				// console.log(options)
 			}
 		})
 	},

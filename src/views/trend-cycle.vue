@@ -246,6 +246,7 @@ const charts = ref<{
 		series: any[]
 	}
 	time: {
+		yAxis: any[]
 		xAxis: {
 			data: string[]
 		}
@@ -265,6 +266,7 @@ const charts = ref<{
 		series: [],
 	},
 	time: {
+		yAxis: [],
 		xAxis: {
 			data: [],
 		},
@@ -429,11 +431,13 @@ function getTrendData(param: {
 						const { stocks: timeStocks, isNeedUpdate } = res.data.data[0]
 						if (isNeedUpdate) {
 							stockList.value.data.forEach((item) => {
-								const { score, code } = item
+								const { score, code, scoreL, zdf } = item
 								const key = code.split('.')[0]
 								if (timeStocks[key]) {
 									const len = timeStocks[key].length - 1
 									timeStocks[key][len].score = score
+									timeStocks[key][len].scoreL = scoreL
+									timeStocks[key][len].zdf = zdf
 								} else {
 									console.log(key)
 								}
@@ -570,17 +574,69 @@ function seeTime(row: any) {
 	timeQS.value.visible = true
 	timeQS.value.title = name
 	const timeInfo = stockTimesInfo[code.split('.')[0]]
-	charts.value.time.xAxis.data = []
-	charts.value.time.series = [
+	const times: any[] = []
+	const zScore: any = {
+		name: '总指数',
+		type: 'line',
+		data: [],
+	}
+	const zdf: any = {
+		name: '涨跌幅',
+		type: 'line',
+		yAxisIndex: 1,
+		data: [],
+	}
+	const scoreL: any = {
+		name: '指数率',
+		type: 'line',
+		yAxisIndex: 1,
+		data: [],
+	}
+	timeInfo.forEach((t: any) => {
+		times.push(t.time)
+		zScore.data.push(t.score || 0)
+		zdf.data.push(t.zdf || 0)
+		scoreL.data.push((t.scoreL || 0) * 10)
+	})
+	charts.value.time.xAxis.data = times
+	charts.value.time.yAxis = [
 		{
-			name: '指数',
-			data: [],
+			type: 'value',
+			max: function (value: any) {
+				if (Math.abs(value.max) > Math.abs(value.min)) {
+					return Number((Math.abs(value.max) * 1.5).toFixed(2))
+				} else {
+					return Number((Math.abs(value.min) * 1.5).toFixed(2))
+				}
+			},
+			min: function (value: any) {
+				if (Math.abs(value.max) > Math.abs(value.min)) {
+					return Number((-Math.abs(value.max) * 1.5).toFixed(2))
+				} else {
+					return Number((-Math.abs(value.min) * 1.5).toFixed(2))
+				}
+			},
+		},
+		{
+			type: 'value',
+			alignTicks: true,
+			max: function (value: any) {
+				if (Math.abs(value.max) > Math.abs(value.min)) {
+					return Number((Math.abs(value.max) * 1.5).toFixed(2))
+				} else {
+					return Number((Math.abs(value.min) * 1.5).toFixed(2))
+				}
+			},
+			min: function (value: any) {
+				if (Math.abs(value.max) > Math.abs(value.min)) {
+					return Number((-Math.abs(value.max) * 1.5).toFixed(2))
+				} else {
+					return Number((-Math.abs(value.min) * 1.5).toFixed(2))
+				}
+			},
 		},
 	]
-	timeInfo.forEach((t: any) => {
-		charts.value.time.xAxis.data.push(t.time)
-		charts.value.time.series[0].data.push(t.score)
-	})
+	charts.value.time.series = [zScore, zdf, scoreL]
 }
 function seeStocks(gn: any) {
 	const label = gn.label

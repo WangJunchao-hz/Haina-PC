@@ -1014,7 +1014,14 @@ export function extend(def: any, obj: any) {
 			if (!def1[key]) {
 				def1[key] = obj1[key]
 			} else {
-				if (Object.prototype.toString.call(obj1[key]) === '[object Object]') {
+				if (
+					Object.prototype.toString.call(def1[key]) !==
+					Object.prototype.toString.call(obj1[key])
+				) {
+					def1[key] = obj1[key]
+				} else if (
+					Object.prototype.toString.call(obj1[key]) === '[object Object]'
+				) {
 					getObj(def1[key], obj1[key])
 				} else if (
 					Object.prototype.toString.call(obj1[key]) === '[object Array]'
