@@ -22,12 +22,27 @@
 			<span style="color: red">({{ item.sortField }})</span>
 		</a-card-grid>
 	</a-card> -->
-	<a-table
-		:columns="hot.columns"
-		:data-source="hot.data"
-		:pagination="false"
-		style="max-height: calc(100% - 32px); overflow: auto"
-	></a-table>
+	<a-tabs
+		v-model:activeKey="activeTab"
+		style="height: calc(100% - 48px); overflow: auto"
+	>
+		<a-tab-pane key="1" tab="开盘啦" style="height: 100%">
+			<a-table
+				:columns="hot.columns"
+				:data-source="hot.data"
+				:pagination="false"
+				style="max-height: calc(100% - 32px); overflow: auto"
+			></a-table>
+		</a-tab-pane>
+		<a-tab-pane key="2" tab="同花顺">
+			<a-table
+				:columns="ths.columns"
+				:data-source="ths.data"
+				:pagination="false"
+				style="max-height: calc(100% - 32px); overflow: auto"
+			></a-table>
+		</a-tab-pane>
+	</a-tabs>
 	<a-modal
 		v-model:visible="themeInfo.visible"
 		:title="themeInfo.title"
@@ -50,11 +65,17 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { GetThemeStatistics } from '@/common/api/uni-cloud-api'
-import { resolutionThemes, Cache, getStartDate } from '@/common/utils'
+import { GetThemeStatistics, UniCloudGet } from '@/common/api/uni-cloud-api'
+import {
+	resolutionThemes,
+	resolutionThsThemes,
+	Cache,
+	getStartDate,
+} from '@/common/utils'
 import dayjs, { Dayjs } from 'dayjs'
 import HolidayDate from '@/components/HolidayDate.vue'
 const hots = ref<any[]>([])
+const activeTab = ref<string>('1')
 const dateRange = ref<number>(20)
 let endDate: string = dayjs().format('YYYY-MM-DD')
 let startDate: string = getStartDate(endDate, dateRange.value)
@@ -94,6 +115,42 @@ const hot = ref<{
 			title: '总强度',
 			dataIndex: 'totalVol',
 			sorter: (a: any, b: any) => b.totalVol - a.totalVol,
+		},
+	],
+	data: [],
+})
+const ths = ref<{
+	columns: {
+		title: string
+		dataIndex: string
+		[name: string]: any
+	}[]
+	data: any[]
+}>({
+	columns: [
+		{
+			title: '板块',
+			dataIndex: 'name',
+		},
+		{
+			title: '涨停家数',
+			dataIndex: 'ztjs',
+			sorter: (a: any, b: any) => b.ztjs - a.ztjs,
+		},
+		{
+			title: '平均家数',
+			dataIndex: 'avgZtjs',
+			sorter: (a: any, b: any) => b.avgZtjs - a.avgZtjs,
+		},
+		{
+			title: '天数',
+			dataIndex: 'num',
+			sorter: (a: any, b: any) => b.num - a.num,
+		},
+		{
+			title: '总家数',
+			dataIndex: 'totalZtjs',
+			sorter: (a: any, b: any) => b.totalZtjs - a.totalZtjs,
 		},
 	],
 	data: [],
@@ -183,6 +240,11 @@ function getThemeData(param: {
 			hot.value.data = resolutionThemes(res.data.data, currentDate.value)
 		}
 	})
+	UniCloudGet({ _tableName: 'ths-bk-tj', ...param }).then((res) => {
+		if (res.data) {
+			ths.value.data = resolutionThsThemes(res.data.data, currentDate.value)
+		}
+	})
 }
 const holiday = ref<string[]>([])
 onMounted(() => {
@@ -214,6 +276,9 @@ function seeCalendar() {
 :deep(.ant-card-body) {
 	height: calc(100% - 58px);
 	overflow: auto;
+}
+:deep(.ant-tabs-content) {
+	height: 100%;
 }
 .card-label {
 	display: inline-block;

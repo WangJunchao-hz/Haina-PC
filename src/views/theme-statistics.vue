@@ -11,12 +11,27 @@
 			统计
 		</a-button>
 	</div>
-	<a-table
-		:columns="hot.columns"
-		:data-source="hot.data"
-		:pagination="false"
-		style="max-height: calc(100% - 32px); overflow: auto"
-	></a-table>
+	<a-tabs
+		v-model:activeKey="activeTab"
+		style="height: calc(100% - 48px); overflow: auto"
+	>
+		<a-tab-pane key="1" tab="开盘啦" style="height: 100%">
+			<a-table
+				:columns="hot.columns"
+				:data-source="hot.data"
+				:pagination="false"
+				style="max-height: 100%; overflow: auto"
+			></a-table>
+		</a-tab-pane>
+		<a-tab-pane key="2" tab="同花顺">
+			<a-table
+				:columns="ths.columns"
+				:data-source="ths.data"
+				:pagination="false"
+				style="max-height: 100%; overflow: auto"
+			></a-table>
+		</a-tab-pane>
+	</a-tabs>
 	<!-- <a-card :title="showQ" size="small">
 		<a-card-grid v-for="item in result" @click="cardClick(item)">
 			<span class="card-label" :title="item.lb">{{ item.lb }}</span>
@@ -38,13 +53,15 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-// import { GetRobotData } from '@/common/api/ths-wen-cai-api'
+import { GetRobotData } from '@/common/api/ths-wen-cai-api'
 import { GetKaiPanLaHotBanKuai } from '@/common/api/third-party-api'
 import {
 	SetThemeStatistics,
 	GetThemeStatistics,
+	UniCloudSet,
+	UniCloudGet,
 } from '@/common/api/uni-cloud-api'
-// import { replaceTpl, resolutionWenCaiData } from '@/common/utils'
+import { replaceTpl, resolutionTHSBKData } from '@/common/utils'
 import dayjs from 'dayjs'
 import HolidayDate from '@/components/HolidayDate.vue'
 // const question = ref<string>(
@@ -52,6 +69,7 @@ import HolidayDate from '@/components/HolidayDate.vue'
 // )
 // const showQ = ref<string>('')
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
+const activeTab = ref<string>('1')
 // const result = ref<any[]>([])
 const hot = ref<{
 	columns: {
@@ -68,6 +86,25 @@ const hot = ref<{
 		{
 			title: '强度',
 			dataIndex: 'vol',
+		},
+	],
+	data: [],
+})
+const ths = ref<{
+	columns: {
+		title: string
+		dataIndex: string
+	}[]
+	data: any[]
+}>({
+	columns: [
+		{
+			title: '板块',
+			dataIndex: 'name',
+		},
+		{
+			title: '涨停家数',
+			dataIndex: 'ztjs',
 		},
 	],
 	data: [],
@@ -110,32 +147,44 @@ function dateChange(d: string) {
 	// showQ.value = replaceTpl(question.value, d)
 	date.value = d
 	// result.value = []
+	hot.value.data = []
 	GetThemeStatistics({ date: d }).then((res) => {
 		if (res.data && res.data.data.length) {
 			hot.value.data = res.data.data[0].hot
 		}
 	})
-}
-function record() {
-	GetKaiPanLaHotBanKuai(date.value).then((res) => {
-		if (res.data.list) {
-			const bankuai = res.data.list.map((item: any) => {
-				return {
-					name: item[1],
-					vol: item[2],
-				}
-			})
-			hot.value.data = bankuai
-			SetThemeStatistics({ date: date.value, hot: bankuai })
-			// console.log(bankuai)
+	ths.value.data = []
+	UniCloudGet({ _tableName: 'ths-bk-tj', date: d }).then((res) => {
+		if (res.data && res.data.data.length) {
+			ths.value.data = res.data.data[0].data
 		}
 	})
-	// GetRobotData({ question: showQ.value }).then((res) => {
-	// 	const resData = resolutionWenCaiData(res.data) as any
-	// 	result.value = resData.data
-	// 	SetThemeStatistics({ date: date.value, ...resData })
-	// })
 }
+function record() {
+	if (activeTab.value === '1') {
+		GetKaiPanLaHotBanKuai(date.value).then((res) => {
+			if (res.data.list) {
+				const bankuai = res.data.list.map((item: any) => {
+					return {
+						name: item[1],
+						vol: item[2],
+					}
+				})
+				hot.value.data = bankuai
+				SetThemeStatistics({ date: date.value, hot: bankuai })
+				// console.log(bankuai)
+			}
+		})
+	} else {
+		const q = replaceTpl('概念指数，今日涨停家数从大到小排序', date.value)
+		GetRobotData({ question: q, secondary_intent: 'zhishu' }).then((res) => {
+			const resData = resolutionTHSBKData(res.data) as any
+			ths.value.data = resData
+			UniCloudSet({ date: date.value, data: resData, _tableName: 'ths-bk-tj' })
+		})
+	}
+}
+
 // function cardClick(item: any) {
 // 	themeInfo.value.title = `${item.lb}(${item.num})`
 // 	themeInfo.value.visible = true
@@ -156,6 +205,9 @@ function record() {
 :deep(.ant-card-body) {
 	height: calc(100% - 58px);
 	overflow: auto;
+}
+:deep(.ant-tabs-content) {
+	height: 100%;
 }
 .card-label {
 	display: inline-block;

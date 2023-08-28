@@ -4,6 +4,7 @@ export function GetRobotData(params: {
 	question: string
 	page?: number
 	perpage?: number
+	secondary_intent?: string
 }) {
 	const url =
 		import.meta.env.MODE === 'development' ? '/wencai' : '//www.iwencai.com'

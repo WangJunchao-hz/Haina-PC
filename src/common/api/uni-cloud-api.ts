@@ -34,6 +34,8 @@ export function UniCloudGet(params: {
 	date?: string
 	endDate?: string
 	startDate?: string
+	whereKey?: string
+	whereValue?: any
 	_tableName: string
 }) {
 	return http.get(`${url}/unicloud-get`, {

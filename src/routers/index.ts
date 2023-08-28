@@ -5,41 +5,60 @@ const TrendCycle = () => import('@/views/trend-cycle.vue')
 const EmotionStatistics = () => import('@/views/emotion-statistics.vue')
 const ThemeStatistics = () => import('@/views/theme-statistics.vue')
 const TrendStatistics = () => import('@/views/trend-statistics.vue')
+const PriceAnalysis = () => import('@/views/price-analysis.vue')
+const DataMap = () => import('@/views/data-map.vue')
+const Inventory = () => import('@/views/inventory.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
-		redirect: '/emotional-cycle',
+		redirect: '/inventory',
 	},
 	{
-		name: 'emotionalCycle',
-		path: '/emotional-cycle',
-		component: EmotionalCycle,
+		name: 'inventory',
+		path: '/inventory',
+		component: Inventory,
 	},
 	{
-		name: 'mainlineCycle',
-		path: '/mainline-cycle',
-		component: MainlineCycle,
+		name: 'priceAnalysis',
+		path: '/price-analysis',
+		component: PriceAnalysis,
 	},
 	{
-		name: 'trendCycle',
-		path: '/trend-cycle',
-		component: TrendCycle,
+		name: 'dataMap',
+		path: '/data-map',
+		component: DataMap,
 	},
-	{
-		name: 'emotionStatistics',
-		path: '/emotion-statistics',
-		component: EmotionStatistics,
-	},
-	{
-		name: 'trendStatistics',
-		path: '/trend-statistics',
-		component: TrendStatistics,
-	},
-	{
-		name: 'themeStatistics',
-		path: '/theme-statistics',
-		component: ThemeStatistics,
-	},
+
+	// {
+	// 	name: 'emotionalCycle',
+	// 	path: '/emotional-cycle',
+	// 	component: EmotionalCycle,
+	// },
+	// {
+	// 	name: 'mainlineCycle',
+	// 	path: '/mainline-cycle',
+	// 	component: MainlineCycle,
+	// },
+	// {
+	// 	name: 'trendCycle',
+	// 	path: '/trend-cycle',
+	// 	component: TrendCycle,
+	// },
+	// {
+	// 	name: 'emotionStatistics',
+	// 	path: '/emotion-statistics',
+	// 	component: EmotionStatistics,
+	// },
+	// {
+	// 	name: 'trendStatistics',
+	// 	path: '/trend-statistics',
+	// 	component: TrendStatistics,
+	// },
+	// {
+	// 	name: 'themeStatistics',
+	// 	path: '/theme-statistics',
+	// 	component: ThemeStatistics,
+	// },
 ]
 const router = createRouter({
 	history: createWebHashHistory(),

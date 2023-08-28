@@ -20,25 +20,71 @@ export const Cache = {
 		}
 		return res
 	},
+	remove(type: string, key?: string | number) {
+		const value = localStorage.getItem(type)
+		if (value && key) {
+			const data = JSON.parse(value)
+			delete data[key]
+			localStorage.setItem(type, data)
+		} else if (value) {
+			localStorage.removeItem(type)
+		}
+	},
 }
 export function replaceTpl(str: string, reStr: string) {
 	if (!reStr) {
 		console.error('date is error')
 		return str
 	}
-	const y = reStr.split('-')[0]
+	let y = reStr.split('-')[0]
 	let cache = Cache.get('holiday', y)
 	if (!cache) {
 		console.error('cache not find')
 		cache = []
 	}
 	let q1 = dayjs(reStr).subtract(1, 'd').format('YYYY-MM-DD')
+	let nY = q1.split('-')[0]
+	if (nY !== y) {
+		y = nY
+		cache = Cache.get('holiday', y)
+		if (!cache) {
+			console.error('cache not find')
+			cache = []
+		}
+	}
 	while (cache.includes(q1)) {
 		q1 = dayjs(q1).subtract(1, 'd').format('YYYY-MM-DD')
+		nY = q1.split('-')[0]
+		if (nY !== y) {
+			y = nY
+			cache = Cache.get('holiday', y)
+			if (!cache) {
+				console.error('cache not find')
+				cache = []
+			}
+		}
 	}
 	let q2 = dayjs(q1).subtract(1, 'd').format('YYYY-MM-DD')
+	nY = q2.split('-')[0]
+	if (nY !== y) {
+		y = nY
+		cache = Cache.get('holiday', y)
+		if (!cache) {
+			console.error('cache not find')
+			cache = []
+		}
+	}
 	while (cache.includes(q2)) {
 		q2 = dayjs(q2).subtract(1, 'd').format('YYYY-MM-DD')
+		nY = q2.split('-')[0]
+		if (nY !== y) {
+			y = nY
+			cache = Cache.get('holiday', y)
+			if (!cache) {
+				console.error('cache not find')
+				cache = []
+			}
+		}
 	}
 	if (str.includes('10日区间')) {
 		let index = 1
@@ -48,6 +94,15 @@ export function replaceTpl(str: string, reStr: string) {
 				start = dayjs(start ? start : reStr)
 					.subtract(1, 'd')
 					.format('YYYY-MM-DD')
+				nY = start.split('-')[0]
+				if (nY !== y) {
+					y = nY
+					cache = Cache.get('holiday', y)
+					if (!cache) {
+						console.error('cache not find')
+						cache = []
+					}
+				}
 				if (!cache.includes(start)) {
 					index++
 				}
@@ -60,6 +115,15 @@ export function replaceTpl(str: string, reStr: string) {
 				start = dayjs(start ? start : q1)
 					.subtract(1, 'd')
 					.format('YYYY-MM-DD')
+				nY = start.split('-')[0]
+				if (nY !== y) {
+					y = nY
+					cache = Cache.get('holiday', y)
+					if (!cache) {
+						console.error('cache not find')
+						cache = []
+					}
+				}
 				if (!cache.includes(start)) {
 					index++
 					// console.log(index, start)
@@ -78,7 +142,7 @@ export function getStartDate(end: string, range: number) {
 		console.error('params is error')
 		return dayjs().format('YYYY-MM-DD')
 	}
-	const y = end.split('-')[0]
+	let y = end.split('-')[0]
 	let cache = Cache.get('holiday', y)
 	if (!cache) {
 		console.error('cache not find')
@@ -90,6 +154,15 @@ export function getStartDate(end: string, range: number) {
 		start = dayjs(start ? start : end)
 			.subtract(1, 'd')
 			.format('YYYY-MM-DD')
+		const nY = start.split('-')[0]
+		if (nY !== y) {
+			y = nY
+			cache = Cache.get('holiday', y)
+			if (!cache) {
+				console.error('cache not find')
+				cache = []
+			}
+		}
 		if (!cache.includes(start)) {
 			index++
 		}
@@ -181,6 +254,78 @@ export function resolutionWenCaiData(data: any) {
 				lbs,
 				data: ztyylbs,
 			}
+		} catch (error) {
+			console.error(error)
+			res = false as any
+		}
+	}
+	return res
+}
+export function resolutionTHSBKData(data: any) {
+	let res = null
+	if (data) {
+		try {
+			const extra =
+				data.data.answer[0].txt[0].content.components[0].data.meta.extra
+			const datas = data.data.answer[0].txt[0].content.components[0].data.datas
+			const iwc_column_info = extra.iwc_column_info
+			const indexID = Object.keys(iwc_column_info)
+			let codeIndex: string, // 指数代码
+				nameIndex: string, // 指数简称
+				ztjsIndex: string, // 涨停家数
+				zdfIndex: string // 涨跌幅
+			indexID.forEach((item) => {
+				if (item.includes('指数代码')) {
+					codeIndex = item
+				}
+				if (item.includes('指数简称')) {
+					nameIndex = item
+				}
+				if (item.includes('指数@涨跌幅:前复权[')) {
+					zdfIndex = item
+				}
+				if (item.includes('指数@涨停家数[')) {
+					ztjsIndex = item
+				}
+			})
+			const list: any[] = []
+			datas.forEach((item: any) => {
+				const code = item[codeIndex] || 'code'
+				const name = item[nameIndex] || 'name'
+				const ztjs = item[ztjsIndex] || 0
+				const zdf = item[zdfIndex] || 0
+				if (
+					![
+						'融资融券',
+						'国企改革',
+						'标普道琼斯A股',
+						'沪股通',
+						'深股通',
+						'新股与次新股',
+						'参股新三板',
+						'参股券商',
+						'注册制次新股',
+						'ST板块',
+						'参股保险',
+						'MSCI概念',
+						'参股金融',
+						'参股银行',
+						'核准制次新股',
+						'央企国企改革',
+						'北交所概念',
+					].includes(name) &&
+					ztjs > 2
+				) {
+					const newItem = {
+						code,
+						name,
+						ztjs,
+						zdf,
+					}
+					list.push(newItem)
+				}
+			})
+			res = list
 		} catch (error) {
 			console.error(error)
 			res = false as any
@@ -281,6 +426,46 @@ export function resolutionThemes(data: any, date: Dayjs) {
 	}
 	// console.log(res)
 
+	return res
+}
+export function resolutionThsThemes(data: any, date: Dayjs) {
+	let res: any[] = []
+	if (data) {
+		const hotMap = new Map()
+		data.forEach((item: any) => {
+			item.data.forEach((h: any) => {
+				let ztjs = 0
+				if (item.date === date.format('YYYY-MM-DD')) {
+					ztjs = h.ztjs
+				}
+				const has = hotMap.get(h.name)
+				if (has) {
+					has.totalZtjs += h.ztjs
+					has.num += 1
+					if (ztjs) {
+						has.ztjs = ztjs
+					}
+				} else {
+					hotMap.set(h.name, {
+						name: h.name,
+						totalZtjs: h.ztjs,
+						avgZtjs: 0,
+						num: 1,
+						ztjs,
+					})
+				}
+			})
+		})
+		res = Array.from(hotMap)
+			.map((item) => {
+				const info = item[1]
+				info.avgZtjs = Number((info.totalZtjs / info.num).toFixed(0))
+				return info
+			})
+			.sort((a, b) => {
+				return b.num - a.num
+			})
+	}
 	return res
 }
 export function resolutionTrendStocksCycle(data: any) {
@@ -1348,4 +1533,18 @@ export function SetHoliday() {
 			}
 		})
 	}
+}
+export function isNumber(value: string) {
+	return /^\d+(\.\d+)?$/.test(value)
+}
+export function getStringAfter(string: string, pattern: any) {
+	const match: any = string.match(pattern)
+	if (match && match.index >= 0) {
+		return string.substring(match.index + match[0].length)
+	}
+	return ''
+}
+export function insertNewline(string: string) {
+	const pattern = /([\u4e00-\u9fa5]+)(\d+)/g
+	return string.replace(pattern, '$1\n$2')
 }

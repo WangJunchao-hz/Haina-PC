@@ -61,39 +61,49 @@ const collapsed = ref<boolean>(false)
 const selectedKeys = ref<string[]>([])
 const menus = ref<MenuItem[]>([
 	{
+		icon: LineChartOutlined,
+		label: '进销存管理',
+		key: 'inventory',
+	},
+	{
 		icon: RadarChartOutlined,
-		label: '复盘',
-		key: 'replay',
-		children: [
-			{
-				label: '情绪统计',
-				key: 'emotionStatistics',
-			},
-			{
-				label: '题材统计',
-				key: 'themeStatistics',
-			},
-			{
-				label: '趋势统计',
-				key: 'trendStatistics',
-			},
-		],
+		label: '摊位数据采集',
+		key: 'priceAnalysis',
+		// children: [
+		// 	{
+		// 		label: '情绪统计',
+		// 		key: 'emotionStatistics',
+		// 	},
+		// 	{
+		// 		label: '题材统计',
+		// 		key: 'themeStatistics',
+		// 	},
+		// 	{
+		// 		label: '趋势统计',
+		// 		key: 'trendStatistics',
+		// 	},
+		// ],
 	},
 	{
 		icon: AreaChartOutlined,
-		label: '情绪周期',
-		key: 'emotionalCycle',
+		label: '数据映射管理',
+		key: 'dataMap',
 	},
-	{
-		icon: LineChartOutlined,
-		label: '主线周期',
-		key: 'mainlineCycle',
-	},
-	{
-		icon: StockOutlined,
-		label: '趋势周期',
-		key: 'trendCycle',
-	},
+	// {
+	// 	icon: AreaChartOutlined,
+	// 	label: '情绪周期',
+	// 	key: 'emotionalCycle',
+	// },
+	// {
+	// 	icon: LineChartOutlined,
+	// 	label: '主线周期',
+	// 	key: 'mainlineCycle',
+	// },
+	// {
+	// 	icon: StockOutlined,
+	// 	label: '趋势周期',
+	// 	key: 'trendCycle',
+	// },
 ])
 const menuMap = new Map()
 menus.value.forEach((m) => {
@@ -138,5 +148,16 @@ function menuClick(item: any) {
 }
 .ant-modal-body {
 	padding: 0 !important;
+}
+.ant-table-wrapper {
+	height: 100%;
+	.ant-spin-nested-loading {
+		height: 100%;
+		.ant-spin-container,
+		.ant-table,
+		.ant-table-container {
+			height: 100%;
+		}
+	}
 }
 </style>
