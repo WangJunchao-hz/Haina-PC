@@ -53,7 +53,7 @@
 	<a-card title="快速筛选" size="small">
 		<a-checkbox-group :options="config.goodsType" />
 	</a-card>
-	<a-tabs v-model:activeKey="activeTab" style="height: 100%">
+	<a-tabs v-model:activeKey="activeTab" class="tab">
 		<a-tab-pane
 			v-for="d in config.districts"
 			:key="d.value"
@@ -106,6 +106,26 @@
 }"
 							show-search
 						/>
+						<span
+							style="color: red; font-weight: bold"
+							v-else-if="
+								column.dataIndex === 'ygStallPrice' ||
+								column.dataIndex === 'ygStockPrice'
+							"
+							>{{ record[column.dataIndex] }}</span
+						>
+						<a-input-number
+							style="width: 100%"
+							v-else-if="
+								column.dataIndex === 'discount' ||
+								column.dataIndex === 'qwProfit'
+							"
+							v-model:value="record[column.dataIndex]"
+							:min="0"
+							:max="1"
+							:step="0.01"
+						>
+						</a-input-number>
 						<a-input
 							v-else
 							style="width: 100%"
@@ -403,6 +423,7 @@ const goodsTable = ref<{
 		{
 			title: '属/技/等',
 			dataIndex: 'feature',
+			width: 288,
 		},
 		{
 			title: '市场价',
@@ -412,14 +433,16 @@ const goodsTable = ref<{
 		{
 			title: '让利',
 			dataIndex: 'discount',
+			width: 88,
 		},
 		{
 			title: '预估摆摊价',
 			dataIndex: 'ygStallPrice',
 		},
 		{
-			title: '期望利润率',
+			title: '期望利润 ',
 			dataIndex: 'qwProfit',
+			width: 88,
 		},
 		{
 			title: '预估收货价',
@@ -428,6 +451,7 @@ const goodsTable = ref<{
 		{
 			title: '操作',
 			dataIndex: 'operate',
+			width: 88,
 		},
 	],
 	data: [],
@@ -481,21 +505,28 @@ function init() {
 			whereKey: 'mobile',
 			whereValue: m,
 		}),
-	]).then((res) => {
-		const configRes = res[0]
-		if (configRes.data.data && configRes.data.data.length) {
-			config.value = {
-				...config.value,
-				...configRes.data.data[0],
+	])
+		.then((res) => {
+			const configRes = res[0]
+			if (configRes.data.data && configRes.data.data.length) {
+				config.value = {
+					...config.value,
+					...configRes.data.data[0],
+				}
+				activeTab.value = config.value.defaultDistrict
+				addForm.value.district = activeTab.value
 			}
-			activeTab.value = config.value.defaultDistrict
-			addForm.value.district = activeTab.value
-		}
-		const mapRes = res[1]
-		if (mapRes.data.data && mapRes.data.data.length) {
-			goodsMap.value = mapRes.data.data[0].goodsMap
-		}
-	})
+			const mapRes = res[1]
+			if (mapRes.data.data && mapRes.data.data.length) {
+				goodsMap.value = mapRes.data.data[0].goodsMap
+			}
+		})
+		.finally(() => {
+			const hasCache = Cache.get('StallGoodsInfo', m)
+			if (hasCache) {
+				goodsTable.value.data = hasCache[activeTab.value]
+			}
+		})
 }
 function login() {
 	if (config.value.user.mobile) {
@@ -555,6 +586,22 @@ function clean(type?: 1 | 2) {
 			qwProfit: config.value.global.qwProfit,
 			ygStockPrice: '',
 		}
+		item.ygStallPrice = Number(
+			(item.marketPrice * (1 - item.discount)).toFixed(0)
+		)
+		if (item.ygStallPrice > 100000) {
+			item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
+		} else if (item.ygStallPrice > 10000) {
+			item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
+		}
+		item.ygStockPrice = Number(
+			(item.ygStallPrice / (1 + item.qwProfit)).toFixed(0)
+		)
+		if (item.ygStockPrice > 100000) {
+			item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
+		} else if (item.ygStockPrice > 10000) {
+			item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
+		}
 		rowArray.forEach((row, i) => {
 			if (i === 0) {
 				item.name = row
@@ -574,13 +621,35 @@ function clean(type?: 1 | 2) {
 		})
 		if (names.length === prices.length) {
 			names.forEach((name, i) => {
-				const item = {
+				const item: any = {
 					key: v4(),
 					name,
-					price: prices[i],
 					feature: '',
 					featureModel: [],
-					index: i + 1,
+					type: '',
+					districts: activeTab.value,
+					marketPrice: prices[i],
+					zdf: '',
+					discount: config.value.global.discount,
+					ygStallPrice: '',
+					qwProfit: config.value.global.qwProfit,
+					ygStockPrice: '',
+				}
+				item.ygStallPrice = Number(
+					(item.marketPrice * (1 - item.discount)).toFixed(0)
+				)
+				if (item.ygStallPrice > 100000) {
+					item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
+				} else if (item.ygStallPrice > 10000) {
+					item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
+				}
+				item.ygStockPrice = Number(
+					(item.ygStallPrice / (1 + item.qwProfit)).toFixed(0)
+				)
+				if (item.ygStockPrice > 100000) {
+					item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
+				} else if (item.ygStockPrice > 10000) {
+					item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
 				}
 				goodsTable.value.data.push(item)
 			})
@@ -629,6 +698,17 @@ function save() {
 }
 </script>
 <style scoped lang="scss">
+.table {
+	:deep(td) {
+		padding: 8px;
+	}
+}
+.tab {
+	height: calc(100% - 222px);
+	:deep(.ant-tabs-content) {
+		height: 100%;
+	}
+}
 :deep(.ant-btn-icon-only.ant-btn-sm) {
 	width: 18px;
 	height: 18px;
