@@ -1,57 +1,59 @@
 <template>
-	<a-row>
-		<a-col :span="12">
-			<div style="display: flex">
-				<a-textarea
-					style="width: 88px"
-					@change="clean"
-					@focus="autoPaste"
-					v-model:value="text"
-					placeholder="快速识别区域"
-					:rows="6"
-				/>
-				<a-textarea
-					v-model:value="text1"
-					placeholder="商品数据，可手动修正"
-					:rows="6"
-				/>
-			</div>
-		</a-col>
-		<a-col :span="12">
-			<div style="display: flex; align-items: self-start; padding-left: 18px">
-				<a-space direction="vertical">
-					<a-button type="primary" @click="addGoodsModal.visible = true">
-						新增
-					</a-button>
-					<a-button type="primary" @click="clean(2)">清洗</a-button>
-					<a-button type="primary" @click="save">保存</a-button>
-					<a-button type="primary" @click="setModal.visible = true">
-						设置
-					</a-button>
-				</a-space>
-				<a-space style="padding-left: 18px" wrap>
-					<a-input-search
-						style="width: 188px"
-						v-model:value="config.user.mobile"
-						:disabled="isLogin"
-						placeholder="手机号作为唯一标识，设置后不可修改"
-					>
-						<template #enterButton>
-							<a-button @click="login" :disabled="isLogin">登录</a-button>
-						</template>
-					</a-input-search>
-					<a-switch
-						v-model:checked="isCache"
-						checked-children="开启缓存"
-						un-checked-children="关闭缓存"
-					/>
-					<a-button type="primary" @click="cleanCache">清除缓存</a-button>
-				</a-space>
-			</div>
-		</a-col>
-	</a-row>
-	<a-card title="快速筛选" size="small">
-		<a-checkbox-group :options="config.goodsType" />
+	<a-card title="功能区" size="small">
+		<a-space wrap>
+			<a-input-search
+				style="width: 188px"
+				v-model:value="config.user.mobile"
+				:disabled="isLogin"
+				placeholder="手机号作为唯一标识，设置后不可修改"
+				@search="login"
+			>
+				<template #enterButton>
+					<a-button :disabled="isLogin">登录</a-button>
+				</template>
+			</a-input-search>
+			<a-button type="primary" @click="cleanCache('loginOut')">注销</a-button>
+			<a-switch
+				v-model:checked="isCache"
+				checked-children="开启缓存"
+				un-checked-children="关闭缓存"
+			/>
+			<a-button type="primary" @click="cleanCache">清除缓存</a-button>
+			<a-button type="primary" @click="save">保存</a-button>
+			<a-button type="primary" @click="setModal.visible = true">
+				设置
+			</a-button>
+			<a-cascader
+				style="width: 188px"
+				v-model:value="select.value"
+				:options="select.options"
+				:show-search="{ filter: select.filter }"
+				placeholder="快速筛选"
+				expandTrigger="hover"
+				@change="selectChange"
+			/>
+			<a-upload
+				accept=".ini"
+				:showUploadList="false"
+				:customRequest="fileChange"
+			>
+				<a-button>
+					<upload-outlined></upload-outlined>
+					生成配置
+				</a-button>
+			</a-upload>
+			<a-button @click="hanHua">
+				<FormOutlined></FormOutlined>
+				生成喊话
+			</a-button>
+		</a-space>
+	</a-card>
+	<a-card title="类型筛选" size="small">
+		<a-checkbox-group
+			v-model:value="typeChecked"
+			:options="goodsType"
+			@change="typeFilter"
+		/>
 	</a-card>
 	<a-tabs v-model:activeKey="activeTab" class="tab">
 		<a-tab-pane
@@ -64,133 +66,106 @@
 				class="table"
 				:columns="goodsTable.columns"
 				:data-source="goodsTable.data"
-				:scroll="{ y: 'calc(100% - 55px)' }"
+				:scroll="{ y: 'calc(100% - 54px)' }"
 				:pagination="false"
 			>
 				<template #bodyCell="{ column, record, index }">
 					<template v-if="column.dataIndex === 'operate'">
 						<a-space>
-							<a-button
+							<a-popconfirm
+								title="确认删除？"
+								ok-text="是"
+								cancel-text="否"
+								@confirm="goodsTable.remove(index)"
+							>
+								<a-button
+									type="primary"
+									size="small"
+									danger
+									:icon="h(DeleteOutlined)"
+								>
+								</a-button>
+							</a-popconfirm>
+							<!-- <a-button
 								type="primary"
 								size="small"
-								danger
+								:icon="h(FormOutlined)"
 								@click="goodsTable.remove(index)"
 							>
-								删除
-							</a-button>
+							</a-button> -->
 						</a-space>
 					</template>
 					<template v-else>
-						<a-select
-							v-if="column.dataIndex === 'type'"
-							style="width: 100%"
-							v-model:value="record[column.dataIndex]"
-							:options="config.goodsType"
-							placeholder="请选择商品类型"
-						></a-select>
-						<a-select
-							style="width: 100%"
-							placeholder="选择或输入特征"
-							v-else-if="column.dataIndex === 'feature'"
-							v-model:value="record.featureModel"
-							mode="tags"
-							:token-separators="[',']"
-							:options="
-								(goodsMap &&
-									goodsMap[record.name] &&
-									goodsMap[record.name].options) ||
-								[]
-							"
-							:filter-option="(input: string, option: any) => {
-  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-}"
-							show-search
-						/>
 						<span
-							style="color: red; font-weight: bold"
-							v-else-if="
-								column.dataIndex === 'ygStallPrice' ||
-								column.dataIndex === 'ygStockPrice'
-							"
+							style="color: #f56c6c; font-weight: bold"
+							v-if="column.dataIndex === 'ygStallPrice'"
+							>{{ record[column.dataIndex] }}</span
+						>
+						<span
+							style="color: #67c23a; font-weight: bold"
+							v-else-if="column.dataIndex === 'ygStockPrice'"
 							>{{ record[column.dataIndex] }}</span
 						>
 						<a-input-number
 							style="width: 100%"
-							v-else-if="
-								column.dataIndex === 'discount' ||
-								column.dataIndex === 'qwProfit'
-							"
+							v-else-if="column.dataIndex === 'discount'"
 							v-model:value="record[column.dataIndex]"
 							:min="0"
 							:max="1"
 							:step="0.01"
+							:placeholder="config.global.discount + ''"
+							@change="singleJS(record)"
+						>
+						</a-input-number>
+						<a-input-number
+							style="width: 100%"
+							v-else-if="column.dataIndex === 'qwProfit'"
+							v-model:value="record[column.dataIndex]"
+							:min="0"
+							:max="1"
+							:step="0.01"
+							:placeholder="config.global.qwProfit + ''"
+							@change="singleJS(record)"
 						>
 						</a-input-number>
 						<a-input
-							v-else
+							v-else-if="column.dataIndex === 'marketPrice'"
 							style="width: 100%"
+							@change="singleJS(record)"
 							v-model:value="record[column.dataIndex]"
 						/>
+						<a-switch
+							v-else-if="column.dataIndex === 'isSet'"
+							v-model:checked="record[column.dataIndex]"
+							checked-children="是"
+							un-checked-children="否"
+						/>
+						<a-input
+							v-else-if="
+								column.dataIndex === 'collect' || column.dataIndex === 'sell'
+							"
+							style="width: 100%"
+							placeholder=""
+							v-model:value="record[column.dataIndex]"
+						/>
+						<span
+							v-else-if="column.dataIndex === 'name'"
+							style="color: #303133"
+							>{{ record[column.dataIndex] }}</span
+						>
+						<span
+							v-else-if="column.dataIndex === 'feature'"
+							style="color: #409eff"
+							>{{ record[column.dataIndex] }}</span
+						>
+						<span v-else style="color: #909399">{{
+							record[column.dataIndex]
+						}}</span>
 					</template>
 				</template>
 			</a-table>
 		</a-tab-pane>
 	</a-tabs>
-	<a-modal
-		v-model:visible="addGoodsModal.visible"
-		title="新增商品"
-		@ok="addGoodsModal.add"
-		:width="388"
-	>
-		<a-form
-			style="padding-top: 18px"
-			:model="addForm"
-			:label-col="{ style: { width: '98px' } }"
-			:wrapper-col="{ span: 14 }"
-		>
-			<a-form-item label="名称">
-				<a-input v-model:value="addForm.name" />
-			</a-form-item>
-			<a-form-item label="特征">
-				<a-select
-					style="width: 100%"
-					placeholder="选择或输入特征"
-					v-model:value="addForm.featureModel"
-					mode="tags"
-					:token-separators="[',']"
-					:options="
-						(goodsMap &&
-							goodsMap[addForm.name] &&
-							goodsMap[addForm.name].options) ||
-						[]
-					"
-					:filter-option="(input: string, option: any) => {
-  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-}"
-					show-search
-				/>
-			</a-form-item>
-			<a-form-item label="类型">
-				<a-select
-					ref="select"
-					v-model:value="addForm.type"
-					:options="config.goodsType"
-					placeholder="请选择商品类型"
-				></a-select>
-			</a-form-item>
-			<a-form-item label="所在区">
-				<a-select
-					ref="select"
-					v-model:value="addForm.district"
-					:options="config.districts"
-					placeholder="请选择所在区"
-				></a-select>
-			</a-form-item>
-			<a-form-item label="市场价">
-				<a-input v-model:value="addForm.marketPrice" />
-			</a-form-item>
-		</a-form>
-	</a-modal>
 	<a-modal
 		v-model:visible="setModal.visible"
 		title="参数设置"
@@ -253,94 +228,51 @@
 				</a-radio-group>
 			</a-space>
 		</a-card>
-		<a-card title="商品类型管理" size="small">
-			<a-space wrap>
-				<a-input-search
-					v-model:value="config.goodsTypeModel"
-					placeholder="请输入商品类型"
-					size="small"
-					allowClear
-					@search="config.addGoodsType"
-				>
-					<template #enterButton>
-						<a-button type="primary">新增</a-button>
-					</template>
-				</a-input-search>
-				<div v-for="(t, i) in config.goodsType">
-					{{ t.label }}
-					<a-button
-						type="primary"
-						size="small"
-						danger
-						:icon="h(DeleteOutlined)"
-						@click="config.deleteGoodsType(i)"
-					/>
-				</div>
-			</a-space>
-		</a-card>
-		<a-card title="详细参数" size="small">
-			<a-table
-				size="small"
-				:columns="setModal.table.columns"
-				:data-source="setModal.table.data"
-				:pagination="false"
-				:scroll="{ y: 388 }"
-			>
-				<template #bodyCell="{ column, record }">
-					<template v-if="column.dataIndex === 'qwProfit'">
-						<a-input-number
-							v-model:value="record[column.dataIndex]"
-							:min="0"
-							:max="1"
-							:step="0.01"
-						>
-						</a-input-number>
-					</template>
-					<span v-else>{{ record[column.dataIndex] }}</span>
-				</template>
-			</a-table>
-		</a-card>
 	</a-modal>
 </template>
 <script setup lang="ts">
 import { ref, watch, h } from 'vue'
-import { DeleteOutlined } from '@ant-design/icons-vue'
+import {
+	DeleteOutlined,
+	UploadOutlined,
+	FormOutlined,
+} from '@ant-design/icons-vue'
 import { v4 } from 'uuid'
 import { UniCloudSet, UniCloudGet } from '@/common/api/uni-cloud-api'
-import { isNumber, getStringAfter, insertNewline, Cache } from '@/common/utils'
+import {
+	Cache,
+	parseINI,
+	stringifyINI,
+	generateINIFile,
+	getInventoryData,
+	updateINIFile,
+} from '@/common/utils'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
+import type { CascaderProps } from 'ant-design-vue'
+import type { ShowSearchType } from 'ant-design-vue/es/cascader'
 import dayjs from 'dayjs'
 const date = dayjs().format('YYYY-MM-DD')
-const text = ref<string>('')
-const text1 = ref<string>('')
 const activeTab = ref<string>('待分配')
 const isCache = ref<boolean>(true)
 const isLogin = ref<boolean>(false)
 const config = ref<{
 	user: { mobile: string | number }
 	global: { discount: number; qwProfit: number }
-	detail: { [name: string]: any }
 	id?: string
 	districtModel: string
-	goodsTypeModel: string
 	districts: { label: string; value: string }[]
-	goodsType: { label: string; value: string }[]
 	defaultDistrict: string
 	addDistrict: () => void
-	addGoodsType: () => void
 	deleteDistrict: (i: number) => void
-	deleteGoodsType: (i: number) => void
 }>({
 	user: { mobile: '' },
 	global: {
 		discount: 0.01, // 默认让利1%
 		qwProfit: 0.3, // 期望利润率20%
 	},
-	detail: {}, // 单个商品详细配置
 	id: v4(),
 	districtModel: '',
-	goodsTypeModel: '',
 	defaultDistrict: '待分配',
 	districts: [
 		{
@@ -348,7 +280,6 @@ const config = ref<{
 			value: '待分配',
 		},
 	], // 所属区列表
-	goodsType: [],
 	addDistrict: () => {
 		if (config.value.districtModel) {
 			config.value.districts.push({
@@ -357,28 +288,31 @@ const config = ref<{
 			})
 		}
 	},
-	addGoodsType: () => {
-		if (config.value.goodsTypeModel) {
-			config.value.goodsType.push({
-				label: config.value.goodsTypeModel,
-				value: config.value.goodsTypeModel,
-			})
-		}
-	},
 	deleteDistrict: (i: number) => {
-		config.value.districts.splice(i, 1)
+		const dfp = goodsTable.value.rawData.map((item) => {
+			return {
+				...item,
+				district: '待分配',
+			}
+		})
+		let hasCache = Cache.get('StallGoodsInfo', config.value.user.mobile)
+		if (hasCache) {
+			const oldDfp = hasCache['待分配']
+			if (oldDfp) {
+				oldDfp.push(...dfp)
+				hasCache['待分配'] = oldDfp
+			} else {
+				hasCache['待分配'] = dfp
+			}
+		} else {
+			hasCache = {}
+			hasCache['待分配'] = dfp
+		}
+		const del = config.value.districts.splice(i, 1)
+		delete hasCache[del[0].value]
+		Cache.set('StallGoodsInfo', config.value.user.mobile, hasCache)
+		activeTab.value = '待分配'
 	},
-	deleteGoodsType: (i: number) => {
-		config.value.goodsType.splice(i, 1)
-	},
-})
-const goodsMap = ref<any>()
-const addGoodsModal = ref<{
-	visible: boolean
-	add: () => void
-}>({
-	visible: false,
-	add: () => {},
 })
 const setModal = ref<{
 	visible: boolean
@@ -406,9 +340,28 @@ const setModal = ref<{
 		data: [],
 	},
 })
+const select = ref<{
+	value: string[]
+	options: CascaderProps['options']
+	rawOptions: CascaderProps['options']
+	filter: ShowSearchType['filter']
+}>({
+	value: [],
+	options: [],
+	rawOptions: [],
+	filter: (inputValue, path) => {
+		return path.some(
+			(option) =>
+				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
+		)
+	},
+})
+const typeChecked = ref<any[]>([])
+const goodsType = ref<any[]>([])
 const goodsTable = ref<{
 	columns: any[]
 	data: any[]
+	rawData: any[]
 	remove: (i: number) => void
 }>({
 	columns: [
@@ -423,7 +376,6 @@ const goodsTable = ref<{
 		{
 			title: '属/技/等',
 			dataIndex: 'feature',
-			width: 288,
 		},
 		{
 			title: '市场价',
@@ -438,6 +390,9 @@ const goodsTable = ref<{
 		{
 			title: '预估摆摊价',
 			dataIndex: 'ygStallPrice',
+			sorter: (a: any, b: any) => b.ygStallPrice - a.ygStallPrice,
+			width: 118,
+			align: 'center',
 		},
 		{
 			title: '期望利润 ',
@@ -447,40 +402,56 @@ const goodsTable = ref<{
 		{
 			title: '预估收货价',
 			dataIndex: 'ygStockPrice',
+			sorter: (a: any, b: any) => b.ygStockPrice - a.ygStockPrice,
+			width: 118,
+			align: 'center',
+		},
+		{
+			title: '收统计',
+			dataIndex: 'collect',
+			sorter: (a: any, b: any) => b.collect - a.collect,
+			width: 98,
+		},
+		{
+			title: '卖统计',
+			dataIndex: 'sell',
+			sorter: (a: any, b: any) => b.sell - a.sell,
+			width: 98,
+		},
+		{
+			title: '配置',
+			dataIndex: 'isSet',
+			width: 68,
+			align: 'center',
 		},
 		{
 			title: '操作',
 			dataIndex: 'operate',
-			width: 88,
+			width: 68,
+			align: 'center',
 		},
 	],
 	data: [],
+	rawData: [],
 	remove: (i: number) => {
 		goodsTable.value.data.splice(i, 1)
 	},
 })
-const addForm = ref<{
-	name: string
-	featureModel: string[]
-	feature: string
-	type: string
-	district: string
-	marketPrice: number | string
-}>({
-	name: '',
-	feature: '',
-	featureModel: [],
-	type: '',
-	district: activeTab.value,
-	marketPrice: '',
-})
 watch(
-	goodsTable,
+	() => goodsTable.value.rawData,
 	() => {
 		if (isCache.value && config.value.user.mobile) {
-			const obj: any = {}
-			obj[activeTab.value] = goodsTable.value.data
-			Cache.set('StallGoodsInfo', config.value.user.mobile, obj)
+			let hasExist = Cache.get('StallGoodsInfo', config.value.user.mobile)
+			if (!hasExist) {
+				hasExist = {}
+			}
+			hasExist[activeTab.value] = goodsTable.value.rawData
+			Cache.set('StallGoodsInfo', config.value.user.mobile, hasExist)
+			if (typeChecked.value.length) {
+				select.value.options = select.value.rawOptions!.filter((so) =>
+					typeChecked.value.includes(so.type)
+				)
+			}
 		}
 	},
 	{ deep: true }
@@ -505,28 +476,27 @@ function init() {
 			whereKey: 'mobile',
 			whereValue: m,
 		}),
-	])
-		.then((res) => {
-			const configRes = res[0]
-			if (configRes.data.data && configRes.data.data.length) {
-				config.value = {
-					...config.value,
-					...configRes.data.data[0],
-				}
-				activeTab.value = config.value.defaultDistrict
-				addForm.value.district = activeTab.value
+	]).then((res) => {
+		const configRes = res[0]
+		if (configRes.data.data && configRes.data.data.length) {
+			config.value = {
+				...config.value,
+				...configRes.data.data[0],
 			}
-			const mapRes = res[1]
-			if (mapRes.data.data && mapRes.data.data.length) {
-				goodsMap.value = mapRes.data.data[0].goodsMap
-			}
-		})
-		.finally(() => {
-			const hasCache = Cache.get('StallGoodsInfo', m)
-			if (hasCache) {
-				goodsTable.value.data = hasCache[activeTab.value]
-			}
-		})
+			activeTab.value = config.value.defaultDistrict
+		}
+		const mapRes = res[1]
+		if (mapRes.data.data && mapRes.data.data.length) {
+			const goodsMap = mapRes.data.data[0].goodsMap
+			getInventoryData(goodsMap, m, activeTab.value).then((result) => {
+				goodsTable.value.data = result.data
+				goodsTable.value.rawData = goodsTable.value.data
+				goodsType.value = result.types
+				select.value.options = result.goodsOptions
+				select.value.rawOptions = select.value.options
+			})
+		}
+	})
 }
 function login() {
 	if (config.value.user.mobile) {
@@ -545,156 +515,107 @@ function upSet() {
 			defaultDistrict: config.value.defaultDistrict,
 			districts: config.value.districts,
 			global: config.value.global,
-			goodsType: config.value.goodsType,
 			user: config.value.user,
-			detail: config.value.detail,
 			mobile: config.value.user.mobile,
 			whereKey: 'mobile',
 			whereValue: config.value.user.mobile,
 		}).then(() => {
+			goodsTable.value.rawData.forEach((item) => {
+				singleJS(item)
+			})
 			message.success('设置成功！')
 		})
 	} else {
 		message.warning('登录后才能保存设置到服务器！')
 	}
 }
-function clean(type?: 1 | 2) {
-	const t = type && type === 2 ? text1.value : text.value
-	const fixText = insertNewline(t)
-	const rowArray = fixText.split('\n')
-	if (!rowArray.length) {
-		return false
+function singleJS(item: any) {
+	const discount = item.discount ? item.discount : config.value.global.discount
+	const qwProfit = item.qwProfit ? item.qwProfit : config.value.global.qwProfit
+	item.ygStallPrice = Number((item.marketPrice * (1 - discount)).toFixed(0))
+	if (item.ygStallPrice > 100000) {
+		item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
+	} else if (item.ygStallPrice > 10000) {
+		item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
 	}
-	const prices: number[] = []
-	rowArray.forEach((row) => {
-		if (isNumber(row)) {
-			prices.push(Number(row))
-		}
-	})
-	if (prices.length === 1) {
-		const item: any = {
-			key: v4(),
-			name: '',
-			feature: '',
-			featureModel: [],
-			type: '',
-			districts: activeTab.value,
-			marketPrice: prices[0],
-			zdf: '',
-			discount: config.value.global.discount,
-			ygStallPrice: '',
-			qwProfit: config.value.global.qwProfit,
-			ygStockPrice: '',
-		}
-		item.ygStallPrice = Number(
-			(item.marketPrice * (1 - item.discount)).toFixed(0)
-		)
-		if (item.ygStallPrice > 100000) {
-			item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
-		} else if (item.ygStallPrice > 10000) {
-			item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
-		}
-		item.ygStockPrice = Number(
-			(item.ygStallPrice / (1 + item.qwProfit)).toFixed(0)
-		)
-		if (item.ygStockPrice > 100000) {
-			item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
-		} else if (item.ygStockPrice > 10000) {
-			item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
-		}
-		rowArray.forEach((row, i) => {
-			if (i === 0) {
-				item.name = row
-			}
-			if (row.includes('：')) {
-				item.feature = getStringAfter(row, /：/)
-				item.featureModel.push(item.feature)
-			}
-		})
-		goodsTable.value.data.push(item)
-	} else if (prices.length > 1) {
-		const names: string[] = []
-		rowArray.forEach((row) => {
-			if (row !== '单价' && !isNumber(row)) {
-				names.push(row)
-			}
-		})
-		if (names.length === prices.length) {
-			names.forEach((name, i) => {
-				const item: any = {
-					key: v4(),
-					name,
-					feature: '',
-					featureModel: [],
-					type: '',
-					districts: activeTab.value,
-					marketPrice: prices[i],
-					zdf: '',
-					discount: config.value.global.discount,
-					ygStallPrice: '',
-					qwProfit: config.value.global.qwProfit,
-					ygStockPrice: '',
-				}
-				item.ygStallPrice = Number(
-					(item.marketPrice * (1 - item.discount)).toFixed(0)
-				)
-				if (item.ygStallPrice > 100000) {
-					item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
-				} else if (item.ygStallPrice > 10000) {
-					item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
-				}
-				item.ygStockPrice = Number(
-					(item.ygStallPrice / (1 + item.qwProfit)).toFixed(0)
-				)
-				if (item.ygStockPrice > 100000) {
-					item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
-				} else if (item.ygStockPrice > 10000) {
-					item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
-				}
-				goodsTable.value.data.push(item)
-			})
-		}
-	}
-	if (type !== 2) {
-		text1.value = text.value
-		text.value = ''
+	item.ygStockPrice = Number((item.ygStallPrice / (1 + qwProfit)).toFixed(0))
+	if (item.ygStockPrice > 100000) {
+		item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
+	} else if (item.ygStockPrice > 10000) {
+		item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
 	}
 }
-function cleanCache() {
-	Cache.remove('StallGoodsInfo')
-	Cache.remove('Login')
+function cleanCache(type?: string) {
+	if (type === 'loginOut') {
+		Cache.remove('Login')
+	} else {
+		Cache.remove('StallGoodsInfo', config.value.user.mobile, activeTab.value)
+	}
 }
-function autoPaste() {
-	navigator.clipboard
-		.readText()
-		.then((t) => {
-			if (t) {
-				text.value = t
-				clean()
+function selectChange() {
+	if (select.value.value) {
+		const key = select.value.value.join('_')
+		goodsTable.value.data = goodsTable.value.rawData.filter((item) => {
+			const { name, feature } = item
+			let _id = name
+			if (feature) {
+				_id += '_' + feature
 			}
+			return _id === key
 		})
-		.catch((error) => {
-			console.error('无法粘贴文本：', error)
-		})
+	} else {
+		goodsTable.value.data = goodsTable.value.rawData
+	}
+}
+function typeFilter(checked: any[]) {
+	if (checked.length) {
+		goodsTable.value.data = goodsTable.value.rawData.filter((item: any) =>
+			checked.includes(item.type)
+		)
+		select.value.options = select.value.rawOptions!.filter((so) =>
+			checked.includes(so.type)
+		)
+	} else {
+		goodsTable.value.data = goodsTable.value.rawData
+		select.value.options = select.value.rawOptions
+	}
 }
 function save() {
 	if (!config.value.user.mobile) {
 		message.error('请先登录！')
 		return false
 	}
-	if (goodsTable.value.data.length) {
+	if (goodsTable.value.rawData.length) {
 		UniCloudSet({
 			_tableName: 'stall-analysis',
 			date,
-			goods: goodsTable.value.data,
+			goods: goodsTable.value.rawData,
 			mobile: config.value.user.mobile,
-		}).then((res) => {
-			console.log(res)
+			district: activeTab.value,
+			id: config.value.user.mobile + '_' + activeTab.value,
+		}).then(() => {
 			message.success('保存成功')
 		})
-	} else {
-		message.error('请先分析再保存!')
 	}
+}
+function fileChange(res: any) {
+	const reader = new FileReader()
+	reader.onload = function (event: any) {
+		const fileContent = event.target.result
+		const config = parseINI(fileContent)
+		updateINIFile(config['qiyunlou'], goodsTable.value.rawData)
+		const modifiedContent = stringifyINI(config)
+		generateINIFile(modifiedContent, 'test.ini')
+	}
+	reader.onerror = function (event) {
+		message.error('读取配置失败!')
+		console.log(event)
+	}
+	// 读取文件内容
+	reader.readAsText(res.file, 'GBK')
+}
+function hanHua() {
+	generateINIFile('喊话喊话', '喊话test.txt')
 }
 </script>
 <style scoped lang="scss">
@@ -702,9 +623,16 @@ function save() {
 	:deep(td) {
 		padding: 8px;
 	}
+	:deep(
+			.ant-table-tbody > tr.ant-table-row:hover > td,
+			.ant-table-tbody > tr > td.ant-table-cell-row-hover
+		) {
+		background: #e4e7ed;
+		cursor: pointer;
+	}
 }
 .tab {
-	height: calc(100% - 222px);
+	height: calc(100% - 212px);
 	:deep(.ant-tabs-content) {
 		height: 100%;
 	}

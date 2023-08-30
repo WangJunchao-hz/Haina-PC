@@ -66,25 +66,6 @@ const menus = ref<MenuItem[]>([
 		key: 'inventory',
 	},
 	{
-		icon: RadarChartOutlined,
-		label: '摊位数据采集',
-		key: 'priceAnalysis',
-		// children: [
-		// 	{
-		// 		label: '情绪统计',
-		// 		key: 'emotionStatistics',
-		// 	},
-		// 	{
-		// 		label: '题材统计',
-		// 		key: 'themeStatistics',
-		// 	},
-		// 	{
-		// 		label: '趋势统计',
-		// 		key: 'trendStatistics',
-		// 	},
-		// ],
-	},
-	{
 		icon: AreaChartOutlined,
 		label: '数据映射管理',
 		key: 'dataMap',

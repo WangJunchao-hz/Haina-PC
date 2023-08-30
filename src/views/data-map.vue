@@ -2,67 +2,47 @@
 	<a-row>
 		<a-col :span="12">
 			<a-space>
+				<a-button type="primary" @click="add()"> 新增商品 </a-button>
 				<a-button type="primary" @click="save()"> 保存 </a-button>
-				<a-select
-					placeholder="快速搜索"
-					v-model:value="filter.value"
-					show-search
-					style="width: 288px"
-					:options="filter.options"
-					:filter-option="(input: string, option: any) => {
-  return option.value.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-}"
-					@change="doFilter"
-				></a-select>
+				<a-cascader
+					style="width: 188px"
+					v-model:value="select.value"
+					:options="select.options"
+					:show-search="{ filter: select.filter }"
+					placeholder="快速筛选"
+					expandTrigger="hover"
+					@change="selectChange"
+				/>
 			</a-space>
 		</a-col>
 		<a-col :span="12"> </a-col>
 	</a-row>
+	<a-card title="类型筛选" size="small">
+		<a-checkbox-group
+			v-model:value="typeChecked"
+			:options="goodsType"
+			@change="typeFilter"
+		>
+		</a-checkbox-group>
+	</a-card>
 	<a-table
 		class="table"
 		:columns="table.columns"
 		:data-source="table.data"
 		:scroll="{ y: 'calc(100% - 55px)' }"
 		:pagination="false"
-		:expand-column-width="58"
-		:expandedRowKeys="expandRowKeys"
-		@expand="expand"
 	>
 		<template #bodyCell="{ column, record, index }">
 			<template v-if="column.dataIndex === 'operate'">
 				<a-space>
-					<a-button type="primary" size="small" @click="add(index)">
-						新增特征
-					</a-button>
-					<a-button type="primary" size="small" @click="add()">
-						新增商品
-					</a-button>
 					<a-button type="primary" size="small" danger @click="remove(index)">
 						删除
 					</a-button>
 				</a-space>
 			</template>
 			<template v-else>
-				<a-input
-					style="width: 288px"
-					v-model:value="record[column.dataIndex]"
-				/>
+				<a-input style="width: 100%" v-model:value="record[column.dataIndex]" />
 			</template>
-		</template>
-		<template #expandedRowRender="{ record, index }">
-			<a-space style="margin-left: 58px" wrap>
-				<a-space v-for="(opt, i) in record.options">
-					<a-input style="width: 288px" v-model:value="opt.value" />
-					<a-button
-						type="primary"
-						size="small"
-						danger
-						@click="remove(index, i)"
-					>
-						删除
-					</a-button>
-				</a-space>
-			</a-space>
 		</template>
 	</a-table>
 </template>
@@ -73,54 +53,123 @@ import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
 import { UniCloudSet, UniCloudGet } from '@/common/api/uni-cloud-api'
 import { Cache } from '@/common/utils'
-const filter = ref<{
-	value: string
-	options: {
-		label: string
-		value: string
-	}[]
+import type { CascaderProps } from 'ant-design-vue'
+import type { ShowSearchType } from 'ant-design-vue/es/cascader'
+const goodsType = ref<any[]>([])
+const typeChecked = ref<any[]>([])
+const tpl = {
+	key: v4(),
+	type: '',
+	name: '',
+	feature: '',
+	config: '',
+}
+const select = ref<{
+	value: string[]
+	options: CascaderProps['options']
+	rawOptions: CascaderProps['options']
+	filter: ShowSearchType['filter']
 }>({
-	value: '',
+	value: [],
 	options: [],
+	rawOptions: [],
+	filter: (inputValue, path) => {
+		return path.some(
+			(option) =>
+				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
+		)
+	},
 })
-const table = ref<{ columns: any[]; data: any[] }>({
+const table = ref<{ columns: any[]; data: any[]; rawData: any[] }>({
 	columns: [
 		{
-			title: '名称',
-			dataIndex: 'value',
+			title: '类型',
+			dataIndex: 'type',
 			sorter: (a: any, b: any) =>
-				a.value.localeCompare(b.value, 'zh-Hans-CN', {
+				a.type.localeCompare(b.type, 'zh-Hans-CN', {
 					sensitivity: 'accent',
 				}),
+		},
+		{
+			title: '名称',
+			dataIndex: 'name',
+		},
+		{
+			title: '特征',
+			dataIndex: 'feature',
+		},
+		{
+			title: '配置字段',
+			dataIndex: 'config',
 		},
 		{
 			title: '操作',
 			dataIndex: 'operate',
 		},
 	],
-	data: [
-		{
-			key: v4(),
-			label: '',
-			value: '',
-			options: [],
-		},
-	],
+	data: [],
+	rawData: [],
 })
 watch(
-	table,
+	() => table.value.rawData,
 	() => {
-		if (table.value.data.length !== filter.value.options.length) {
-			filter.value.options = table.value.data
-				.filter((item) => item.value)
-				.map((item) => {
-					return { label: item.value, value: item.value }
-				})
+		if (table.value.rawData.length) {
+			const typeMap: any = {}
+			const map: any = {}
+			goodsType.value = []
+			table.value.rawData.forEach((item) => {
+				const { type, name, feature } = item
+				if (type) {
+					const hasType = typeMap[type]
+					if (hasType) {
+						hasType.num += 1
+						hasType.label = hasType.value + `(${hasType.num})`
+					} else {
+						typeMap[type] = {
+							label: type + '(1)',
+							value: type,
+							num: 1,
+						}
+					}
+				}
+				if (name) {
+					const has = map[name]
+					if (has) {
+						if (feature) {
+							has.children.push({
+								label: feature,
+								value: feature,
+							})
+						}
+					} else {
+						const single: any = {
+							label: name,
+							value: name,
+							type,
+							children: [],
+						}
+						if (feature) {
+							single.children.push({
+								label: feature,
+								value: feature,
+							})
+						}
+						map[name] = single
+					}
+				}
+			})
+			goodsType.value = Object.keys(typeMap).map((key) => typeMap[key])
+			select.value.options = Object.keys(map).map((key) => map[key])
+			select.value.rawOptions = select.value.options
+			if (typeChecked.value.length) {
+				select.value.options = select.value.rawOptions.filter((so) =>
+					typeChecked.value.includes(so.type)
+				)
+			}
 		}
 	},
 	{ deep: true }
 )
-const expandRowKeys = ref<string[]>([])
 const mobile = ref<string | number>('')
 init()
 function init() {
@@ -138,90 +187,67 @@ function init() {
 	}).then((res) => {
 		if (res.data && res.data.data.length) {
 			const goodsMap = res.data.data[0].goodsMap
-			table.value.data = Object.keys(goodsMap).map((key) => goodsMap[key])
+			table.value.data = goodsMap
+			table.value.rawData = table.value.data
 		}
 	})
 }
-function doFilter() {
-	if (filter.value.value) {
-		const i = table.value.data.findIndex(
-			(item) => item.value === filter.value.value
+function selectChange() {
+	if (select.value.value) {
+		const key = select.value.value.join('_')
+		table.value.data = table.value.rawData.filter((item) => {
+			const { name, feature } = item
+			let _id = name
+			if (feature) {
+				_id += '_' + feature
+			}
+			return _id === key
+		})
+	} else {
+		table.value.data = table.value.rawData
+	}
+}
+function typeFilter(checked: any[]) {
+	if (checked.length) {
+		table.value.data = table.value.rawData.filter((item: any) =>
+			checked.includes(item.type)
 		)
-		if (i !== -1) {
-			const target = table.value.data.splice(i, 1)
-			table.value.data.unshift(target[0])
-		}
-	}
-}
-function add(i?: number) {
-	if (i !== undefined) {
-		table.value.data[i].options.push({
-			label: '',
-			value: '',
-		})
-		expandRowKeys.value.push(table.value.data[i].key)
+		select.value.options = select.value.rawOptions!.filter((so) =>
+			checked.includes(so.type)
+		)
 	} else {
-		table.value.data.push({
-			key: v4(),
-			label: '',
-			value: '',
-			options: [],
-		})
+		table.value.data = table.value.rawData
+		select.value.options = select.value.rawOptions
 	}
 }
-function expand(expanded: any, record: any) {
-	if (expanded) {
-		expandRowKeys.value.push(record.key)
-	} else {
-		const i = expandRowKeys.value.findIndex((key) => key === record.key)
-		if (i !== -1) {
-			expandRowKeys.value.splice(i, 1)
-		}
-	}
+function add() {
+	table.value.data.unshift({
+		...tpl,
+		key: v4(),
+	})
+	table.value.rawData = table.value.data
 }
-function remove(i: number, subI?: number) {
-	if (table.value.data.length <= 1 && subI === undefined) {
-		message.error('至少保留一项数据！')
-	} else if (subI !== undefined) {
-		table.value.data[i].options.splice(subI, 1)
-	} else if (i !== undefined) {
-		table.value.data.splice(i, 1)
+function remove(i: number) {
+	const del: any = table.value.data.splice(i, 1)
+	const rawI = table.value.rawData.findIndex((item) => item.key === del.key)
+	if (rawI !== -1) {
+		table.value.rawData.splice(rawI, 1)
 	}
 }
 function save() {
-	const map: any = {}
-	table.value.data.forEach((item) => {
-		if (item.value) {
-			item.label = item.value
-			item.options = item.options
-				.filter((opt: any) => opt.value)
-				.map((opt: any) => {
-					opt.label = opt.value
-					return opt
-				})
-				.sort((a: any, b: any) => {
-					return a.value.localeCompare(b.value, 'zh-Hans-CN', {
-						sensitivity: 'accent',
-					})
-				})
-			map[item.value] = item
-		}
+	UniCloudSet({
+		_tableName: 'goods-map',
+		goodsMap: table.value.rawData,
+		mobile: mobile.value,
+		whereKey: 'mobile',
+		whereValue: mobile.value,
+	}).then(() => {
+		message.success('保存成功')
 	})
-	if (Object.keys(map).length) {
-		UniCloudSet({
-			_tableName: 'goods-map',
-			goodsMap: map,
-			mobile: mobile.value,
-			whereKey: 'mobile',
-			whereValue: mobile.value,
-		}).then(() => {
-			message.success('保存成功')
-		})
-	}
 }
 </script>
 <style lang="scss" scoped>
 .table {
-	height: calc(100% - 32px);
+	height: calc(100% - 118px);
 }
 </style>

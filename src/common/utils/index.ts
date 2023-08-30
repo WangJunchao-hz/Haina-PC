@@ -1,5 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs'
 import { GetHoliday } from '@/common/api/third-party-api'
+import { UniCloudGet } from '@/common/api/uni-cloud-api'
 export const Cache = {
 	set(type: string, key: string | number, value: any) {
 		let newValue: any = {}
@@ -20,12 +21,16 @@ export const Cache = {
 		}
 		return res
 	},
-	remove(type: string, key?: string | number) {
+	remove(type: string, key?: string | number, subKey?: string | number) {
 		const value = localStorage.getItem(type)
 		if (value && key) {
 			const data = JSON.parse(value)
-			delete data[key]
-			localStorage.setItem(type, data)
+			if (subKey && data[key]) {
+				delete data[key][subKey]
+			} else {
+				delete data[key]
+			}
+			localStorage.setItem(type, JSON.stringify(data))
 		} else if (value) {
 			localStorage.removeItem(type)
 		}
@@ -1547,4 +1552,179 @@ export function getStringAfter(string: string, pattern: any) {
 export function insertNewline(string: string) {
 	const pattern = /([\u4e00-\u9fa5]+)(\d+)/g
 	return string.replace(pattern, '$1\n$2')
+}
+// 解析 INI 文件内容为 JavaScript 对象
+export function parseINI(content: string) {
+	const lines = content.split('\n')
+	let currentSection = null
+	const config: any = {}
+
+	for (let line of lines) {
+		line = line.trim()
+
+		if (line === '' || line.startsWith(';')) {
+			continue
+		} else if (line.startsWith('[') && line.endsWith(']')) {
+			currentSection = line.slice(1, -1)
+			config[currentSection] = {}
+		} else if (currentSection && line.includes('=')) {
+			const [key, value] = line.split('=').map((item) => item.trim())
+			config[currentSection][key] = value
+		}
+	}
+
+	return config
+}
+
+// 将 JavaScript 对象转换为 INI 文件格式
+export function stringifyINI(config: any) {
+	let content = ''
+
+	for (const section in config) {
+		content += `[${section}]\n`
+
+		for (const key in config[section]) {
+			const value = config[section][key]
+			content += `${key} = ${value}\n`
+		}
+
+		content += '\n'
+	}
+
+	return content
+}
+export function generateINIFile(content: any, name: string) {
+	// 创建Blob对象
+	const blob = new Blob([content], { type: 'text/plain' })
+
+	// 创建URL对象
+	const url = URL.createObjectURL(blob)
+
+	// 创建a标签
+	const link = document.createElement('a')
+	link.href = url
+	link.download = name // 指定下载文件的文件名
+
+	// 触发点击事件进行下载
+	link.click()
+
+	// 释放URL对象
+	URL.revokeObjectURL(url)
+}
+
+export async function getInventoryData(
+	map: any[],
+	mobile: string | number,
+	activeTab: string
+) {
+	let res: any = {}
+	const hasCache = Cache.get('StallGoodsInfo', mobile)
+	let needGet = false
+	if (hasCache) {
+		if (!hasCache[activeTab]) {
+			needGet = true
+		} else {
+			res = handleData(map, hasCache[activeTab])
+		}
+	} else {
+		needGet = true
+	}
+	if (needGet) {
+		const r = await UniCloudGet({
+			_tableName: 'stall-analysis',
+			whereKey: 'id',
+			whereValue: mobile + '_' + activeTab,
+		})
+		if (r.data && r.data.data && r.data.data.length) {
+			res = handleData(map, r.data.data[0].goods)
+		}
+	}
+	function handleData(map: any[], data: any[]) {
+		const typeMap: any = {}
+		const goodsMap: any = {}
+		const newData = map.map((item) => {
+			const { key, type, name, feature } = item
+			if (type) {
+				const hasType = typeMap[type]
+				if (hasType) {
+					hasType.num += 1
+					hasType.label = hasType.value + `(${hasType.num})`
+				} else {
+					typeMap[type] = {
+						label: type + '(1)',
+						value: type,
+						num: 1,
+					}
+				}
+			}
+			if (name) {
+				const has = goodsMap[name]
+				if (has) {
+					if (feature) {
+						has.children.push({
+							label: feature,
+							value: feature,
+						})
+					}
+				} else {
+					const single: any = {
+						label: name,
+						value: name,
+						type,
+						children: [],
+					}
+					if (feature) {
+						single.children.push({
+							label: feature,
+							value: feature,
+						})
+					}
+					goodsMap[name] = single
+				}
+			}
+			const tpl = {
+				marketPrice: null,
+				discount: null,
+				ygStallPrice: null,
+				qwProfit: null,
+				ygStockPrice: null,
+				collect: null,
+				sell: null,
+				isSet: false,
+			}
+			let newItem = {
+				...item,
+				...tpl,
+			}
+			const find = data.find((d) => d.key === key)
+			if (find) {
+				newItem = {
+					...tpl,
+					...find,
+					...item,
+				}
+			}
+			return newItem
+		})
+		return {
+			data: newData,
+			types: Object.keys(typeMap).map((key) => typeMap[key]),
+			goodsOptions: Object.keys(goodsMap).map((key) => goodsMap[key]),
+		}
+	}
+	return res
+}
+export function updateINIFile(config: any, data: any[]) {
+	const keys = Object.keys(config)
+	data.forEach((item) => {
+		const { isSet, config, ygStockPrice } = item
+		if (isSet && config) {
+			let key: any = keys.find((k) => k.includes(config + '.Text'))
+			console.log(key, config + '.Text')
+			if (key) {
+				key = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+				config[key] = ygStockPrice
+			}
+		}
+	})
 }
