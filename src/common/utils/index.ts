@@ -1,6 +1,7 @@
 import dayjs, { Dayjs } from 'dayjs'
 import { GetHoliday } from '@/common/api/third-party-api'
 import { UniCloudGet } from '@/common/api/uni-cloud-api'
+import { TextEncoder, TextDecoder } from 'text-encoding'
 export const Cache = {
 	set(type: string, key: string | number, value: any) {
 		let newValue: any = {}
@@ -1555,7 +1556,7 @@ export function insertNewline(string: string) {
 }
 // 解析 INI 文件内容为 JavaScript 对象
 export function parseINI(content: string) {
-	const lines = content.split('\n')
+	const lines = content.split('\r\n')
 	let currentSection = null
 	const config: any = {}
 
@@ -1581,21 +1582,29 @@ export function stringifyINI(config: any) {
 	let content = ''
 
 	for (const section in config) {
-		content += `[${section}]\n`
+		content += `[${section}]\r\n`
 
 		for (const key in config[section]) {
 			const value = config[section][key]
-			content += `${key} = ${value}\n`
+			content += `${key} = ${value}\r\n`
 		}
 
-		content += '\n'
+		content += '\r\n'
 	}
 
 	return content
 }
 export function generateINIFile(content: any, name: string) {
+	console.log(content)
+
+	const encoder = new TextEncoder('GBK', {
+		NONSTANDARD_allowLegacyEncoding: true,
+	})
+	const uint8Array = encoder.encode(content)
 	// 创建Blob对象
-	const blob = new Blob([content], { type: 'text/plain' })
+	const blob = new Blob([uint8Array], {
+		type: 'text/plain;charset=GBK',
+	})
 
 	// 创建URL对象
 	const url = URL.createObjectURL(blob)
@@ -1714,16 +1723,14 @@ export async function getInventoryData(
 	}
 	return res
 }
-export function updateINIFile(config: any, data: any[]) {
-	const keys = Object.keys(config)
+export function updateINIFile(iniObj: any, data: any[]) {
+	const keys = Object.keys(iniObj)
 	data.forEach((item) => {
 		const { isSet, config, ygStockPrice } = item
 		if (isSet && config) {
 			let key: any = keys.find((k) => k.includes(config + '.Text'))
-			console.log(key, config + '.Text')
 			if (key) {
-				key = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-				config[key] = ygStockPrice
+				iniObj[key] = ygStockPrice
 			}
 		}
 	})
