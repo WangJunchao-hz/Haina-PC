@@ -1595,8 +1595,6 @@ export function stringifyINI(config: any) {
 	return content
 }
 export function generateINIFile(content: any, name: string) {
-	console.log(content)
-
 	const encoder = new TextEncoder('GBK', {
 		NONSTANDARD_allowLegacyEncoding: true,
 	})
@@ -1734,4 +1732,90 @@ export function updateINIFile(iniObj: any, data: any[]) {
 			}
 		}
 	})
+}
+export function handleHanHuaTpl(tpl: string, data: any[]) {
+	const goodsPriceMap: any = {}
+	const goodsTypeRange: any = {}
+	data.forEach((item) => {
+		const { name, type, feature, ygStockPrice } = item
+		const key = feature ? name + '_' + feature : name
+		goodsPriceMap[key] = ygStockPrice
+		const has = goodsTypeRange[type]
+		if (has) {
+			if (has.min > ygStockPrice) {
+				has.min = ygStockPrice
+			}
+			if (has.max < ygStockPrice) {
+				has.max = ygStockPrice
+			}
+		} else {
+			goodsTypeRange[type] = {
+				min: ygStockPrice,
+				max: ygStockPrice,
+			}
+		}
+	})
+	// console.log(goodsPriceMap, goodsTypeRange)
+	const regex = /\$(\w+)\{([^}]+)\}/g
+	let matches = [...tpl.matchAll(regex)]
+	let variables = matches.map((match) => [match[1], match[2]])
+	const replace: any = {}
+	const errorKey: string[] = []
+	variables.forEach((v) => {
+		if (v.length === 2) {
+			const gz = v[0]
+			const key = v[1]
+			const str = '$' + gz + '{' + key + '}'
+			switch (gz) {
+				case 'n':
+				case 'n_f':
+					if (goodsPriceMap[key] !== undefined) {
+						replace[str] = coverPriceW(goodsPriceMap[key])
+					} else {
+						errorKey.push(key)
+					}
+					break
+				case 't_range':
+					if (goodsTypeRange[key]) {
+						const min = coverPriceW(goodsTypeRange[key].min)
+						const max = coverPriceW(goodsTypeRange[key].max)
+						replace[str] = min + '-' + max
+					} else {
+						errorKey.push(key)
+					}
+					break
+				case 't_min':
+					if (goodsTypeRange[key]) {
+						replace[str] = coverPriceW(goodsTypeRange[key].min)
+					} else {
+						errorKey.push(key)
+					}
+					break
+				case 't_max':
+					if (goodsTypeRange[key]) {
+						replace[str] = coverPriceW(goodsTypeRange[key].max)
+					} else {
+						errorKey.push(key)
+					}
+					break
+			}
+		}
+	})
+	if (errorKey.length) {
+		console.warn(
+			'以下商品未识别成功【' +
+				errorKey.join('、') +
+				'】请核对修改后再重新尝试！'
+		)
+	}
+	let text = tpl
+	Object.keys(replace).forEach((key) => {
+		text = text.replace(key, replace[key])
+	})
+	// console.log(replace, text)
+	return text
+}
+
+function coverPriceW(price: number | null) {
+	return price ? (price / 10000).toFixed(1) + 'W' : ''
 }

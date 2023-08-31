@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@ant-design/icons-vue": "^6.1.0",
 		"@types/uuid": "^9.0.2",
+		"@vueuse/core": "^10.4.1",
 		"ant-design-vue": "^3.2.20",
 		"axios": "^1.4.0",
 		"echarts": "^5.4.2",

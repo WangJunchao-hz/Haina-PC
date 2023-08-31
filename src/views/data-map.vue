@@ -221,11 +221,12 @@ function typeFilter(checked: any[]) {
 	}
 }
 function add() {
-	table.value.data.unshift({
+	const item = {
 		...tpl,
 		key: v4(),
-	})
-	table.value.rawData = table.value.data
+	}
+	table.value.data.unshift(item)
+	table.value.rawData.unshift(item)
 }
 function remove(i: number) {
 	const del: any = table.value.data.splice(i, 1)
@@ -242,12 +243,13 @@ function save() {
 		whereKey: 'mobile',
 		whereValue: mobile.value,
 	}).then(() => {
+		Cache.set('Goods-Map', mobile.value, table.value.rawData)
 		message.success('保存成功')
 	})
 }
 </script>
 <style lang="scss" scoped>
 .table {
-	height: calc(100% - 118px);
+	height: calc(100% - 140px);
 }
 </style>

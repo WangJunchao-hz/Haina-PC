@@ -55,7 +55,7 @@
 			</div>
 		</a-col>
 	</a-row>
-	<div style="height: calc(100% - 186px)">
+	<div style="height: calc(100% - 208px)">
 		<a-tabs v-model:activeKey="activeTab" style="height: 100%">
 			<a-tab-pane key="1" tab="统计" style="height: 100%">
 				<a-table
@@ -224,6 +224,13 @@
 					</template>
 				</a-table>
 			</a-card>
+			<a-card title="喊话模板" size="small">
+				<a-textarea
+					v-model:value="config.hanhuaTpl"
+					placeholder="Basic usage"
+					:rows="8"
+				/>
+			</a-card>
 		</a-modal>
 	</div>
 </template>
@@ -242,6 +249,7 @@ const config = ref<{
 	global: { discount: number; qwProfit: number }
 	detail: { [name: string]: any }
 	id?: string
+	hanhuaTpl: string
 }>({
 	user: { mobile: '' },
 	global: {
@@ -250,6 +258,7 @@ const config = ref<{
 	},
 	detail: {}, // 单个商品详细配置
 	id: v4(),
+	hanhuaTpl: '',
 })
 const goodsMap = ref<{
 	[name: string]: {

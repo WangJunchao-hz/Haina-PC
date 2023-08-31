@@ -46,6 +46,7 @@
 				<FormOutlined></FormOutlined>
 				生成喊话
 			</a-button>
+			<a-button @click="hhModal.visible = true"> 喊话记录 </a-button>
 		</a-space>
 	</a-card>
 	<a-card title="类型筛选" size="small">
@@ -228,10 +229,50 @@
 				</a-radio-group>
 			</a-space>
 		</a-card>
+		<a-card title="喊话模板" size="small">
+			<a-textarea
+				v-model:value="config.hanhuaTpl"
+				placeholder="n=名称，f=特征，t=类型，range=价格范围，min=最小值，max=最大值；自由组合，如：$t_n_f{普通兽决_魔兽要诀_夜战}表示取夜战的收货价"
+				:rows="8"
+			/>
+		</a-card>
+	</a-modal>
+	<a-modal
+		v-model:visible="hhModal.visible"
+		title="喊话生成记录"
+		:width="888"
+		@ok="hhModal.visible = false"
+	>
+		<a-list
+			class="list"
+			size="small"
+			bordered
+			:data-source="hhModal.hhRecord"
+			item-layout="horizontal"
+		>
+			<template #renderItem="{ item, index }">
+				<a-list-item>
+					<div @click="copyTxt(item)">（{{ index + 1 }}）{{ item }}</div>
+					<template #actions>
+						<a-button type="primary" size="small" @click="copyTxt(item)">
+							复制
+						</a-button>
+						<a-button
+							type="primary"
+							size="small"
+							danger
+							@click="hhModal.remove(index)"
+							>删除</a-button
+						>
+					</template>
+				</a-list-item>
+			</template>
+		</a-list>
 	</a-modal>
 </template>
 <script setup lang="ts">
 import { ref, watch, h } from 'vue'
+import { useClipboard } from '@vueuse/core'
 import {
 	DeleteOutlined,
 	UploadOutlined,
@@ -246,6 +287,7 @@ import {
 	generateINIFile,
 	getInventoryData,
 	updateINIFile,
+	handleHanHuaTpl,
 } from '@/common/utils'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
@@ -265,6 +307,7 @@ const config = ref<{
 	defaultDistrict: string
 	addDistrict: () => void
 	deleteDistrict: (i: number) => void
+	hanhuaTpl: string
 }>({
 	user: { mobile: '' },
 	global: {
@@ -272,6 +315,13 @@ const config = ref<{
 		qwProfit: 0.3, // 期望利润率20%
 	},
 	id: v4(),
+	hanhuaTpl:
+		'#Y熊猫长安城天台' +
+		'【杂货】强化$n{青龙石}树$n{摇钱树苗}符石$n_f{符石_1级}起C6$n{超级金柳露}c6$n{金柳露}如意丹$t_range{如意丹}' +
+		'【宝石】黑$n_f{黑宝石_1级}星辉$n_f{星辉石_1级}舍$n_f{舍利子_1级}玛$n_f{红玛瑙_1级}太$n_f{太阳石_1级}月$n_f{月亮石_1级}光$n_f{光芒石_1级}' +
+		'【珍珠】60珍$n_f{珍珠_60级}70珍$n_f{珍珠_70级}80珍$n_f{珍珠_80级}90珍$n_f{珍珠_90级}100珍$n_f{珍珠_100级}110珍$n_f{珍珠_110级}120珍$n_f{珍珠_120级}130珍$n_f{珍珠_130级}' +
+		'【内丹】低丹$t_range{低内丹}高丹$t_range{高内丹}' +
+		'【兽决】普兽$t_range{普通兽诀}高兽$t_range{高级兽诀}#46',
 	districtModel: '',
 	defaultDistrict: '待分配',
 	districts: [
@@ -312,6 +362,17 @@ const config = ref<{
 		delete hasCache[del[0].value]
 		Cache.set('StallGoodsInfo', config.value.user.mobile, hasCache)
 		activeTab.value = '待分配'
+	},
+})
+const hhModal = ref<{
+	visible: boolean
+	hhRecord: string[]
+	remove: (i: number) => void
+}>({
+	visible: false,
+	hhRecord: [],
+	remove: (i) => {
+		hhModal.value.hhRecord.splice(i, 1)
 	},
 })
 const setModal = ref<{
@@ -465,18 +526,24 @@ function init() {
 		config.value.user.mobile = m
 		isLogin.value = true
 	}
-	Promise.all([
+	const req: any = [
 		UniCloudGet({
 			_tableName: 'stall-config',
 			whereKey: 'mobile',
 			whereValue: m,
 		}),
-		UniCloudGet({
-			_tableName: 'goods-map',
-			whereKey: 'mobile',
-			whereValue: m,
-		}),
-	]).then((res) => {
+	]
+	const hasGoodsMap = Cache.get('Goods-Map', m)
+	if (!hasGoodsMap) {
+		req.push(
+			UniCloudGet({
+				_tableName: 'goods-map',
+				whereKey: 'mobile',
+				whereValue: m,
+			})
+		)
+	}
+	Promise.all(req).then((res) => {
 		const configRes = res[0]
 		if (configRes.data.data && configRes.data.data.length) {
 			config.value = {
@@ -485,9 +552,14 @@ function init() {
 			}
 			activeTab.value = config.value.defaultDistrict
 		}
+		let goodsMap = null
 		const mapRes = res[1]
-		if (mapRes.data.data && mapRes.data.data.length) {
-			const goodsMap = mapRes.data.data[0].goodsMap
+		if (mapRes && mapRes.data.data && mapRes.data.data.length) {
+			goodsMap = mapRes.data.data[0].goodsMap
+		} else if (hasGoodsMap) {
+			goodsMap = hasGoodsMap
+		}
+		if (goodsMap) {
 			getInventoryData(goodsMap, m, activeTab.value).then((result) => {
 				goodsTable.value.data = result.data
 				goodsTable.value.rawData = goodsTable.value.data
@@ -497,6 +569,10 @@ function init() {
 			})
 		}
 	})
+	const hhR = Cache.get('HanHua-Record', m)
+	if (hhR) {
+		hhModal.value.hhRecord = hhR
+	}
 }
 function login() {
 	if (config.value.user.mobile) {
@@ -615,7 +691,29 @@ function fileChange(res: any) {
 	reader.readAsText(res.file, 'GBK')
 }
 function hanHua() {
-	generateINIFile('喊话喊话', '喊话test.txt')
+	if (config.value.hanhuaTpl) {
+		const text = handleHanHuaTpl(
+			config.value.hanhuaTpl,
+			goodsTable.value.rawData
+		)
+		const hhRecord = hhModal.value.hhRecord
+		if (hhRecord.length < 10) {
+			hhRecord.unshift(text)
+		} else {
+			hhRecord.unshift(text)
+			hhRecord.splice(hhRecord.length - 1, 1)
+		}
+		Cache.set('HanHua-Record', config.value.user.mobile, hhRecord)
+		hhModal.value.visible = true
+	} else {
+		message.error('请先设置喊话模板！')
+	}
+}
+function copyTxt(txt: string) {
+	const { copy } = useClipboard()
+	copy(txt).then((res) => {
+		message.success('复制成功！')
+	})
 }
 </script>
 <style scoped lang="scss">
@@ -632,7 +730,7 @@ function hanHua() {
 	}
 }
 .tab {
-	height: calc(100% - 212px);
+	height: calc(100% - 180px);
 	:deep(.ant-tabs-content) {
 		height: 100%;
 	}
@@ -641,5 +739,9 @@ function hanHua() {
 	width: 18px;
 	height: 18px;
 	vertical-align: -2px;
+}
+.list {
+	max-height: 550px;
+	overflow: auto;
 }
 </style>
