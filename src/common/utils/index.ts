@@ -1742,20 +1742,30 @@ export function handleHanHuaTpl(tpl: string, data: any[]) {
 		goodsPriceMap[key] = ygStockPrice
 		const has = goodsTypeRange[type]
 		if (has) {
-			if (has.min > ygStockPrice) {
-				has.min = ygStockPrice
-			}
-			if (has.max < ygStockPrice) {
-				has.max = ygStockPrice
+			if (ygStockPrice) {
+				if (has.min) {
+					if (has.min > ygStockPrice) {
+						has.min = ygStockPrice
+					}
+				} else {
+					has.min = ygStockPrice
+				}
+				if (has.max) {
+					if (has.max < ygStockPrice) {
+						has.max = ygStockPrice
+					}
+				} else {
+					has.max = ygStockPrice
+				}
 			}
 		} else {
 			goodsTypeRange[type] = {
-				min: ygStockPrice,
-				max: ygStockPrice,
+				min: ygStockPrice || 0,
+				max: ygStockPrice || 0,
 			}
 		}
 	})
-	// console.log(goodsPriceMap, goodsTypeRange)
+	console.log(goodsPriceMap, goodsTypeRange)
 	const regex = /\$(\w+)\{([^}]+)\}/g
 	let matches = [...tpl.matchAll(regex)]
 	let variables = matches.map((match) => [match[1], match[2]])
@@ -1817,5 +1827,9 @@ export function handleHanHuaTpl(tpl: string, data: any[]) {
 }
 
 function coverPriceW(price: number | null) {
-	return price ? (price / 10000).toFixed(1) + 'W' : ''
+	return price
+		? price % 10000 === 0
+			? (price / 10000).toFixed(0) + 'W'
+			: (price / 10000).toFixed(1) + 'W'
+		: ''
 }

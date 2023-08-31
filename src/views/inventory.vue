@@ -698,7 +698,7 @@ function hanHua() {
 			goodsTable.value.rawData
 		)
 		const hhRecord = hhModal.value.hhRecord
-		if (hhRecord.length < 10) {
+		if (hhRecord.length < 9) {
 			hhRecord.unshift(text)
 		} else {
 			hhRecord.unshift(text)
