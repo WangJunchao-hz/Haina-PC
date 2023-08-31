@@ -593,6 +593,7 @@ function upSet() {
 			global: config.value.global,
 			user: config.value.user,
 			mobile: config.value.user.mobile,
+			hanhuaTpl: config.value.hanhuaTpl,
 			whereKey: 'mobile',
 			whereValue: config.value.user.mobile,
 		}).then(() => {
