@@ -1625,17 +1625,17 @@ export async function getInventoryData(
 	activeTab: string
 ) {
 	let res: any = {}
-	const hasCache = Cache.get('StallGoodsInfo', mobile)
-	let needGet = false
-	if (hasCache) {
-		if (!hasCache[activeTab]) {
-			needGet = true
-		} else {
-			res = handleData(map, hasCache[activeTab])
-		}
-	} else {
-		needGet = true
-	}
+	// const hasCache = Cache.get('StallGoodsInfo', mobile)
+	let needGet = true
+	// if (hasCache) {
+	// 	if (!hasCache[activeTab]) {
+	// 		needGet = true
+	// 	} else {
+	// 		res = handleData(map, hasCache[activeTab])
+	// 	}
+	// } else {
+	// 	needGet = true
+	// }
 	if (needGet) {
 		const r = await UniCloudGet({
 			_tableName: 'stall-analysis',
@@ -1643,7 +1643,7 @@ export async function getInventoryData(
 			whereValue: mobile + '_' + activeTab,
 		})
 		if (r.data && r.data.data && r.data.data.length) {
-			res = handleData(map, r.data.data[0].goods)
+			res = handleData(map, coverObjToArray(r.data.data[0].goods))
 		}
 	}
 	function handleData(map: any[], data: any[]) {
@@ -1832,4 +1832,36 @@ function coverPriceW(price: number | null) {
 			? (price / 10000).toFixed(0) + 'W'
 			: (price / 10000).toFixed(1) + 'W'
 		: ''
+}
+export function coverArrayToObj(array: any[], key: string) {
+	const res: any = {}
+	array.forEach((item) => {
+		res[item[key]] = item
+	})
+	return res
+}
+export function coverObjToArray(obj: any) {
+	return Object.keys(obj).map((key) => obj[key])
+}
+export function updateTableData(iniObj: any, table: any, global: any) {
+	const keys = Object.keys(iniObj)
+	table.forEach((item: any) => {
+		const { config } = item
+		const key: any = keys.find((k) => k.includes(config + '.Text'))
+		if (key) {
+			item.ygStockPrice = iniObj[key]
+			if (item.ygStockPrice) {
+				// const discount = item.discount ? item.discount : global.discount
+				const qwProfit = item.qwProfit ? item.qwProfit : global.qwProfit
+				item.ygStallPrice = Number(
+					(item.ygStockPrice * (1 + qwProfit)).toFixed(0)
+				)
+				if (item.ygStallPrice > 100000) {
+					item.ygStallPrice = Math.ceil(item.ygStallPrice / 10000) * 10000
+				} else if (item.ygStallPrice > 10000) {
+					item.ygStallPrice = Math.ceil(item.ygStallPrice / 1000) * 1000
+				}
+			}
+		}
+	})
 }

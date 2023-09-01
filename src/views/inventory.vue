@@ -13,12 +13,12 @@
 				</template>
 			</a-input-search>
 			<a-button type="primary" @click="cleanCache('loginOut')">注销</a-button>
-			<a-switch
+			<!-- <a-switch
 				v-model:checked="isCache"
 				checked-children="开启缓存"
 				un-checked-children="关闭缓存"
 			/>
-			<a-button type="primary" @click="cleanCache">清除缓存</a-button>
+			<a-button type="primary" @click="cleanCache">清除缓存</a-button> -->
 			<a-button type="primary" @click="save">保存</a-button>
 			<a-button type="primary" @click="setModal.visible = true">
 				设置
@@ -35,7 +35,25 @@
 			<a-upload
 				accept=".ini"
 				:showUploadList="false"
-				:customRequest="fileChange"
+				:customRequest="
+					($event:any) => {
+						fileChange($event, 'import')
+					}
+				"
+			>
+				<a-button>
+					<upload-outlined></upload-outlined>
+					导入配置
+				</a-button>
+			</a-upload>
+			<a-upload
+				accept=".ini"
+				:showUploadList="false"
+				:customRequest="
+					($event:any) => {
+						fileChange($event, 'export')
+					}
+				"
 			>
 				<a-button>
 					<upload-outlined></upload-outlined>
@@ -288,6 +306,8 @@ import {
 	getInventoryData,
 	updateINIFile,
 	handleHanHuaTpl,
+	coverArrayToObj,
+	updateTableData,
 } from '@/common/utils'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
@@ -507,18 +527,18 @@ const goodsTable = ref<{
 watch(
 	() => goodsTable.value.rawData,
 	() => {
-		if (isCache.value && config.value.user.mobile) {
-			let hasExist = Cache.get('StallGoodsInfo', config.value.user.mobile)
-			if (!hasExist) {
-				hasExist = {}
-			}
-			hasExist[activeTab.value] = goodsTable.value.rawData
-			Cache.set('StallGoodsInfo', config.value.user.mobile, hasExist)
-			if (typeChecked.value.length) {
-				select.value.options = select.value.rawOptions!.filter((so) =>
-					typeChecked.value.includes(so.type)
-				)
-			}
+		// if (isCache.value && config.value.user.mobile) {
+		// 	let hasExist = Cache.get('StallGoodsInfo', config.value.user.mobile)
+		// 	if (!hasExist) {
+		// 		hasExist = {}
+		// 	}
+		// 	hasExist[activeTab.value] = goodsTable.value.rawData
+		// 	Cache.set('StallGoodsInfo', config.value.user.mobile, hasExist)
+		// }
+		if (typeChecked.value.length) {
+			select.value.options = select.value.rawOptions!.filter((so) =>
+				typeChecked.value.includes(so.type)
+			)
 		}
 	},
 	{ deep: true }
@@ -672,7 +692,7 @@ function save() {
 		UniCloudSet({
 			_tableName: 'stall-analysis',
 			date,
-			goods: goodsTable.value.rawData,
+			goods: coverArrayToObj(goodsTable.value.rawData, 'key'),
 			mobile: config.value.user.mobile,
 			district: activeTab.value,
 			id: config.value.user.mobile + '_' + activeTab.value,
@@ -681,14 +701,23 @@ function save() {
 		})
 	}
 }
-function fileChange(res: any) {
+function fileChange(res: any, type: 'import' | 'export') {
 	const reader = new FileReader()
 	reader.onload = function (event: any) {
 		const fileContent = event.target.result
-		const config = parseINI(fileContent)
-		updateINIFile(config['qiyunlou'], goodsTable.value.rawData)
-		const modifiedContent = stringifyINI(config)
-		generateINIFile(modifiedContent, 'test.ini')
+		const iniConfig = parseINI(fileContent)
+		if (type === 'export') {
+			updateINIFile(iniConfig['qiyunlou'], goodsTable.value.rawData)
+			const modifiedContent = stringifyINI(iniConfig)
+			generateINIFile(modifiedContent, 'test.ini')
+		}
+		if (type === 'import') {
+			updateTableData(
+				iniConfig['qiyunlou'],
+				goodsTable.value.rawData,
+				config.value.global
+			)
+		}
 	}
 	reader.onerror = function (event) {
 		message.error('读取配置失败!')

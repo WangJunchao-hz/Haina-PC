@@ -52,7 +52,7 @@ import { v4 } from 'uuid'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
 import { UniCloudSet, UniCloudGet } from '@/common/api/uni-cloud-api'
-import { Cache } from '@/common/utils'
+import { Cache, coverArrayToObj, coverObjToArray } from '@/common/utils'
 import type { CascaderProps } from 'ant-design-vue'
 import type { ShowSearchType } from 'ant-design-vue/es/cascader'
 const goodsType = ref<any[]>([])
@@ -186,7 +186,7 @@ function init() {
 		whereValue: m,
 	}).then((res) => {
 		if (res.data && res.data.data.length) {
-			const goodsMap = res.data.data[0].goodsMap
+			const goodsMap = coverObjToArray(res.data.data[0].goodsMap)
 			table.value.data = goodsMap
 			table.value.rawData = [...table.value.data]
 		}
@@ -238,7 +238,7 @@ function remove(i: number) {
 function save() {
 	UniCloudSet({
 		_tableName: 'goods-map',
-		goodsMap: table.value.rawData,
+		goodsMap: coverArrayToObj(table.value.rawData, 'key'),
 		mobile: mobile.value,
 		whereKey: 'mobile',
 		whereValue: mobile.value,
