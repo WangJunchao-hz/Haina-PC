@@ -160,7 +160,7 @@ watch(
 			})
 			goodsType.value = Object.keys(typeMap).map((key) => typeMap[key])
 			select.value.options = Object.keys(map).map((key) => map[key])
-			select.value.rawOptions = select.value.options
+			select.value.rawOptions = [...select.value.options]
 			if (typeChecked.value.length) {
 				select.value.options = select.value.rawOptions.filter((so) =>
 					typeChecked.value.includes(so.type)
@@ -188,7 +188,7 @@ function init() {
 		if (res.data && res.data.data.length) {
 			const goodsMap = res.data.data[0].goodsMap
 			table.value.data = goodsMap
-			table.value.rawData = table.value.data
+			table.value.rawData = [...table.value.data]
 		}
 	})
 }
@@ -204,7 +204,7 @@ function selectChange() {
 			return _id === key
 		})
 	} else {
-		table.value.data = table.value.rawData
+		table.value.data = [...table.value.rawData]
 	}
 }
 function typeFilter(checked: any[]) {
@@ -216,8 +216,8 @@ function typeFilter(checked: any[]) {
 			checked.includes(so.type)
 		)
 	} else {
-		table.value.data = table.value.rawData
-		select.value.options = select.value.rawOptions
+		table.value.data = [...table.value.rawData]
+		select.value.options = [...select.value.rawOptions]
 	}
 }
 function add() {
@@ -230,7 +230,7 @@ function add() {
 }
 function remove(i: number) {
 	const del: any = table.value.data.splice(i, 1)
-	const rawI = table.value.rawData.findIndex((item) => item.key === del.key)
+	const rawI = table.value.rawData.findIndex((item) => item.key === del[0].key)
 	if (rawI !== -1) {
 		table.value.rawData.splice(rawI, 1)
 	}

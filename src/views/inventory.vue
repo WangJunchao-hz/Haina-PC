@@ -562,10 +562,10 @@ function init() {
 		if (goodsMap) {
 			getInventoryData(goodsMap, m, activeTab.value).then((result) => {
 				goodsTable.value.data = result.data
-				goodsTable.value.rawData = goodsTable.value.data
+				goodsTable.value.rawData = [...goodsTable.value.data]
 				goodsType.value = result.types
 				select.value.options = result.goodsOptions
-				select.value.rawOptions = select.value.options
+				select.value.rawOptions = [...select.value.options!]
 			})
 		}
 	})
@@ -641,7 +641,7 @@ function selectChange() {
 			return _id === key
 		})
 	} else {
-		goodsTable.value.data = goodsTable.value.rawData
+		goodsTable.value.data = [...goodsTable.value.rawData]
 	}
 }
 function typeFilter(checked: any[]) {
@@ -653,8 +653,8 @@ function typeFilter(checked: any[]) {
 			checked.includes(so.type)
 		)
 	} else {
-		goodsTable.value.data = goodsTable.value.rawData
-		select.value.options = select.value.rawOptions
+		goodsTable.value.data = [...goodsTable.value.rawData]
+		select.value.options = [...select.value.rawOptions]
 	}
 }
 function save() {
