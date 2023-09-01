@@ -217,7 +217,7 @@ function typeFilter(checked: any[]) {
 		)
 	} else {
 		table.value.data = [...table.value.rawData]
-		select.value.options = [...select.value.rawOptions]
+		select.value.options = [...select.value.rawOptions!]
 	}
 }
 function add() {

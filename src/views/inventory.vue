@@ -495,7 +495,13 @@ const goodsTable = ref<{
 	data: [],
 	rawData: [],
 	remove: (i: number) => {
-		goodsTable.value.data.splice(i, 1)
+		const del = goodsTable.value.data.splice(i, 1)
+		const rawI = goodsTable.value.rawData.findIndex(
+			(item) => item.key === del[0].key
+		)
+		if (rawI !== -1) {
+			goodsTable.value.rawData.splice(rawI, 1)
+		}
 	},
 })
 watch(
@@ -654,7 +660,7 @@ function typeFilter(checked: any[]) {
 		)
 	} else {
 		goodsTable.value.data = [...goodsTable.value.rawData]
-		select.value.options = [...select.value.rawOptions]
+		select.value.options = [...select.value.rawOptions!]
 	}
 }
 function save() {
