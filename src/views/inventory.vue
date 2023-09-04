@@ -248,11 +248,18 @@
 			</a-space>
 		</a-card>
 		<a-card title="喊话模板" size="small">
-			<a-textarea
-				v-model:value="config.hanhuaTpl"
-				placeholder="n=名称，f=特征，t=类型，range=价格范围，min=最小值，max=最大值；自由组合，如：$t_n_f{普通兽决_魔兽要诀_夜战}表示取夜战的收货价"
-				:rows="8"
-			/>
+			<a-space v-for="(tpl, i) in config.hanhuaTpl">
+				<a-textarea
+					style="width: 688px"
+					v-model:value="tpl.value"
+					placeholder="n=名称，f=特征，t=类型，range=价格范围，min=最小值，max=最大值；自由组合，如：$t_n_f{普通兽决_魔兽要诀_夜战}表示取夜战的收货价"
+					:rows="4"
+				/>
+				<a-button type="primary" @click="config.addTpl">新增</a-button>
+				<a-button type="primary" danger @click="config.deleteTpl(i)"
+					>删除</a-button
+				>
+			</a-space>
 		</a-card>
 	</a-modal>
 	<a-modal
@@ -308,6 +315,7 @@ import {
 	handleHanHuaTpl,
 	coverArrayToObj,
 	updateTableData,
+	coverObjToArray,
 } from '@/common/utils'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
@@ -323,11 +331,13 @@ const config = ref<{
 	global: { discount: number; qwProfit: number }
 	id?: string
 	districtModel: string
-	districts: { label: string; value: string }[]
+	districts: { label: string; value: string; key: string }[]
 	defaultDistrict: string
 	addDistrict: () => void
 	deleteDistrict: (i: number) => void
-	hanhuaTpl: string
+	hanhuaTpl: { value: string; key: string }[]
+	addTpl: () => void
+	deleteTpl: (i: number) => void
 }>({
 	user: { mobile: '' },
 	global: {
@@ -335,17 +345,23 @@ const config = ref<{
 		qwProfit: 0.3, // 期望利润率20%
 	},
 	id: v4(),
-	hanhuaTpl:
-		'#Y熊猫长安城天台' +
-		'【杂货】强化$n{青龙石}树$n{摇钱树苗}符石$n_f{符石_1级}起C6$n{超级金柳露}c6$n{金柳露}如意丹$t_range{如意丹}' +
-		'【宝石】黑$n_f{黑宝石_1级}星辉$n_f{星辉石_1级}舍$n_f{舍利子_1级}玛$n_f{红玛瑙_1级}太$n_f{太阳石_1级}月$n_f{月亮石_1级}光$n_f{光芒石_1级}' +
-		'【珍珠】60珍$n_f{珍珠_60级}70珍$n_f{珍珠_70级}80珍$n_f{珍珠_80级}90珍$n_f{珍珠_90级}100珍$n_f{珍珠_100级}110珍$n_f{珍珠_110级}120珍$n_f{珍珠_120级}130珍$n_f{珍珠_130级}' +
-		'【内丹】低丹$t_range{低内丹}高丹$t_range{高内丹}' +
-		'【兽决】普兽$t_range{普通兽诀}高兽$t_range{高级兽诀}#46',
+	hanhuaTpl: [
+		{
+			value:
+				'#Y熊猫长安城天台' +
+				'【杂货】强化$n{青龙石}树$n{摇钱树苗}符石$n_f{符石_1级}起C6$n{超级金柳露}c6$n{金柳露}如意丹$t_range{如意丹}' +
+				'【宝石】黑$n_f{黑宝石_1级}星辉$n_f{星辉石_1级}舍$n_f{舍利子_1级}玛$n_f{红玛瑙_1级}太$n_f{太阳石_1级}月$n_f{月亮石_1级}光$n_f{光芒石_1级}' +
+				'【珍珠】60珍$n_f{珍珠_60级}70珍$n_f{珍珠_70级}80珍$n_f{珍珠_80级}90珍$n_f{珍珠_90级}100珍$n_f{珍珠_100级}110珍$n_f{珍珠_110级}120珍$n_f{珍珠_120级}130珍$n_f{珍珠_130级}' +
+				'【内丹】低丹$t_range{低内丹}高丹$t_range{高内丹}' +
+				'【兽决】普兽$t_range{普通兽诀}高兽$t_range{高级兽诀}#46',
+			key: v4(),
+		},
+	],
 	districtModel: '',
 	defaultDistrict: '待分配',
 	districts: [
 		{
+			key: v4(),
 			label: '待分配',
 			value: '待分配',
 		},
@@ -353,9 +369,23 @@ const config = ref<{
 	addDistrict: () => {
 		if (config.value.districtModel) {
 			config.value.districts.push({
+				key: v4(),
 				label: config.value.districtModel,
 				value: config.value.districtModel,
 			})
+		}
+	},
+	addTpl: () => {
+		config.value.hanhuaTpl.push({
+			key: v4(),
+			value: '',
+		})
+	},
+	deleteTpl: (i: number) => {
+		if (config.value.hanhuaTpl.length === 1) {
+			message.warn('至少保留一条！')
+		} else {
+			config.value.hanhuaTpl.splice(i, 1)
 		}
 	},
 	deleteDistrict: (i: number) => {
@@ -575,6 +605,8 @@ function init() {
 			config.value = {
 				...config.value,
 				...configRes.data.data[0],
+				hanhuaTpl: coverObjToArray(configRes.data.data[0].hanhuaTpl),
+				districts: coverObjToArray(configRes.data.data[0].districts),
 			}
 			activeTab.value = config.value.defaultDistrict
 		}
@@ -615,11 +647,11 @@ function upSet() {
 		UniCloudSet({
 			_tableName: 'stall-config',
 			defaultDistrict: config.value.defaultDistrict,
-			districts: config.value.districts,
+			districts: coverArrayToObj(config.value.districts, 'key'),
 			global: config.value.global,
 			user: config.value.user,
 			mobile: config.value.user.mobile,
-			hanhuaTpl: config.value.hanhuaTpl,
+			hanhuaTpl: coverArrayToObj(config.value.hanhuaTpl, 'key'),
 			whereKey: 'mobile',
 			whereValue: config.value.user.mobile,
 		}).then(() => {
@@ -733,12 +765,7 @@ function hanHua() {
 			goodsTable.value.rawData
 		)
 		const hhRecord = hhModal.value.hhRecord
-		if (hhRecord.length < 9) {
-			hhRecord.unshift(text)
-		} else {
-			hhRecord.unshift(text)
-			hhRecord.splice(hhRecord.length - 1, 1)
-		}
+		hhRecord.unshift(...text)
 		Cache.set('HanHua-Record', config.value.user.mobile, hhRecord)
 		hhModal.value.visible = true
 	} else {
