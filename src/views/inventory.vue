@@ -65,6 +65,7 @@
 				生成喊话
 			</a-button>
 			<a-button @click="hhModal.visible = true"> 喊话记录 </a-button>
+			<el-button @click="openGj">估价</el-button>
 		</a-space>
 	</a-card>
 	<a-card title="类型筛选" size="small">
@@ -211,6 +212,15 @@
 				>
 					<template #addonBefore> 期望收益 </template>
 				</a-input-number>
+				<a-input-number
+					v-model:value="config.global.mhbrate"
+					:min="0"
+					:max="1"
+					:step="0.0001"
+					size="small"
+				>
+					<template #addonBefore>梦幻币汇率</template>
+				</a-input-number>
 			</a-space>
 		</a-card>
 		<a-card title="所属区管理" size="small">
@@ -294,6 +304,63 @@
 			</template>
 		</a-list>
 	</a-modal>
+	<el-dialog
+		class="dialog"
+		v-model="gjModal.visible"
+		title="估价计算器"
+		:width="1188"
+	>
+		<el-table :data="gjModal.table.data" style="width: 100%" height="588">
+			<el-table-column
+				v-for="c in gjModal.table.columns"
+				:prop="c.dataIndex"
+				:label="c.title"
+			>
+				<template #default="{ column, row }">
+					<el-input-number
+						controls-position="right"
+						style="width: 100%"
+						v-if="column.property === 'level'"
+						v-model="row[column.property]"
+						:min="1"
+						:max="18"
+						:step="1"
+						@change="handleGJ(row)"
+					/>
+					<el-input
+						style="width: 100%"
+						v-else-if="
+							column.property === 'baseCost' ||
+							column.property === 'ygStockPrice'
+						"
+						v-model="row[column.property]"
+						placeholder="请输入"
+						@change="handleGJ(row)"
+					/>
+					<el-input-number
+						controls-position="right"
+						style="width: 100%"
+						v-else-if="column.property === 'qwProfit'"
+						v-model="row[column.property]"
+						:min="0"
+						:max="1"
+						:step="0.01"
+						:placeholder="config.global.qwProfit + ''"
+						@change="handleGJ(row)"
+					/>
+					<span v-else>{{ row[column.property] }}</span>
+				</template>
+			</el-table-column>
+		</el-table>
+		<template #footer>
+			<span class="dialog-footer">
+				<el-button @click="gjModal.visible = false">取消</el-button>
+				<el-button type="primary" @click="gjModal.visible = false">
+					确定
+				</el-button>
+			</span>
+		</template>
+	</el-dialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, h } from 'vue'
@@ -328,7 +395,7 @@ const isCache = ref<boolean>(true)
 const isLogin = ref<boolean>(false)
 const config = ref<{
 	user: { mobile: string | number }
-	global: { discount: number; qwProfit: number }
+	global: { discount: number; qwProfit: number; mhbrate: number }
 	id?: string
 	districtModel: string
 	districts: { label: string; value: string; key: string }[]
@@ -343,6 +410,7 @@ const config = ref<{
 	global: {
 		discount: 0.01, // 默认让利1%
 		qwProfit: 0.3, // 期望利润率20%
+		mhbrate: 0.0725,
 	},
 	id: v4(),
 	hanhuaTpl: [
@@ -412,6 +480,64 @@ const config = ref<{
 		delete hasCache[del[0].value]
 		Cache.set('StallGoodsInfo', config.value.user.mobile, hasCache)
 		activeTab.value = '待分配'
+	},
+})
+const gjModal = ref<{
+	visible: boolean
+	table: {
+		columns: any[]
+		data: any[]
+	}
+}>({
+	visible: false,
+	table: {
+		columns: [
+			{
+				title: '类型',
+				dataIndex: 'type',
+			},
+			{
+				title: '名称',
+				dataIndex: 'name',
+			},
+			{
+				title: '等级',
+				dataIndex: 'level',
+			},
+			{
+				title: '收货价',
+				dataIndex: 'ygStockPrice',
+			},
+			{
+				title: '基础工费',
+				dataIndex: 'baseCost',
+			},
+			{
+				title: '总工费',
+				dataIndex: 'totalCost',
+			},
+			{
+				title: '总成本',
+				dataIndex: 'totalCb',
+			},
+			{
+				title: '期望利润',
+				dataIndex: 'qwProfit',
+			},
+			{
+				title: '应卖价-梦幻币',
+				dataIndex: 'sell_mhb',
+			},
+			{
+				title: '汇率',
+				dataIndex: 'mhbrate',
+			},
+			{
+				title: '应卖价-人民币',
+				dataIndex: 'sell_rmb',
+			},
+		],
+		data: [],
 	},
 })
 const hhModal = ref<{
@@ -778,6 +904,58 @@ function copyTxt(txt: string) {
 		message.success('复制成功！')
 	})
 }
+function openGj() {
+	gjModal.value.table.data = goodsTable.value.rawData
+		.filter((item) => {
+			return item.type === '宝石' || item.type === '灵石'
+		})
+		.map((item) => {
+			const { type, name, feature, qwProfit, ygStockPrice } = item
+			const newItem = {
+				type,
+				name: type === '宝石' ? name : feature,
+				qwProfit: qwProfit ? qwProfit : config.value.global.qwProfit,
+				ygStockPrice,
+				upNum: name === '星辉石' ? 3 : 2,
+				mhbrate: config.value.global.mhbrate,
+				level: 1,
+				baseCost: name === '星辉石' ? 4000 : type === '灵石' ? 4000 : 1000,
+				totalCost: 0,
+				totalCb: 0,
+				sell_mhb: 0,
+				sell_rmb: 0,
+			}
+			handleGJ(newItem)
+			return newItem
+		})
+	gjModal.value.visible = true
+	// console.log(gjModal.value.table.data)
+}
+function handleGJ(item: any) {
+	const { level, mhbrate, baseCost, ygStockPrice, qwProfit, upNum } = item
+	const num = upNum ** (level - 1)
+	const totalStock = num * ygStockPrice
+	item.totalCost = calculateTotalCost(level, baseCost)
+	item.totalCb = totalStock + item.totalCost
+	item.sell_mhb = Number((item.totalCb * (1 + qwProfit)).toFixed(0))
+	item.sell_rmb = ((item.sell_mhb / 10000) * mhbrate).toFixed(2)
+}
+function calculateTotalCost(n: number, base: number): any {
+	if (!n || n <= 1) {
+		return 0
+	} else if (n === 2) {
+		return base * (1 + 0.01)
+	} else if (n === 3) {
+		return 2 * calculateTotalCost(2, base) + 2 * base * (1 + 0.01)
+	} else if (n === 4) {
+		return (
+			2 * (2 * calculateTotalCost(2, base) + 2 * base * (1 + 0.01)) +
+			3 * base * (1 + 0.01)
+		)
+	} else {
+		return 2 * calculateTotalCost(n - 1, base) + (n - 1) * 1000 * (1 + 0.01)
+	}
+}
 </script>
 <style scoped lang="scss">
 .table {
@@ -806,5 +984,10 @@ function copyTxt(txt: string) {
 .list {
 	max-height: 550px;
 	overflow: auto;
+}
+</style>
+<style>
+.el-dialog__body {
+	padding: 0;
 }
 </style>
