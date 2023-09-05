@@ -66,6 +66,7 @@
 			</a-button>
 			<a-button @click="hhModal.visible = true"> 喊话记录 </a-button>
 			<el-button @click="openGj">估价</el-button>
+			<el-button @click="openCk">仓库</el-button>
 		</a-space>
 	</a-card>
 	<a-card title="类型筛选" size="small">
@@ -86,7 +87,7 @@
 				class="table"
 				:columns="goodsTable.columns"
 				:data-source="goodsTable.data"
-				:scroll="{ y: 'calc(100% - 54px)' }"
+				:scroll="{ y: 518 }"
 				:pagination="false"
 			>
 				<template #bodyCell="{ column, record, index }">
@@ -142,7 +143,6 @@
 							v-else-if="column.dataIndex === 'qwProfit'"
 							v-model:value="record[column.dataIndex]"
 							:min="0"
-							:max="1"
 							:step="0.01"
 							:placeholder="config.global.qwProfit + ''"
 							@change="singleJS(record)"
@@ -160,14 +160,16 @@
 							checked-children="是"
 							un-checked-children="否"
 						/>
-						<a-input
+						<a-input-number
+							style="width: 100%"
 							v-else-if="
 								column.dataIndex === 'collect' || column.dataIndex === 'sell'
 							"
-							style="width: 100%"
-							placeholder=""
 							v-model:value="record[column.dataIndex]"
-						/>
+							:min="0"
+							:step="1"
+						>
+						</a-input-number>
 						<span
 							v-else-if="column.dataIndex === 'name'"
 							style="color: #303133"
@@ -206,7 +208,6 @@
 				<a-input-number
 					v-model:value="config.global.qwProfit"
 					:min="0"
-					:max="1"
 					:step="0.01"
 					size="small"
 				>
@@ -343,7 +344,6 @@
 						v-else-if="column.property === 'qwProfit'"
 						v-model="row[column.property]"
 						:min="0"
-						:max="1"
 						:step="0.01"
 						:placeholder="config.global.qwProfit + ''"
 						@change="handleGJ(row)"
@@ -356,6 +356,81 @@
 			<span class="dialog-footer">
 				<el-button @click="gjModal.visible = false">取消</el-button>
 				<el-button type="primary" @click="gjModal.visible = false">
+					确定
+				</el-button>
+			</span>
+		</template>
+	</el-dialog>
+	<el-dialog
+		class="dialog"
+		v-model="ckModal.visible"
+		title="仓库"
+		:width="1188"
+	>
+		<el-row>
+			<el-col :span="6">
+				<el-statistic title="收成本" :precision="2" :value="ckModal.ck.ycb">
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic title="预期卖流水" :precision="2" :value="ckModal.ck.yls">
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic
+					title="预期收益梦幻币"
+					:precision="2"
+					:value="ckModal.ck.yyk_mhb"
+				>
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic
+					title="预期收益人民币"
+					:precision="2"
+					:value="ckModal.ck.yyk_rmb"
+				>
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+		</el-row>
+		<el-row>
+			<el-col :span="6">
+				<el-statistic title="卖成本" :precision="2" :value="ckModal.ck.scb">
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic title="卖流水" :precision="2" :value="ckModal.ck.sls">
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic
+					title="已收益梦幻币"
+					:precision="2"
+					:value="ckModal.ck.syk_mhb"
+				>
+					<template #suffix>W</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="6">
+				<el-statistic
+					title="已收益人民币"
+					:value="ckModal.ck.syk_rmb"
+					:precision="2"
+				>
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+		</el-row>
+		<template #footer>
+			<span class="dialog-footer">
+				<el-button @click="ckModal.visible = false">取消</el-button>
+				<el-button type="primary" @click="ckModal.visible = false">
 					确定
 				</el-button>
 			</span>
@@ -538,6 +613,33 @@ const gjModal = ref<{
 			},
 		],
 		data: [],
+	},
+})
+const ckModal = ref<{
+	visible: boolean
+	ck: {
+		ycb: number
+		yls: number
+		scb: number
+		sls: number
+		mhbRate: number
+		yyk_mhb: number
+		yyk_rmb: number
+		syk_mhb: number
+		syk_rmb: number
+	}
+}>({
+	visible: false,
+	ck: {
+		ycb: 0,
+		yls: 0,
+		scb: 0,
+		sls: 0,
+		mhbRate: config.value.global.mhbrate,
+		yyk_mhb: 0,
+		yyk_rmb: 0,
+		syk_mhb: 0,
+		syk_rmb: 0,
 	},
 })
 const hhModal = ref<{
@@ -794,15 +896,15 @@ function singleJS(item: any) {
 	const discount = item.discount ? item.discount : config.value.global.discount
 	const qwProfit = item.qwProfit ? item.qwProfit : config.value.global.qwProfit
 	item.ygStallPrice = Number((item.marketPrice * (1 - discount)).toFixed(0))
-	if (item.ygStallPrice > 100000) {
-		item.ygStallPrice = Math.floor(item.ygStallPrice / 10000) * 10000
-	} else if (item.ygStallPrice > 10000) {
+	if (item.ygStallPrice < 100000) {
+		item.ygStallPrice = Math.floor(item.ygStallPrice / 100) * 100
+	} else {
 		item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
 	}
 	item.ygStockPrice = Number((item.ygStallPrice / (1 + qwProfit)).toFixed(0))
-	if (item.ygStockPrice > 100000) {
-		item.ygStockPrice = Math.floor(item.ygStockPrice / 10000) * 10000
-	} else if (item.ygStockPrice > 10000) {
+	if (item.ygStockPrice < 100000) {
+		item.ygStockPrice = Math.floor(item.ygStockPrice / 100) * 100
+	} else {
 		item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
 	}
 }
@@ -931,6 +1033,40 @@ function openGj() {
 	gjModal.value.visible = true
 	// console.log(gjModal.value.table.data)
 }
+function openCk() {
+	const ck: any = {
+		ycb: 0,
+		yls: 0,
+		scb: 0,
+		sls: 0,
+		mhbRate: config.value.global.mhbrate,
+		yyk_mhb: 0,
+		yyk_rmb: 0,
+		syk_mhb: 0,
+		syk_rmb: 0,
+	}
+	goodsTable.value.rawData.forEach((item) => {
+		const { ygStallPrice, ygStockPrice, sell, collect } = item
+		if (collect) {
+			ck.ycb += ygStockPrice * collect
+			ck.yls += ygStallPrice * collect
+		}
+		if (sell) {
+			ck.scb += ygStockPrice * sell
+			ck.sls += ygStallPrice * sell
+		}
+	})
+	ck.yyk_mhb = (ck.yls - ck.ycb) / 10000
+	ck.syk_mhb = (ck.sls - ck.scb) / 10000
+	ck.yyk_rmb = Number((ck.yyk_mhb * ck.mhbRate).toFixed(2))
+	ck.syk_rmb = Number((ck.syk_mhb * ck.mhbRate).toFixed(2))
+	ck.yls = ck.yls / 10000
+	ck.ycb = ck.ycb / 10000
+	ck.sls = ck.sls / 10000
+	ck.scb = ck.scb / 10000
+	ckModal.value.ck = ck
+	ckModal.value.visible = true
+}
 function handleGJ(item: any) {
 	const { level, mhbrate, baseCost, ygStockPrice, qwProfit, upNum } = item
 	const num = upNum ** (level - 1)
@@ -984,6 +1120,9 @@ function calculateTotalCost(n: number, base: number): any {
 .list {
 	max-height: 550px;
 	overflow: auto;
+}
+:deep(.el-col) {
+	padding-left: 28px;
 }
 </style>
 <style>

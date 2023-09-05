@@ -1844,7 +1844,9 @@ function coverPriceW(price: number | null) {
 	return price
 		? price % 10000 === 0
 			? (price / 10000).toFixed(0)
-			: (price / 10000).toFixed(1)
+			: price % 1000 === 0
+			? (price / 10000).toFixed(1)
+			: (price / 10000).toFixed(2)
 		: ''
 }
 export function coverArrayToObj(array: any[], key: string) {
