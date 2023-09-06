@@ -893,8 +893,14 @@ function upSet() {
 	}
 }
 function singleJS(item: any) {
-	const discount = item.discount ? item.discount : config.value.global.discount
-	const qwProfit = item.qwProfit ? item.qwProfit : config.value.global.qwProfit
+	const discount =
+		typeof item.discount === 'number'
+			? item.discount
+			: config.value.global.discount
+	const qwProfit =
+		typeof item.qwProfit === 'number'
+			? item.qwProfit
+			: config.value.global.qwProfit
 	item.ygStallPrice = Number((item.marketPrice * (1 - discount)).toFixed(0))
 	if (item.ygStallPrice < 100000) {
 		item.ygStallPrice = Math.floor(item.ygStallPrice / 100) * 100
@@ -903,9 +909,9 @@ function singleJS(item: any) {
 	}
 	item.ygStockPrice = Number((item.ygStallPrice / (1 + qwProfit)).toFixed(0))
 	if (item.ygStockPrice < 100000) {
-		item.ygStockPrice = Math.floor(item.ygStockPrice / 100) * 100
+		item.ygStockPrice = Math.ceil(item.ygStockPrice / 100) * 100
 	} else {
-		item.ygStockPrice = Math.floor(item.ygStockPrice / 1000) * 1000
+		item.ygStockPrice = Math.ceil(item.ygStockPrice / 1000) * 1000
 	}
 }
 function cleanCache(type?: string) {
@@ -1123,6 +1129,10 @@ function calculateTotalCost(n: number, base: number): any {
 }
 :deep(.el-col) {
 	padding-left: 28px;
+}
+:deep(.ant-card-body) {
+	max-height: 388px;
+	overflow: auto;
 }
 </style>
 <style>
