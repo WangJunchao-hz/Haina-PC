@@ -62,6 +62,7 @@ const tpl = {
 	type: '',
 	name: '',
 	feature: '',
+	quality: '',
 	config: '',
 }
 const select = ref<{
@@ -97,6 +98,14 @@ const table = ref<{ columns: any[]; data: any[]; rawData: any[] }>({
 		{
 			title: '特征',
 			dataIndex: 'feature',
+		},
+		{
+			title: '定位',
+			dataIndex: 'quality',
+			sorter: (a: any, b: any) =>
+				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
+					sensitivity: 'accent',
+				}),
 		},
 		{
 			title: '配置字段',
@@ -187,7 +196,11 @@ function init() {
 	}).then((res) => {
 		if (res.data && res.data.data.length) {
 			const goodsMap = coverObjToArray(res.data.data[0].goodsMap)
-			table.value.data = goodsMap
+			table.value.data = goodsMap.sort((a: any, b: any) =>
+				a.type.localeCompare(b.type, 'zh-Hans-CN', {
+					sensitivity: 'accent',
+				})
+			)
 			table.value.rawData = [...table.value.data]
 		}
 	})

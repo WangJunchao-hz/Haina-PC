@@ -1841,13 +1841,8 @@ export function handleHanHuaTpl(tpl: any[], data: any[]) {
 }
 
 function coverPriceW(price: number | null) {
-	return price
-		? price % 10000 === 0
-			? (price / 10000).toFixed(0)
-			: price > 100000
-			? Math.ceil(price / 10000)
-			: Math.ceil(price / 1000) / 10
-		: ''
+	let res = (price || 0) / 10000
+	return res
 }
 export function coverArrayToObj(array: any[], key: string) {
 	const res: any = {}

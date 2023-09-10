@@ -717,6 +717,14 @@ const goodsTable = ref<{
 			dataIndex: 'feature',
 		},
 		{
+			title: '定位',
+			dataIndex: 'quality',
+			sorter: (a: any, b: any) =>
+				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
+					sensitivity: 'accent',
+				}),
+		},
+		{
 			title: '市场价',
 			dataIndex: 'marketPrice',
 			sorter: (a: any, b: any) => b.marketPrice - a.marketPrice,
