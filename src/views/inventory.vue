@@ -77,6 +77,7 @@
 			<el-button type="primary" link @click="cbModal.visible = true">
 				明细
 			</el-button>
+			<el-button type="primary" link @click="getCb"> 刷新 </el-button>
 		</template>
 		<el-row>
 			<el-col :span="4">
@@ -1014,50 +1015,53 @@ function init() {
 					if (hhR) {
 						hhModal.value.hhRecord = hhR
 					}
-					UniCloudGet({
-						_tableName: 'cb-manager',
-						whereKey: 'id_n',
-						whereValue: m + '_' + activeTab.value,
-					}).then((cbRes) => {
-						if (cbRes.data.data && cbRes.data.data.length) {
-							const r = {
-								...cbManager.value,
-							}
-							let total = 0
-							cbRes.data.data.forEach((item: any) => {
-								const { type, money } = item
-								switch (type) {
-									case '账号':
-										r.zh += money
-										total += money
-										break
-									case '金币':
-										r.jb += money
-										total += money
-										break
-									case '点卡':
-										r.dk += money
-										total += money
-										break
-									case '软件':
-										r.rj += money
-										total += money
-										break
-									case '收益':
-										r.sy += money
-										break
-								}
-							})
-							cbManager.value = {
-								...r,
-							}
-							cbManager.value.lr = r.sy - total
-							cbManager.value.lrl =
-								Number((cbManager.value.lr / total).toFixed(2)) * 100
-						}
-					})
+					getCb()
 				})
 			})
+		}
+	})
+}
+function getCb() {
+	UniCloudGet({
+		_tableName: 'cb-manager',
+		whereKey: 'id_n',
+		whereValue: config.value.user.mobile + '_' + activeTab.value,
+	}).then((cbRes) => {
+		if (cbRes.data.data && cbRes.data.data.length) {
+			const r = {
+				...cbManager.value,
+			}
+			let total = 0
+			cbRes.data.data.forEach((item: any) => {
+				const { type, money } = item
+				switch (type) {
+					case '账号':
+						r.zh += money
+						total += money
+						break
+					case '金币':
+						r.jb += money
+						total += money
+						break
+					case '点卡':
+						r.dk += money
+						total += money
+						break
+					case '软件':
+						r.rj += money
+						total += money
+						break
+					case '收益':
+						r.sy += money
+						break
+				}
+			})
+			cbManager.value = {
+				...r,
+			}
+			cbManager.value.lr = r.sy - total
+			cbManager.value.lrl =
+				Number((cbManager.value.lr / total).toFixed(2)) * 100
 		}
 	})
 }
