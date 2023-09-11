@@ -1033,7 +1033,7 @@ function fileChange(res: any, type: 'import' | 'export') {
 		if (type === 'export') {
 			updateINIFile(iniConfig['qiyunlou'], goodsTable.value.rawData)
 			const modifiedContent = stringifyINI(iniConfig)
-			generateINIFile(modifiedContent, 'test.ini')
+			generateINIFile(modifiedContent, activeTab.value + '.ini')
 		}
 		if (type === 'import') {
 			updateTableData(
