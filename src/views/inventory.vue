@@ -117,17 +117,46 @@
 						</a-space>
 					</template>
 					<template v-else>
+						<!-- <a-input
+							v-if="
+								column.dataIndex === 'ygStallPrice' ||
+								column.dataIndex === 'ygStockPrice'
+							"
+							style="width: 100%"
+							@change="singleJS(record)"
+							v-model:value="record[column.dataIndex]"
+						/> -->
+						<a-input-number
+							style="width: 100%"
+							v-if="
+								column.dataIndex === 'ygStallPrice' ||
+								column.dataIndex === 'ygStockPrice' ||
+								column.dataIndex === 'marketPrice'
+							"
+							v-model:value="record[column.dataIndex]"
+							:min="0"
+							:step="
+								record[column.dataIndex] > 100000
+									? 10000
+									: record[column.dataIndex] > 10000
+									? 1000
+									: 100
+							"
+							placeholder="请输入"
+							@change="singleJS(record)"
+						>
+						</a-input-number>
 						<span
 							style="color: #f56c6c; font-weight: bold"
-							v-if="column.dataIndex === 'ygStallPrice'"
+							v-else-if="column.dataIndex === 'qwProfit'"
 							>{{ record[column.dataIndex] }}</span
 						>
 						<span
 							style="color: #67c23a; font-weight: bold"
-							v-else-if="column.dataIndex === 'ygStockPrice'"
+							v-else-if="column.dataIndex === 'discount'"
 							>{{ record[column.dataIndex] }}</span
 						>
-						<a-input-number
+						<!-- <a-input-number
 							style="width: 100%"
 							v-else-if="column.dataIndex === 'discount'"
 							v-model:value="record[column.dataIndex]"
@@ -147,13 +176,13 @@
 							:placeholder="config.global.qwProfit + ''"
 							@change="singleJS(record)"
 						>
-						</a-input-number>
-						<a-input
+						</a-input-number> -->
+						<!-- <a-input
 							v-else-if="column.dataIndex === 'marketPrice'"
 							style="width: 100%"
 							@change="singleJS(record)"
 							v-model:value="record[column.dataIndex]"
-						/>
+						/> -->
 						<a-switch
 							v-else-if="column.dataIndex === 'isSet'"
 							v-model:checked="record[column.dataIndex]"
@@ -168,6 +197,7 @@
 							v-model:value="record[column.dataIndex]"
 							:min="0"
 							:step="1"
+							placeholder="请输入"
 						>
 						</a-input-number>
 						<span
@@ -311,7 +341,7 @@
 		title="估价计算器"
 		:width="1188"
 	>
-		<el-table :data="gjModal.table.data" style="width: 100%" height="588">
+		<el-table :data="gjModal.table.data" style="width: 100%" height="488">
 			<el-table-column
 				v-for="c in gjModal.table.columns"
 				:prop="c.dataIndex"
@@ -707,22 +737,30 @@ const goodsTable = ref<{
 		{
 			title: '类型',
 			dataIndex: 'type',
+			width: 88,
+			align: 'center',
 		},
 		{
 			title: '名称',
 			dataIndex: 'name',
+			width: 158,
+			align: 'center',
 		},
 		{
 			title: '属/技/等',
 			dataIndex: 'feature',
+			width: 158,
+			align: 'center',
 		},
 		{
-			title: '定位',
+			title: '定级',
 			dataIndex: 'quality',
 			sorter: (a: any, b: any) =>
 				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
 					sensitivity: 'accent',
 				}),
+			width: 88,
+			align: 'center',
 		},
 		{
 			title: '市场价',
@@ -733,25 +771,23 @@ const goodsTable = ref<{
 			title: '让利',
 			dataIndex: 'discount',
 			width: 88,
+			align: 'center',
 		},
 		{
-			title: '预估摆摊价',
+			title: '摆摊价',
 			dataIndex: 'ygStallPrice',
 			sorter: (a: any, b: any) => b.ygStallPrice - a.ygStallPrice,
-			width: 118,
-			align: 'center',
 		},
 		{
-			title: '期望利润 ',
+			title: '利润率 ',
 			dataIndex: 'qwProfit',
 			width: 88,
+			align: 'center',
 		},
 		{
-			title: '预估收货价',
+			title: '收货价',
 			dataIndex: 'ygStockPrice',
 			sorter: (a: any, b: any) => b.ygStockPrice - a.ygStockPrice,
-			width: 118,
-			align: 'center',
 		},
 		{
 			title: '收统计',
@@ -891,9 +927,9 @@ function upSet() {
 			whereKey: 'mobile',
 			whereValue: config.value.user.mobile,
 		}).then(() => {
-			goodsTable.value.rawData.forEach((item) => {
-				singleJS(item)
-			})
+			// goodsTable.value.rawData.forEach((item) => {
+			// 	singleJS(item)
+			// })
 			message.success('设置成功！')
 		})
 	} else {
@@ -901,26 +937,40 @@ function upSet() {
 	}
 }
 function singleJS(item: any) {
-	const discount =
-		typeof item.discount === 'number'
-			? item.discount
-			: config.value.global.discount
-	const qwProfit =
-		typeof item.qwProfit === 'number'
-			? item.qwProfit
-			: config.value.global.qwProfit
-	item.ygStallPrice = Number((item.marketPrice * (1 - discount)).toFixed(0))
-	if (item.ygStallPrice < 100000) {
-		item.ygStallPrice = Math.floor(item.ygStallPrice / 100) * 100
+	if (item.marketPrice) {
+		item.discount = Number(
+			(
+				(item.marketPrice - (item.ygStallPrice || 0)) /
+				item.marketPrice
+			).toFixed(2)
+		)
 	} else {
-		item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
+		item.discount = 0
 	}
-	item.ygStockPrice = Number((item.ygStallPrice / (1 + qwProfit)).toFixed(0))
-	if (item.ygStockPrice < 100000) {
-		item.ygStockPrice = Math.ceil(item.ygStockPrice / 100) * 100
+
+	if (item.ygStockPrice) {
+		item.qwProfit = Number(
+			(
+				((item.ygStallPrice || 0) - item.ygStockPrice) /
+				item.ygStockPrice
+			).toFixed(2)
+		)
 	} else {
-		item.ygStockPrice = Math.ceil(item.ygStockPrice / 1000) * 1000
+		item.qwProfit = 0
 	}
+
+	// item.ygStallPrice = Number((item.marketPrice * (1 - discount)).toFixed(0))
+	// if (item.ygStallPrice < 100000) {
+	// 	item.ygStallPrice = Math.floor(item.ygStallPrice / 100) * 100
+	// } else {
+	// 	item.ygStallPrice = Math.floor(item.ygStallPrice / 1000) * 1000
+	// }
+	// item.ygStockPrice = Number((item.ygStallPrice / (1 + qwProfit)).toFixed(0))
+	// if (item.ygStockPrice < 100000) {
+	// 	item.ygStockPrice = Math.ceil(item.ygStockPrice / 100) * 100
+	// } else {
+	// 	item.ygStockPrice = Math.ceil(item.ygStockPrice / 1000) * 1000
+	// }
 }
 function cleanCache(type?: string) {
 	if (type === 'loginOut') {
@@ -1139,7 +1189,7 @@ function calculateTotalCost(n: number, base: number): any {
 	padding-left: 28px;
 }
 :deep(.ant-card-body) {
-	max-height: 388px;
+	max-height: 288px;
 	overflow: auto;
 }
 </style>

@@ -1868,11 +1868,6 @@ export function updateTableData(iniObj: any, table: any, global: any) {
 				item.ygStallPrice = Number(
 					(item.ygStockPrice * (1 + qwProfit)).toFixed(0)
 				)
-				if (item.ygStallPrice > 100000) {
-					item.ygStallPrice = Math.ceil(item.ygStallPrice / 10000) * 10000
-				} else if (item.ygStallPrice > 10000) {
-					item.ygStallPrice = Math.ceil(item.ygStallPrice / 1000) * 1000
-				}
 			}
 		} else {
 			err.push(config + '.Text')

@@ -100,7 +100,7 @@ const table = ref<{ columns: any[]; data: any[]; rawData: any[] }>({
 			dataIndex: 'feature',
 		},
 		{
-			title: '定位',
+			title: '定级',
 			dataIndex: 'quality',
 			sorter: (a: any, b: any) =>
 				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
