@@ -69,6 +69,48 @@
 			<el-button @click="openCk">仓库</el-button>
 		</a-space>
 	</a-card>
+	<a-card title="成本区" size="small">
+		<template #extra>
+			<el-button type="primary" link @click="cbModal.visible = true">
+				记录
+			</el-button>
+			<el-button type="primary" link @click="cbModal.visible = true">
+				明细
+			</el-button>
+		</template>
+		<el-row>
+			<el-col :span="4">
+				<el-statistic title="账号" :precision="2" :value="cbManager.zh">
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="4">
+				<el-statistic title="金币" :precision="2" :value="cbManager.jb">
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="4">
+				<el-statistic title="点卡" :precision="2" :value="cbManager.dk">
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="4">
+				<el-statistic title="软件" :precision="2" :value="cbManager.rj">
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="4">
+				<el-statistic title="收益" :precision="2" :value="cbManager.sy">
+					<template #suffix>RMB</template>
+				</el-statistic>
+			</el-col>
+			<el-col :span="4">
+				<el-statistic title="利润" :precision="2" :value="cbManager.lr">
+					<template #suffix>/{{ cbManager.lrl }}%</template>
+				</el-statistic>
+			</el-col>
+		</el-row>
+	</a-card>
 	<a-card title="类型筛选" size="small">
 		<a-checkbox-group
 			v-model:value="typeChecked"
@@ -87,7 +129,7 @@
 				class="table"
 				:columns="goodsTable.columns"
 				:data-source="goodsTable.data"
-				:scroll="{ y: 518 }"
+				:scroll="{ y: 392 }"
 				:pagination="false"
 			>
 				<template #bodyCell="{ column, record, index }">
@@ -466,9 +508,48 @@
 			</span>
 		</template>
 	</el-dialog>
+	<el-dialog
+		class="dialog"
+		v-model="cbModal.visible"
+		title="成本记录"
+		:width="518"
+	>
+		<el-form
+			:model="cbModal.form"
+			label-width="88px"
+			style="padding-right: 28px"
+		>
+			<el-form-item label="类型">
+				<el-radio-group v-model="cbModal.form.type">
+					<el-radio label="账号" />
+					<el-radio label="金币" />
+					<el-radio label="点卡" />
+					<el-radio label="软件" />
+					<el-radio label="收益" />
+				</el-radio-group>
+			</el-form-item>
+			<el-form-item label="金额">
+				<el-input-number v-model="cbModal.form.money" :min="0" />
+			</el-form-item>
+			<el-form-item label="备注">
+				<el-input
+					v-model="cbModal.form.remark"
+					:rows="2"
+					type="textarea"
+					placeholder="请输入"
+				/>
+			</el-form-item>
+		</el-form>
+		<template #footer>
+			<span class="dialog-footer">
+				<el-button @click="cbModal.visible = false">取消</el-button>
+				<el-button type="primary" @click="setCb">确定</el-button>
+			</span>
+		</template>
+	</el-dialog>
 </template>
 <script setup lang="ts">
-import { ref, watch, h } from 'vue'
+import { ref, watch, h, nextTick } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import {
 	DeleteOutlined,
@@ -498,6 +579,38 @@ const date = dayjs().format('YYYY-MM-DD')
 const activeTab = ref<string>('待分配')
 const isCache = ref<boolean>(true)
 const isLogin = ref<boolean>(false)
+const cbManager = ref<{
+	zh: number
+	jb: number
+	dk: number
+	rj: number
+	sy: number
+	lr: number
+	lrl: number
+}>({
+	zh: 0,
+	jb: 0,
+	dk: 0,
+	rj: 0,
+	sy: 0,
+	lr: 0,
+	lrl: 0,
+})
+const cbModal = ref<{
+	visible: boolean
+	form: {
+		type: string
+		money: number
+		remark: string
+	}
+}>({
+	visible: false,
+	form: {
+		type: '点卡',
+		money: 0,
+		remark: '',
+	},
+})
 const config = ref<{
 	user: { mobile: string | number }
 	global: { discount: number; qwProfit: number; mhbrate: number }
@@ -892,17 +1005,61 @@ function init() {
 		if (goodsMap) {
 			getInventoryData(goodsMap, m, activeTab.value).then((result) => {
 				goodsTable.value.data = result.data
-				goodsTable.value.rawData = [...goodsTable.value.data]
-				goodsType.value = result.types
-				select.value.options = result.goodsOptions
-				select.value.rawOptions = [...select.value.options!]
+				nextTick(() => {
+					goodsTable.value.rawData = [...goodsTable.value.data]
+					goodsType.value = result.types
+					select.value.options = result.goodsOptions
+					select.value.rawOptions = [...select.value.options!]
+					const hhR = Cache.get('HanHua-Record', m)
+					if (hhR) {
+						hhModal.value.hhRecord = hhR
+					}
+					UniCloudGet({
+						_tableName: 'cb-manager',
+						whereKey: 'id_n',
+						whereValue: m + '_' + activeTab.value,
+					}).then((cbRes) => {
+						if (cbRes.data.data && cbRes.data.data.length) {
+							const r = {
+								...cbManager.value,
+							}
+							let total = 0
+							cbRes.data.data.forEach((item: any) => {
+								const { type, money } = item
+								switch (type) {
+									case '账号':
+										r.zh += money
+										total += money
+										break
+									case '金币':
+										r.jb += money
+										total += money
+										break
+									case '点卡':
+										r.dk += money
+										total += money
+										break
+									case '软件':
+										r.rj += money
+										total += money
+										break
+									case '收益':
+										r.sy += money
+										break
+								}
+							})
+							cbManager.value = {
+								...r,
+							}
+							cbManager.value.lr = r.sy - total
+							cbManager.value.lrl =
+								Number((cbManager.value.lr / total).toFixed(2)) * 100
+						}
+					})
+				})
 			})
 		}
 	})
-	const hhR = Cache.get('HanHua-Record', m)
-	if (hhR) {
-		hhModal.value.hhRecord = hhR
-	}
 }
 function login() {
 	if (config.value.user.mobile) {
@@ -1156,6 +1313,23 @@ function calculateTotalCost(n: number, base: number): any {
 		return 2 * calculateTotalCost(n - 1, base) + (n - 1) * 1000 * (1 + 0.01)
 	}
 }
+function setCb() {
+	if (!cbModal.value.form.money) {
+		message.error('请输入金额！')
+	} else {
+		UniCloudSet({
+			_tableName: 'cb-manager',
+			date_n: date,
+			id_n: config.value.user.mobile + '_' + activeTab.value,
+			...cbModal.value.form,
+		}).then(() => {
+			cbModal.value.visible = false
+			cbModal.value.form.money = 0
+			cbModal.value.form.remark = ''
+			message.success('记录成功')
+		})
+	}
+}
 </script>
 <style scoped lang="scss">
 .table {
@@ -1171,7 +1345,8 @@ function calculateTotalCost(n: number, base: number): any {
 	}
 }
 .tab {
-	height: calc(100% - 180px);
+	padding: 0 14px;
+	height: calc(100% - 300px);
 	:deep(.ant-tabs-content) {
 		height: 100%;
 	}

@@ -110,7 +110,6 @@ function menuClick(item: any) {
 <style lang="scss" scoped>
 .ant-layout-content {
 	.main {
-		padding: 16px;
 		background-color: #fff;
 		margin-bottom: 48px;
 		height: calc(100% - 102px);
