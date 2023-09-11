@@ -1022,6 +1022,15 @@ function init() {
 	})
 }
 function getCb() {
+	cbManager.value = {
+		zh: 0,
+		jb: 0,
+		dk: 0,
+		rj: 0,
+		sy: 0,
+		lr: 0,
+		lrl: 0,
+	}
 	UniCloudGet({
 		_tableName: 'cb-manager',
 		whereKey: 'id_n',
