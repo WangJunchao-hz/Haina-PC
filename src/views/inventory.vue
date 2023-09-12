@@ -74,7 +74,7 @@
 			<el-button type="primary" link @click="cbModal.visible = true">
 				记录
 			</el-button>
-			<el-button type="primary" link @click="cbModal.visible = true">
+			<el-button type="primary" link @click="cbMxModal.visible = true">
 				明细
 			</el-button>
 			<el-button type="primary" link @click="getCb"> 刷新 </el-button>
@@ -548,6 +548,30 @@
 			</span>
 		</template>
 	</el-dialog>
+	<el-dialog
+		class="dialog"
+		v-model="cbMxModal.visible"
+		title="成本明细"
+		:width="1188"
+	>
+		<el-table :data="cbMxModal.table.data" style="width: 100%" height="488">
+			<el-table-column
+				v-for="c in cbMxModal.table.columns"
+				:prop="c.dataIndex"
+				:label="c.title"
+				:width="c.width"
+			>
+			</el-table-column>
+		</el-table>
+		<template #footer>
+			<span class="dialog-footer">
+				<el-button @click="cbMxModal.visible = false">取消</el-button>
+				<el-button type="primary" @click="cbMxModal.visible = false">
+					确定
+				</el-button>
+			</span>
+		</template>
+	</el-dialog>
 </template>
 <script setup lang="ts">
 import { ref, watch, h, nextTick } from 'vue'
@@ -610,6 +634,34 @@ const cbModal = ref<{
 		type: '点卡',
 		money: 0,
 		remark: '',
+	},
+})
+const cbMxModal = ref<{
+	visible: boolean
+	table: {
+		columns: any[]
+		data: any[]
+	}
+}>({
+	visible: false,
+	table: {
+		columns: [
+			{
+				title: '类型',
+				dataIndex: 'type',
+				width: 188,
+			},
+			{
+				title: '金额',
+				dataIndex: 'money',
+				width: 188,
+			},
+			{
+				title: '备注',
+				dataIndex: 'remark',
+			},
+		],
+		data: [],
 	},
 })
 const config = ref<{
@@ -1037,6 +1089,7 @@ function getCb() {
 		whereValue: config.value.user.mobile + '_' + activeTab.value,
 	}).then((cbRes) => {
 		if (cbRes.data.data && cbRes.data.data.length) {
+			cbMxModal.value.table.data = cbRes.data.data
 			const r = {
 				...cbManager.value,
 			}
