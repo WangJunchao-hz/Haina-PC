@@ -1,10 +1,10 @@
 <template>
-	<a-row>
+	<a-row ref="Box1">
 		<a-col :span="12">
 			<a-space>
 				<a-button type="primary" @click="add()"> 新增商品 </a-button>
 				<a-button type="primary" @click="save()"> 保存 </a-button>
-				<a-cascader
+				<!-- <a-cascader
 					style="width: 188px"
 					v-model:value="select.value"
 					:options="select.options"
@@ -12,12 +12,12 @@
 					placeholder="快速筛选"
 					expandTrigger="hover"
 					@change="selectChange"
-				/>
+				/> -->
 			</a-space>
 		</a-col>
 		<a-col :span="12"> </a-col>
 	</a-row>
-	<a-card title="类型筛选" size="small">
+	<a-card ref="Box2" title="类型筛选" size="small">
 		<a-checkbox-group
 			v-model:value="typeChecked"
 			:options="goodsType"
@@ -26,6 +26,7 @@
 		</a-checkbox-group>
 	</a-card>
 	<a-table
+		:style="{ height: ths }"
 		class="table"
 		:columns="table.columns"
 		:data-source="table.data"
@@ -47,40 +48,42 @@
 	</a-table>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { v4 } from 'uuid'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
 import { UniCloudSet, UniCloudGet } from '@/common/api/uni-cloud-api'
 import { Cache, coverArrayToObj, coverObjToArray } from '@/common/utils'
-import type { CascaderProps } from 'ant-design-vue'
-import type { ShowSearchType } from 'ant-design-vue/es/cascader'
+// import type { CascaderProps } from 'ant-design-vue'
+// import type { ShowSearchType } from 'ant-design-vue/es/cascader'
 const goodsType = ref<any[]>([])
 const typeChecked = ref<any[]>([])
+const Box1 = ref()
+const Box2 = ref()
+const ths = ref<string>('300px')
 const tpl = {
 	key: v4(),
 	type: '',
 	name: '',
-	feature: '',
 	quality: '',
 	config: '',
 }
-const select = ref<{
-	value: string[]
-	options: CascaderProps['options']
-	rawOptions: CascaderProps['options']
-	filter: ShowSearchType['filter']
-}>({
-	value: [],
-	options: [],
-	rawOptions: [],
-	filter: (inputValue, path) => {
-		return path.some(
-			(option) =>
-				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
-		)
-	},
-})
+// const select = ref<{
+// 	value: string[]
+// 	options: CascaderProps['options']
+// 	rawOptions: CascaderProps['options']
+// 	filter: ShowSearchType['filter']
+// }>({
+// 	value: [],
+// 	options: [],
+// 	rawOptions: [],
+// 	filter: (inputValue, path) => {
+// 		return path.some(
+// 			(option) =>
+// 				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
+// 		)
+// 	},
+// })
 const table = ref<{ columns: any[]; data: any[]; rawData: any[] }>({
 	columns: [
 		{
@@ -92,15 +95,11 @@ const table = ref<{ columns: any[]; data: any[]; rawData: any[] }>({
 				}),
 		},
 		{
-			title: '名称',
+			title: '名称/特征',
 			dataIndex: 'name',
 		},
 		{
-			title: '特征',
-			dataIndex: 'feature',
-		},
-		{
-			title: '定级',
+			title: '质量',
 			dataIndex: 'quality',
 			sorter: (a: any, b: any) =>
 				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
@@ -127,7 +126,7 @@ watch(
 			const map: any = {}
 			goodsType.value = []
 			table.value.rawData.forEach((item) => {
-				const { type, name, feature } = item
+				const { type, name } = item
 				if (type) {
 					const hasType = typeMap[type]
 					if (hasType) {
@@ -144,12 +143,12 @@ watch(
 				if (name) {
 					const has = map[name]
 					if (has) {
-						if (feature) {
-							has.children.push({
-								label: feature,
-								value: feature,
-							})
-						}
+						// if (feature) {
+						// 	has.children.push({
+						// 		label: feature,
+						// 		value: feature,
+						// 	})
+						// }
 					} else {
 						const single: any = {
 							label: name,
@@ -157,24 +156,24 @@ watch(
 							type,
 							children: [],
 						}
-						if (feature) {
-							single.children.push({
-								label: feature,
-								value: feature,
-							})
-						}
+						// if (feature) {
+						// 	single.children.push({
+						// 		label: feature,
+						// 		value: feature,
+						// 	})
+						// }
 						map[name] = single
 					}
 				}
 			})
 			goodsType.value = Object.keys(typeMap).map((key) => typeMap[key])
-			select.value.options = Object.keys(map).map((key) => map[key])
-			select.value.rawOptions = [...select.value.options]
-			if (typeChecked.value.length) {
-				select.value.options = select.value.rawOptions.filter((so) =>
-					typeChecked.value.includes(so.type)
-				)
-			}
+			// select.value.options = Object.keys(map).map((key) => map[key])
+			// select.value.rawOptions = [...select.value.options]
+			// if (typeChecked.value.length) {
+			// 	select.value.options = select.value.rawOptions.filter((so) =>
+			// 		typeChecked.value.includes(so.type)
+			// 	)
+			// }
 		}
 	},
 	{ deep: true }
@@ -202,35 +201,40 @@ function init() {
 				})
 			)
 			table.value.rawData = [...table.value.data]
+			nextTick(() => {
+				const h1 = Box1.value.$el.offsetHeight
+				const h2 = Box2.value.$el.offsetHeight
+				ths.value = `calc(100% - ${h1 + h2}px)`
+			})
 		}
 	})
 }
-function selectChange() {
-	if (select.value.value) {
-		const key = select.value.value.join('_')
-		table.value.data = table.value.rawData.filter((item) => {
-			const { name, feature } = item
-			let _id = name
-			if (feature) {
-				_id += '_' + feature
-			}
-			return _id === key
-		})
-	} else {
-		table.value.data = [...table.value.rawData]
-	}
-}
+// function selectChange() {
+// 	if (select.value.value) {
+// 		const key = select.value.value.join('_')
+// 		table.value.data = table.value.rawData.filter((item) => {
+// 			const { name, feature } = item
+// 			let _id = name
+// 			if (feature) {
+// 				_id += '_' + feature
+// 			}
+// 			return _id === key
+// 		})
+// 	} else {
+// 		table.value.data = [...table.value.rawData]
+// 	}
+// }
 function typeFilter(checked: any[]) {
 	if (checked.length) {
 		table.value.data = table.value.rawData.filter((item: any) =>
 			checked.includes(item.type)
 		)
-		select.value.options = select.value.rawOptions!.filter((so) =>
-			checked.includes(so.type)
-		)
+		// select.value.options = select.value.rawOptions!.filter((so) =>
+		// 	checked.includes(so.type)
+		// )
 	} else {
 		table.value.data = [...table.value.rawData]
-		select.value.options = [...select.value.rawOptions!]
+		// select.value.options = [...select.value.rawOptions!]
 	}
 }
 function add() {
@@ -261,8 +265,10 @@ function save() {
 	})
 }
 </script>
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .table {
-	height: calc(100% - 140px);
+	:deep(.ant-table) {
+		height: 100% !important;
+	}
 }
 </style>

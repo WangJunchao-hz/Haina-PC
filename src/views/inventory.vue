@@ -1,29 +1,30 @@
 <template>
-	<a-card title="功能区" size="small">
-		<a-space wrap>
-			<a-input-search
-				style="width: 188px"
-				v-model:value="config.user.mobile"
-				:disabled="isLogin"
-				placeholder="手机号作为唯一标识，设置后不可修改"
-				@search="login"
-			>
-				<template #enterButton>
-					<a-button :disabled="isLogin">登录</a-button>
-				</template>
-			</a-input-search>
-			<a-button type="primary" @click="cleanCache('loginOut')">注销</a-button>
-			<!-- <a-switch
+	<a-spin class="loading" tip="数据加载中..." :spinning="loading">
+		<a-card ref="Box1" title="功能区" size="small">
+			<a-space wrap>
+				<a-input-search
+					style="width: 188px"
+					v-model:value="config.user.mobile"
+					:disabled="isLogin"
+					placeholder="手机号作为唯一标识，设置后不可修改"
+					@search="login"
+				>
+					<template #enterButton>
+						<a-button :disabled="isLogin">登录</a-button>
+					</template>
+				</a-input-search>
+				<a-button type="primary" @click="cleanCache('loginOut')">注销</a-button>
+				<!-- <a-switch
 				v-model:checked="isCache"
 				checked-children="开启缓存"
 				un-checked-children="关闭缓存"
 			/>
 			<a-button type="primary" @click="cleanCache">清除缓存</a-button> -->
-			<a-button type="primary" @click="save">保存</a-button>
-			<a-button type="primary" @click="setModal.visible = true">
-				设置
-			</a-button>
-			<a-cascader
+				<a-button type="primary" @click="save">保存</a-button>
+				<a-button type="primary" @click="setModal.visible = true">
+					设置
+				</a-button>
+				<!-- <a-cascader
 				style="width: 188px"
 				v-model:value="select.value"
 				:options="select.options"
@@ -31,136 +32,141 @@
 				placeholder="快速筛选"
 				expandTrigger="hover"
 				@change="selectChange"
-			/>
-			<a-upload
-				accept=".ini"
-				:showUploadList="false"
-				:customRequest="
+			/> -->
+				<a-upload
+					accept=".ini"
+					:showUploadList="false"
+					:customRequest="
 					($event:any) => {
 						fileChange($event, 'import')
 					}
 				"
-			>
-				<a-button>
-					<upload-outlined></upload-outlined>
-					导入配置
-				</a-button>
-			</a-upload>
-			<a-upload
-				accept=".ini"
-				:showUploadList="false"
-				:customRequest="
+				>
+					<a-button>
+						<upload-outlined></upload-outlined>
+						导入配置
+					</a-button>
+				</a-upload>
+				<a-upload
+					accept=".ini"
+					:showUploadList="false"
+					:customRequest="
 					($event:any) => {
 						fileChange($event, 'export')
 					}
 				"
-			>
-				<a-button>
-					<upload-outlined></upload-outlined>
-					生成配置
+				>
+					<a-button>
+						<upload-outlined></upload-outlined>
+						生成配置
+					</a-button>
+				</a-upload>
+				<a-button @click="hanHua">
+					<FormOutlined></FormOutlined>
+					生成喊话
 				</a-button>
-			</a-upload>
-			<a-button @click="hanHua">
-				<FormOutlined></FormOutlined>
-				生成喊话
-			</a-button>
-			<a-button @click="hhModal.visible = true"> 喊话记录 </a-button>
-			<el-button @click="openGj">估价</el-button>
-			<el-button @click="openCk">仓库</el-button>
-		</a-space>
-	</a-card>
-	<a-card title="成本区" size="small">
-		<template #extra>
-			<el-button type="primary" link @click="cbModal.visible = true">
-				记录
-			</el-button>
-			<el-button type="primary" link @click="cbMxModal.visible = true">
-				明细
-			</el-button>
-			<el-button type="primary" link @click="getCb"> 刷新 </el-button>
-		</template>
-		<el-row>
-			<el-col :span="4">
-				<el-statistic title="账号" :precision="2" :value="cbManager.zh">
-					<template #suffix>RMB</template>
-				</el-statistic>
-			</el-col>
-			<el-col :span="4">
-				<el-statistic title="金币" :precision="2" :value="cbManager.jb">
-					<template #suffix>RMB</template>
-				</el-statistic>
-			</el-col>
-			<el-col :span="4">
-				<el-statistic title="点卡" :precision="2" :value="cbManager.dk">
-					<template #suffix>RMB</template>
-				</el-statistic>
-			</el-col>
-			<el-col :span="4">
-				<el-statistic title="软件" :precision="2" :value="cbManager.rj">
-					<template #suffix>RMB</template>
-				</el-statistic>
-			</el-col>
-			<el-col :span="4">
-				<el-statistic title="收益" :precision="2" :value="cbManager.sy">
-					<template #suffix>RMB</template>
-				</el-statistic>
-			</el-col>
-			<el-col :span="4">
-				<el-statistic title="利润" :precision="2" :value="cbManager.lr">
-					<template #suffix>/{{ cbManager.lrl }}%</template>
-				</el-statistic>
-			</el-col>
-		</el-row>
-	</a-card>
-	<a-card title="类型筛选" size="small">
-		<a-checkbox-group
-			v-model:value="typeChecked"
-			:options="goodsType"
-			@change="typeFilter"
-		/>
-	</a-card>
-	<a-tabs v-model:activeKey="activeTab" class="tab">
-		<a-tab-pane
-			v-for="d in config.districts"
-			:key="d.value"
-			:tab="d.label"
-			style="height: 100%"
+				<a-button @click="hhModal.visible = true"> 喊话记录 </a-button>
+				<el-button @click="openGj">估价</el-button>
+				<el-button @click="openCk">仓库</el-button>
+			</a-space>
+		</a-card>
+		<a-card ref="Box2" title="成本区" size="small">
+			<template #extra>
+				<el-button type="primary" link @click="cbModal.visible = true">
+					记录
+				</el-button>
+				<el-button type="primary" link @click="cbMxModal.visible = true">
+					明细
+				</el-button>
+				<el-button type="primary" link @click="getCb"> 刷新 </el-button>
+			</template>
+			<el-row>
+				<el-col :span="4">
+					<el-statistic title="账号" :precision="2" :value="cbManager.zh">
+						<template #suffix>RMB</template>
+					</el-statistic>
+				</el-col>
+				<el-col :span="4">
+					<el-statistic title="金币" :precision="2" :value="cbManager.jb">
+						<template #suffix>RMB</template>
+					</el-statistic>
+				</el-col>
+				<el-col :span="4">
+					<el-statistic title="点卡" :precision="2" :value="cbManager.dk">
+						<template #suffix>RMB</template>
+					</el-statistic>
+				</el-col>
+				<el-col :span="4">
+					<el-statistic title="软件" :precision="2" :value="cbManager.rj">
+						<template #suffix>RMB</template>
+					</el-statistic>
+				</el-col>
+				<el-col :span="4">
+					<el-statistic title="收益" :precision="2" :value="cbManager.sy">
+						<template #suffix>RMB</template>
+					</el-statistic>
+				</el-col>
+				<el-col :span="4">
+					<el-statistic title="利润" :precision="2" :value="cbManager.lr">
+						<template #suffix>/{{ cbManager.lrl }}%</template>
+					</el-statistic>
+				</el-col>
+			</el-row>
+		</a-card>
+		<a-card ref="Box3" title="类型筛选" size="small">
+			<a-checkbox-group
+				v-model:value="typeChecked"
+				:options="goodsType"
+				@change="typeFilter"
+			/>
+		</a-card>
+		<a-tabs
+			:style="{ height: ths }"
+			@change="getPageData"
+			v-model:activeKey="activeTab"
+			class="tab"
 		>
-			<a-table
-				class="table"
-				:columns="goodsTable.columns"
-				:data-source="goodsTable.data"
-				:scroll="{ y: 392 }"
-				:pagination="false"
+			<a-tab-pane
+				v-for="d in config.districts"
+				:key="d.value"
+				:tab="d.label"
+				style="height: 100%"
 			>
-				<template #bodyCell="{ column, record, index }">
-					<template v-if="column.dataIndex === 'operate'">
-						<a-space>
-							<a-popconfirm
-								title="确认删除？"
-								ok-text="是"
-								cancel-text="否"
-								@confirm="goodsTable.remove(index)"
-							>
-								<a-button
-									type="primary"
-									size="small"
-									danger
-									:icon="h(DeleteOutlined)"
+				<a-table
+					class="table"
+					:columns="goodsTable.columns"
+					:data-source="goodsTable.data"
+					:scroll="{ y: 'calc(100% - 55px)' }"
+					:pagination="false"
+				>
+					<template #bodyCell="{ column, record, index }">
+						<template v-if="column.dataIndex === 'operate'">
+							<a-space>
+								<a-popconfirm
+									title="确认删除？"
+									ok-text="是"
+									cancel-text="否"
+									@confirm="goodsTable.remove(index)"
 								>
-								</a-button>
-							</a-popconfirm>
-							<!-- <a-button
+									<a-button
+										type="primary"
+										size="small"
+										danger
+										:icon="h(DeleteOutlined)"
+									>
+									</a-button>
+								</a-popconfirm>
+								<!-- <a-button
 								type="primary"
 								size="small"
 								:icon="h(FormOutlined)"
 								@click="goodsTable.remove(index)"
 							>
 							</a-button> -->
-						</a-space>
-					</template>
-					<template v-else>
-						<!-- <a-input
+							</a-space>
+						</template>
+						<template v-else>
+							<!-- <a-input
 							v-if="
 								column.dataIndex === 'ygStallPrice' ||
 								column.dataIndex === 'ygStockPrice'
@@ -169,37 +175,37 @@
 							@change="singleJS(record)"
 							v-model:value="record[column.dataIndex]"
 						/> -->
-						<a-input-number
-							style="width: 100%"
-							v-if="
-								column.dataIndex === 'ygStallPrice' ||
-								column.dataIndex === 'ygStockPrice' ||
-								column.dataIndex === 'marketPrice'
-							"
-							v-model:value="record[column.dataIndex]"
-							:min="0"
-							:step="
-								record[column.dataIndex] > 100000
-									? 10000
-									: record[column.dataIndex] > 10000
-									? 1000
-									: 100
-							"
-							placeholder="请输入"
-							@change="singleJS(record)"
-						>
-						</a-input-number>
-						<span
-							style="color: #f56c6c; font-weight: bold"
-							v-else-if="column.dataIndex === 'qwProfit'"
-							>{{ record[column.dataIndex] }}</span
-						>
-						<span
+							<a-input-number
+								style="width: 100%"
+								v-if="
+									column.dataIndex === 'ygStallPrice' ||
+									column.dataIndex === 'ygStockPrice'
+									// column.dataIndex === 'marketPrice'
+								"
+								v-model:value="record[column.dataIndex]"
+								:min="0"
+								:step="
+									record[column.dataIndex] > 100000
+										? 10000
+										: record[column.dataIndex] > 10000
+										? 1000
+										: 100
+								"
+								placeholder="请输入"
+								@change="singleJS(record)"
+							>
+							</a-input-number>
+							<span
+								style="color: #f56c6c; font-weight: bold"
+								v-else-if="column.dataIndex === 'qwProfit'"
+								>{{ record[column.dataIndex] }}</span
+							>
+							<!-- <span
 							style="color: #67c23a; font-weight: bold"
 							v-else-if="column.dataIndex === 'discount'"
 							>{{ record[column.dataIndex] }}</span
-						>
-						<!-- <a-input-number
+						> -->
+							<!-- <a-input-number
 							style="width: 100%"
 							v-else-if="column.dataIndex === 'discount'"
 							v-model:value="record[column.dataIndex]"
@@ -220,19 +226,19 @@
 							@change="singleJS(record)"
 						>
 						</a-input-number> -->
-						<!-- <a-input
+							<!-- <a-input
 							v-else-if="column.dataIndex === 'marketPrice'"
 							style="width: 100%"
 							@change="singleJS(record)"
 							v-model:value="record[column.dataIndex]"
 						/> -->
-						<a-switch
-							v-else-if="column.dataIndex === 'isSet'"
-							v-model:checked="record[column.dataIndex]"
-							checked-children="是"
-							un-checked-children="否"
-						/>
-						<a-input-number
+							<a-switch
+								v-else-if="column.dataIndex === 'isSet'"
+								v-model:checked="record[column.dataIndex]"
+								checked-children="是"
+								un-checked-children="否"
+							/>
+							<!-- <a-input-number
 							style="width: 100%"
 							v-else-if="
 								column.dataIndex === 'collect' || column.dataIndex === 'sell'
@@ -242,25 +248,26 @@
 							:step="1"
 							placeholder="请输入"
 						>
-						</a-input-number>
-						<span
-							v-else-if="column.dataIndex === 'name'"
-							style="color: #303133"
-							>{{ record[column.dataIndex] }}</span
-						>
-						<span
+						</a-input-number> -->
+							<span
+								v-else-if="column.dataIndex === 'name'"
+								style="color: #409eff"
+								>{{ record[column.dataIndex] }}</span
+							>
+							<!-- <span
 							v-else-if="column.dataIndex === 'feature'"
 							style="color: #409eff"
 							>{{ record[column.dataIndex] }}</span
-						>
-						<span v-else style="color: #909399">{{
-							record[column.dataIndex]
-						}}</span>
+						> -->
+							<span v-else style="color: #303133">{{
+								record[column.dataIndex]
+							}}</span>
+						</template>
 					</template>
-				</template>
-			</a-table>
-		</a-tab-pane>
-	</a-tabs>
+				</a-table>
+			</a-tab-pane>
+		</a-tabs>
+	</a-spin>
 	<a-modal
 		v-model:visible="setModal.visible"
 		title="参数设置"
@@ -314,7 +321,7 @@
 					<a-radio-button v-for="(d, i) in config.districts" :value="d.value">
 						{{ d.label }}
 						<a-popconfirm
-							title="所属区下的数据会被放到待分配区，请谨慎操作！是否确认删除？"
+							title="所属区下的数据会丢失，请谨慎操作！是否确认删除？"
 							ok-text="是"
 							cancel-text="否"
 							@confirm="config.deleteDistrict(i)"
@@ -332,7 +339,7 @@
 			</a-space>
 		</a-card>
 		<a-card title="喊话模板" size="small">
-			<a-space v-for="(tpl, i) in config.hanhuaTpl">
+			<a-space v-for="(tpl, i) in config.hanhuaTpl[config.defaultDistrict]">
 				<a-textarea
 					style="width: 688px"
 					v-model:value="tpl.value"
@@ -356,7 +363,7 @@
 			class="list"
 			size="small"
 			bordered
-			:data-source="hhModal.hhRecord"
+			:data-source="hhModal.hhRecord[activeTab]"
 			item-layout="horizontal"
 		>
 			<template #renderItem="{ item, index }">
@@ -574,7 +581,7 @@
 	</el-dialog>
 </template>
 <script setup lang="ts">
-import { ref, watch, h, nextTick } from 'vue'
+import { ref, h, nextTick } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import {
 	DeleteOutlined,
@@ -597,12 +604,18 @@ import {
 } from '@/common/utils'
 import { message } from 'ant-design-vue'
 import 'ant-design-vue/es/message/style/css'
-import type { CascaderProps } from 'ant-design-vue'
-import type { ShowSearchType } from 'ant-design-vue/es/cascader'
+// import type { CascaderProps } from 'ant-design-vue'
+// import type { ShowSearchType } from 'ant-design-vue/es/cascader'
 import dayjs from 'dayjs'
+const Box1 = ref()
+const Box2 = ref()
+const Box3 = ref()
+const ths = ref<string>('300px')
+const loading = ref<boolean>(true)
 const date = dayjs().format('YYYY-MM-DD')
+let goodsMap: any = null // 缓存后面用
 const activeTab = ref<string>('待分配')
-const isCache = ref<boolean>(true)
+// const isCache = ref<boolean>(true)
 const isLogin = ref<boolean>(false)
 const cbManager = ref<{
 	zh: number
@@ -673,29 +686,33 @@ const config = ref<{
 	defaultDistrict: string
 	addDistrict: () => void
 	deleteDistrict: (i: number) => void
-	hanhuaTpl: { value: string; key: string }[]
+	hanhuaTpl: {
+		[name: string]: { value: string; key: string }[]
+	}
 	addTpl: () => void
 	deleteTpl: (i: number) => void
 }>({
 	user: { mobile: '' },
 	global: {
 		discount: 0.01, // 默认让利1%
-		qwProfit: 0.3, // 期望利润率20%
+		qwProfit: 0.2, // 期望利润率20%
 		mhbrate: 0.0725,
 	},
 	id: v4(),
-	hanhuaTpl: [
-		{
-			value:
-				'#Y熊猫长安城天台' +
-				'【杂货】强化$n{青龙石}树$n{摇钱树苗}符石$n_f{符石_1级}起C6$n{超级金柳露}c6$n{金柳露}如意丹$t_range{如意丹}' +
-				'【宝石】黑$n_f{黑宝石_1级}星辉$n_f{星辉石_1级}舍$n_f{舍利子_1级}玛$n_f{红玛瑙_1级}太$n_f{太阳石_1级}月$n_f{月亮石_1级}光$n_f{光芒石_1级}' +
-				'【珍珠】60珍$n_f{珍珠_60级}70珍$n_f{珍珠_70级}80珍$n_f{珍珠_80级}90珍$n_f{珍珠_90级}100珍$n_f{珍珠_100级}110珍$n_f{珍珠_110级}120珍$n_f{珍珠_120级}130珍$n_f{珍珠_130级}' +
-				'【内丹】低丹$t_range{低内丹}高丹$t_range{高内丹}' +
-				'【兽决】普兽$t_range{普通兽诀}高兽$t_range{高级兽诀}#46',
-			key: v4(),
-		},
-	],
+	hanhuaTpl: {
+		待分配: [
+			{
+				value:
+					'#Y熊猫长安城天台' +
+					'【杂货】强化$n{青龙石}树$n{摇钱树苗}符石$n_f{符石_1级}起C6$n{超级金柳露}c6$n{金柳露}如意丹$t_range{如意丹}' +
+					'【宝石】黑$n_f{黑宝石_1级}星辉$n_f{星辉石_1级}舍$n_f{舍利子_1级}玛$n_f{红玛瑙_1级}太$n_f{太阳石_1级}月$n_f{月亮石_1级}光$n_f{光芒石_1级}' +
+					'【珍珠】60珍$n_f{珍珠_60级}70珍$n_f{珍珠_70级}80珍$n_f{珍珠_80级}90珍$n_f{珍珠_90级}100珍$n_f{珍珠_100级}110珍$n_f{珍珠_110级}120珍$n_f{珍珠_120级}130珍$n_f{珍珠_130级}' +
+					'【内丹】低丹$t_range{低内丹}高丹$t_range{高内丹}' +
+					'【兽决】普兽$t_range{普通兽诀}高兽$t_range{高级兽诀}#46',
+				key: v4(),
+			},
+		],
+	},
 	districtModel: '',
 	defaultDistrict: '待分配',
 	districts: [
@@ -712,44 +729,32 @@ const config = ref<{
 				label: config.value.districtModel,
 				value: config.value.districtModel,
 			})
+			config.value.hanhuaTpl[config.value.districtModel] = [
+				{
+					value: '',
+					key: v4(),
+				},
+			]
 		}
 	},
 	addTpl: () => {
-		config.value.hanhuaTpl.push({
+		config.value.hanhuaTpl[config.value.defaultDistrict].push({
 			key: v4(),
 			value: '',
 		})
 	},
 	deleteTpl: (i: number) => {
-		if (config.value.hanhuaTpl.length === 1) {
+		const tpl = config.value.hanhuaTpl[config.value.defaultDistrict]
+		if (tpl.length === 1) {
 			message.warn('至少保留一条！')
 		} else {
-			config.value.hanhuaTpl.splice(i, 1)
+			tpl.splice(i, 1)
 		}
 	},
 	deleteDistrict: (i: number) => {
-		const dfp = goodsTable.value.rawData.map((item) => {
-			return {
-				...item,
-				district: '待分配',
-			}
-		})
-		let hasCache = Cache.get('StallGoodsInfo', config.value.user.mobile)
-		if (hasCache) {
-			const oldDfp = hasCache['待分配']
-			if (oldDfp) {
-				oldDfp.push(...dfp)
-				hasCache['待分配'] = oldDfp
-			} else {
-				hasCache['待分配'] = dfp
-			}
-		} else {
-			hasCache = {}
-			hasCache['待分配'] = dfp
-		}
 		const del = config.value.districts.splice(i, 1)
-		delete hasCache[del[0].value]
-		Cache.set('StallGoodsInfo', config.value.user.mobile, hasCache)
+		// 喊话模板也会一起删除
+		delete config.value.hanhuaTpl[del[0].value]
 		activeTab.value = '待分配'
 	},
 })
@@ -840,57 +845,60 @@ const ckModal = ref<{
 })
 const hhModal = ref<{
 	visible: boolean
-	hhRecord: string[]
+	hhRecord: {
+		[name: string]: string[]
+	}
 	remove: (i: number) => void
 }>({
 	visible: false,
-	hhRecord: [],
+	hhRecord: {},
 	remove: (i) => {
-		hhModal.value.hhRecord.splice(i, 1)
+		const list = hhModal.value.hhRecord[activeTab.value]
+		list.splice(i, 1)
 	},
 })
 const setModal = ref<{
 	visible: boolean
-	table: {
-		columns: any[]
-		data: any[]
-	}
+	// table: {
+	// 	columns: any[]
+	// 	data: any[]
+	// }
 }>({
 	visible: false,
-	table: {
-		columns: [
-			{
-				title: '名称',
-				dataIndex: 'name',
-			},
-			{
-				title: '属/技/等',
-				dataIndex: 'feature',
-			},
-			{
-				title: '期望利润率',
-				dataIndex: 'qwProfit',
-			},
-		],
-		data: [],
-	},
+	// table: {
+	// 	columns: [
+	// 		{
+	// 			title: '名称',
+	// 			dataIndex: 'name',
+	// 		},
+	// 		{
+	// 			title: '属/技/等',
+	// 			dataIndex: 'feature',
+	// 		},
+	// 		{
+	// 			title: '期望利润率',
+	// 			dataIndex: 'qwProfit',
+	// 		},
+	// 	],
+	// 	data: [],
+	// },
 })
-const select = ref<{
-	value: string[]
-	options: CascaderProps['options']
-	rawOptions: CascaderProps['options']
-	filter: ShowSearchType['filter']
-}>({
-	value: [],
-	options: [],
-	rawOptions: [],
-	filter: (inputValue, path) => {
-		return path.some(
-			(option) =>
-				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
-		)
-	},
-})
+// const select = ref<{
+// 	value: string[]
+// 	options: CascaderProps['options']
+// 	rawOptions: CascaderProps['options']
+// 	filter: ShowSearchType['filter']
+// }>({
+// 	value: [],
+// 	options: [],
+// 	rawOptions: [],
+// 	filter: (inputValue, path) => {
+// 		return path.some(
+// 			(option) =>
+// 				option.label.toLowerCase().indexOf(inputValue.toLowerCase()) > -1
+// 		)
+// 	},
+// })
 const typeChecked = ref<any[]>([])
 const goodsType = ref<any[]>([])
 const goodsTable = ref<{
@@ -903,23 +911,23 @@ const goodsTable = ref<{
 		{
 			title: '类型',
 			dataIndex: 'type',
-			width: 88,
+			// width: 88,
 			align: 'center',
 		},
 		{
-			title: '名称',
+			title: '名称/属/技/等',
 			dataIndex: 'name',
-			width: 158,
+			// width: 158,
 			align: 'center',
 		},
+		// {
+		// 	title: '属/技/等',
+		// 	dataIndex: 'feature',
+		// 	width: 158,
+		// 	align: 'center',
+		// },
 		{
-			title: '属/技/等',
-			dataIndex: 'feature',
-			width: 158,
-			align: 'center',
-		},
-		{
-			title: '定级',
+			title: '质量',
 			dataIndex: 'quality',
 			sorter: (a: any, b: any) =>
 				(a.quality || '').localeCompare(b.quality || '', 'zh-Hans-CN', {
@@ -928,19 +936,20 @@ const goodsTable = ref<{
 			width: 88,
 			align: 'center',
 		},
-		{
-			title: '市场价',
-			dataIndex: 'marketPrice',
-			sorter: (a: any, b: any) => b.marketPrice - a.marketPrice,
-		},
-		{
-			title: '让利',
-			dataIndex: 'discount',
-			width: 88,
-			align: 'center',
-		},
+		// {
+		// 	title: '市场价',
+		// 	dataIndex: 'marketPrice',
+		// 	sorter: (a: any, b: any) => b.marketPrice - a.marketPrice,
+		// },
+		// {
+		// 	title: '让利',
+		// 	dataIndex: 'discount',
+		// 	width: 88,
+		// 	align: 'center',
+		// },
 		{
 			title: '摆摊价',
+			width: 188,
 			dataIndex: 'ygStallPrice',
 			sorter: (a: any, b: any) => b.ygStallPrice - a.ygStallPrice,
 		},
@@ -952,32 +961,33 @@ const goodsTable = ref<{
 		},
 		{
 			title: '收货价',
+			width: 188,
 			dataIndex: 'ygStockPrice',
 			sorter: (a: any, b: any) => b.ygStockPrice - a.ygStockPrice,
 		},
-		{
-			title: '收统计',
-			dataIndex: 'collect',
-			sorter: (a: any, b: any) => b.collect - a.collect,
-			width: 98,
-		},
-		{
-			title: '卖统计',
-			dataIndex: 'sell',
-			sorter: (a: any, b: any) => b.sell - a.sell,
-			width: 98,
-		},
+		// {
+		// 	title: '收统计',
+		// 	dataIndex: 'collect',
+		// 	sorter: (a: any, b: any) => b.collect - a.collect,
+		// 	width: 98,
+		// },
+		// {
+		// 	title: '卖统计',
+		// 	dataIndex: 'sell',
+		// 	sorter: (a: any, b: any) => b.sell - a.sell,
+		// 	width: 98,
+		// },
 		{
 			title: '配置',
 			dataIndex: 'isSet',
-			width: 68,
-			align: 'center',
+			// width: 68,
+			// align: 'center',
 		},
 		{
 			title: '操作',
 			dataIndex: 'operate',
-			width: 68,
-			align: 'center',
+			// width: 68,
+			// align: 'center',
 		},
 	],
 	data: [],
@@ -992,25 +1002,25 @@ const goodsTable = ref<{
 		}
 	},
 })
-watch(
-	() => goodsTable.value.rawData,
-	() => {
-		// if (isCache.value && config.value.user.mobile) {
-		// 	let hasExist = Cache.get('StallGoodsInfo', config.value.user.mobile)
-		// 	if (!hasExist) {
-		// 		hasExist = {}
-		// 	}
-		// 	hasExist[activeTab.value] = goodsTable.value.rawData
-		// 	Cache.set('StallGoodsInfo', config.value.user.mobile, hasExist)
-		// }
-		if (typeChecked.value.length) {
-			select.value.options = select.value.rawOptions!.filter((so) =>
-				typeChecked.value.includes(so.type)
-			)
-		}
-	},
-	{ deep: true }
-)
+// watch(
+// 	() => goodsTable.value.rawData,
+// 	() => {
+// 		// if (isCache.value && config.value.user.mobile) {
+// 		// 	let hasExist = Cache.get('StallGoodsInfo', config.value.user.mobile)
+// 		// 	if (!hasExist) {
+// 		// 		hasExist = {}
+// 		// 	}
+// 		// 	hasExist[activeTab.value] = goodsTable.value.rawData
+// 		// 	Cache.set('StallGoodsInfo', config.value.user.mobile, hasExist)
+// 		// }
+// 		// if (typeChecked.value.length) {
+// 		// 	select.value.options = select.value.rawOptions!.filter((so) =>
+// 		// 		typeChecked.value.includes(so.type)
+// 		// 	)
+// 		// }
+// 	},
+// 	{ deep: true }
+// )
 init()
 function init() {
 	const m = Cache.get('Login', 'mobile')
@@ -1043,35 +1053,45 @@ function init() {
 			config.value = {
 				...config.value,
 				...configRes.data.data[0],
-				hanhuaTpl: coverObjToArray(configRes.data.data[0].hanhuaTpl),
 				districts: coverObjToArray(configRes.data.data[0].districts),
 			}
 			activeTab.value = config.value.defaultDistrict
 		}
-		let goodsMap = null
 		const mapRes = res[1]
 		if (mapRes && mapRes.data.data && mapRes.data.data.length) {
 			goodsMap = mapRes.data.data[0].goodsMap
 		} else if (hasGoodsMap) {
 			goodsMap = hasGoodsMap
 		}
-		if (goodsMap) {
-			getInventoryData(goodsMap, m, activeTab.value).then((result) => {
+		getPageData()
+	})
+}
+function getPageData() {
+	if (goodsMap) {
+		loading.value = true
+		goodsTable.value.data = []
+		goodsTable.value.rawData = []
+		goodsType.value = []
+		const m = config.value.user.mobile
+		getInventoryData(goodsMap, m, activeTab.value)
+			.then((result) => {
 				goodsTable.value.data = result.data
+				goodsType.value = result.types
+				getCb()
 				nextTick(() => {
 					goodsTable.value.rawData = [...goodsTable.value.data]
-					goodsType.value = result.types
-					select.value.options = result.goodsOptions
-					select.value.rawOptions = [...select.value.options!]
+					// select.value.options = result.goodsOptions
+					// select.value.rawOptions = [...select.value.options!]
 					const hhR = Cache.get('HanHua-Record', m)
 					if (hhR) {
 						hhModal.value.hhRecord = hhR
 					}
-					getCb()
 				})
 			})
-		}
-	})
+			.finally(() => {
+				loading.value = false
+			})
+	}
 }
 function getCb() {
 	cbManager.value = {
@@ -1124,6 +1144,12 @@ function getCb() {
 			cbManager.value.lr = r.sy - total
 			cbManager.value.lrl =
 				Number((cbManager.value.lr / total).toFixed(2)) * 100
+			nextTick(() => {
+				const h1 = Box1.value.$el.offsetHeight
+				const h2 = Box2.value.$el.offsetHeight
+				const h3 = Box3.value.$el.offsetHeight
+				ths.value = `calc(100% - ${h1 + h2 + h3}px)`
+			})
 		}
 	})
 }
@@ -1146,7 +1172,7 @@ function upSet() {
 			global: config.value.global,
 			user: config.value.user,
 			mobile: config.value.user.mobile,
-			hanhuaTpl: coverArrayToObj(config.value.hanhuaTpl, 'key'),
+			hanhuaTpl: config.value.hanhuaTpl,
 			whereKey: 'mobile',
 			whereValue: config.value.user.mobile,
 		}).then(() => {
@@ -1160,16 +1186,16 @@ function upSet() {
 	}
 }
 function singleJS(item: any) {
-	if (item.marketPrice) {
-		item.discount = Number(
-			(
-				(item.marketPrice - (item.ygStallPrice || 0)) /
-				item.marketPrice
-			).toFixed(2)
-		)
-	} else {
-		item.discount = 0
-	}
+	// if (item.marketPrice) {
+	// 	item.discount = Number(
+	// 		(
+	// 			(item.marketPrice - (item.ygStallPrice || 0)) /
+	// 			item.marketPrice
+	// 		).toFixed(2)
+	// 	)
+	// } else {
+	// 	item.discount = 0
+	// }
 
 	if (item.ygStockPrice) {
 		item.qwProfit = Number(
@@ -1202,32 +1228,32 @@ function cleanCache(type?: string) {
 		Cache.remove('StallGoodsInfo', config.value.user.mobile, activeTab.value)
 	}
 }
-function selectChange() {
-	if (select.value.value) {
-		const key = select.value.value.join('_')
-		goodsTable.value.data = goodsTable.value.rawData.filter((item) => {
-			const { name, feature } = item
-			let _id = name
-			if (feature) {
-				_id += '_' + feature
-			}
-			return _id === key
-		})
-	} else {
-		goodsTable.value.data = [...goodsTable.value.rawData]
-	}
-}
+// function selectChange() {
+// 	if (select.value.value) {
+// 		const key = select.value.value.join('_')
+// 		goodsTable.value.data = goodsTable.value.rawData.filter((item) => {
+// 			const { name, feature } = item
+// 			let _id = name
+// 			if (feature) {
+// 				_id += '_' + feature
+// 			}
+// 			return _id === key
+// 		})
+// 	} else {
+// 		goodsTable.value.data = [...goodsTable.value.rawData]
+// 	}
+// }
 function typeFilter(checked: any[]) {
 	if (checked.length) {
 		goodsTable.value.data = goodsTable.value.rawData.filter((item: any) =>
 			checked.includes(item.type)
 		)
-		select.value.options = select.value.rawOptions!.filter((so) =>
-			checked.includes(so.type)
-		)
+		// select.value.options = select.value.rawOptions!.filter((so) =>
+		// 	checked.includes(so.type)
+		// )
 	} else {
 		goodsTable.value.data = [...goodsTable.value.rawData]
-		select.value.options = [...select.value.rawOptions!]
+		// select.value.options = [...select.value.rawOptions!]
 	}
 }
 function save() {
@@ -1276,12 +1302,12 @@ function fileChange(res: any, type: 'import' | 'export') {
 function hanHua() {
 	if (config.value.hanhuaTpl) {
 		const text = handleHanHuaTpl(
-			config.value.hanhuaTpl,
+			config.value.hanhuaTpl[activeTab.value],
 			goodsTable.value.rawData
 		)
-		const hhRecord = hhModal.value.hhRecord
+		const hhRecord = hhModal.value.hhRecord[activeTab.value]
 		hhRecord.unshift(...text)
-		Cache.set('HanHua-Record', config.value.user.mobile, hhRecord)
+		Cache.set('HanHua-Record', config.value.user.mobile, hhModal.value.hhRecord)
 		hhModal.value.visible = true
 	} else {
 		message.error('请先设置喊话模板！')
@@ -1299,10 +1325,10 @@ function openGj() {
 			return item.type === '宝石' || item.type === '灵石'
 		})
 		.map((item) => {
-			const { type, name, feature, qwProfit, ygStockPrice } = item
+			const { type, name, qwProfit, ygStockPrice } = item
 			const newItem = {
 				type,
-				name: type === '宝石' ? name : feature,
+				name,
 				qwProfit: qwProfit ? qwProfit : config.value.global.qwProfit,
 				ygStockPrice,
 				upNum: name === '星辉石' ? 3 : 2,
@@ -1437,5 +1463,11 @@ function setCb() {
 <style>
 .el-dialog__body {
 	padding: 0;
+}
+.ant-spin-nested-loading {
+	height: 100%;
+	.ant-spin-container {
+		height: 100%;
+	}
 }
 </style>

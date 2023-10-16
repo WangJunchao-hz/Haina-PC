@@ -1648,9 +1648,9 @@ export async function getInventoryData(
 	}
 	function handleData(map: any[], data: any[]) {
 		const typeMap: any = {}
-		const goodsMap: any = {}
+		// const goodsMap: any = {}
 		const newData = map.map((item) => {
-			const { key, type, name, feature } = item
+			const { type, name } = item
 			if (type) {
 				const hasType = typeMap[type]
 				if (hasType) {
@@ -1664,31 +1664,31 @@ export async function getInventoryData(
 					}
 				}
 			}
-			if (name) {
-				const has = goodsMap[name]
-				if (has) {
-					if (feature) {
-						has.children.push({
-							label: feature,
-							value: feature,
-						})
-					}
-				} else {
-					const single: any = {
-						label: name,
-						value: name,
-						type,
-						children: [],
-					}
-					if (feature) {
-						single.children.push({
-							label: feature,
-							value: feature,
-						})
-					}
-					goodsMap[name] = single
-				}
-			}
+			// if (name) {
+			// 	const has = goodsMap[name]
+			// 	if (has) {
+			// 		if (feature) {
+			// 			has.children.push({
+			// 				label: feature,
+			// 				value: feature,
+			// 			})
+			// 		}
+			// 	} else {
+			// 		const single: any = {
+			// 			label: name,
+			// 			value: name,
+			// 			type,
+			// 			children: [],
+			// 		}
+			// 		if (feature) {
+			// 			single.children.push({
+			// 				label: feature,
+			// 				value: feature,
+			// 			})
+			// 		}
+			// 		goodsMap[name] = single
+			// 	}
+			// }
 			const tpl = {
 				marketPrice: null,
 				discount: null,
@@ -1703,7 +1703,7 @@ export async function getInventoryData(
 				...item,
 				...tpl,
 			}
-			const find = data.find((d) => d.key === key)
+			const find = data.find((d) => `${d.type}_${d.name}` === `${type}_${name}`)
 			if (find) {
 				newItem = {
 					...tpl,
@@ -1716,7 +1716,7 @@ export async function getInventoryData(
 		return {
 			data: newData,
 			types: Object.keys(typeMap).map((key) => typeMap[key]),
-			goodsOptions: Object.keys(goodsMap).map((key) => goodsMap[key]),
+			// goodsOptions: Object.keys(goodsMap).map((key) => goodsMap[key]),
 		}
 	}
 	return res
@@ -1725,7 +1725,7 @@ export function updateINIFile(iniObj: any, data: any[]) {
 	const keys = Object.keys(iniObj)
 	const err: any = []
 	data.forEach((item) => {
-		const { isSet, config, ygStockPrice, name, feature } = item
+		const { isSet, config, ygStockPrice, name, type } = item
 		if (isSet && config) {
 			let key: any = keys.find((k) => k.includes('.' + config + '.Text'))
 			if (key) {
@@ -1734,7 +1734,7 @@ export function updateINIFile(iniObj: any, data: any[]) {
 				err.push(config + '.Text')
 			}
 		} else {
-			err.push(name + '_' + feature)
+			err.push(type + '_' + name)
 		}
 	})
 	if (err.length) {

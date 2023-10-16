@@ -111,8 +111,8 @@ function menuClick(item: any) {
 .ant-layout-content {
 	.main {
 		background-color: #fff;
-		margin-bottom: 48px;
-		height: calc(100% - 102px);
+		margin-bottom: 18px;
+		height: calc(100% - 72px);
 	}
 }
 </style>
