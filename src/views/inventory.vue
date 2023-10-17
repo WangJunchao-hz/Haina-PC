@@ -1110,51 +1110,54 @@ function getCb() {
 		_tableName: 'cb-manager',
 		whereKey: 'id_n',
 		whereValue: config.value.user.mobile + '_' + activeTab.value,
-	}).then((cbRes) => {
-		if (cbRes.data.data && cbRes.data.data.length) {
-			cbMxModal.value.table.data = cbRes.data.data
-			const r = {
-				...cbManager.value,
-			}
-			let total = 0
-			cbRes.data.data.forEach((item: any) => {
-				const { type, money } = item
-				switch (type) {
-					case '账号':
-						r.zh += money
-						total += money
-						break
-					case '金币':
-						r.jb += money
-						total += money
-						break
-					case '点卡':
-						r.dk += money
-						total += money
-						break
-					case '软件':
-						r.rj += money
-						total += money
-						break
-					case '收益':
-						r.sy += money
-						break
+	})
+		.then((cbRes) => {
+			if (cbRes.data.data && cbRes.data.data.length) {
+				cbMxModal.value.table.data = cbRes.data.data
+				const r = {
+					...cbManager.value,
 				}
-			})
-			cbManager.value = {
-				...r,
+				let total = 0
+				cbRes.data.data.forEach((item: any) => {
+					const { type, money } = item
+					switch (type) {
+						case '账号':
+							r.zh += money
+							total += money
+							break
+						case '金币':
+							r.jb += money
+							total += money
+							break
+						case '点卡':
+							r.dk += money
+							total += money
+							break
+						case '软件':
+							r.rj += money
+							total += money
+							break
+						case '收益':
+							r.sy += money
+							break
+					}
+				})
+				cbManager.value = {
+					...r,
+				}
+				cbManager.value.lr = r.sy - total
+				cbManager.value.lrl =
+					Number((cbManager.value.lr / total).toFixed(2)) * 100
 			}
-			cbManager.value.lr = r.sy - total
-			cbManager.value.lrl =
-				Number((cbManager.value.lr / total).toFixed(2)) * 100
+		})
+		.finally(() => {
 			nextTick(() => {
 				const h1 = Box1.value.$el.offsetHeight
 				const h2 = Box2.value.$el.offsetHeight
 				const h3 = Box3.value.$el.offsetHeight
 				ths.value = `calc(100% - ${h1 + h2 + h3}px)`
 			})
-		}
-	})
+		})
 }
 function login() {
 	if (config.value.user.mobile) {
