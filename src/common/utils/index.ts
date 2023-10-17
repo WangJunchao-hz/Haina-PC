@@ -1650,7 +1650,7 @@ export async function getInventoryData(
 		const typeMap: any = {}
 		// const goodsMap: any = {}
 		const newData = map.map((item) => {
-			const { type, name } = item
+			const { key, type, name } = item
 			if (type) {
 				const hasType = typeMap[type]
 				if (hasType) {
@@ -1703,7 +1703,7 @@ export async function getInventoryData(
 				...item,
 				...tpl,
 			}
-			const find = data.find((d) => `${d.type}_${d.name}` === `${type}_${name}`)
+			const find = data.find((d) => d.key === key)
 			if (find) {
 				newItem = {
 					...tpl,
@@ -1745,8 +1745,11 @@ export function handleHanHuaTpl(tpl: any[], data: any[]) {
 	const goodsPriceMap: any = {}
 	const goodsTypeRange: any = {}
 	data.forEach((item) => {
-		const { name, type, feature, ygStockPrice } = item
-		const key = feature ? name + '_' + feature : name
+		const { name, type, ygStockPrice } = item
+		const key =
+			type.includes('珍') || type.includes('妖') || type.includes('符')
+				? type + '_' + name
+				: name
 		goodsPriceMap[key] = ygStockPrice
 		const has = goodsTypeRange[type]
 		if (has) {
@@ -1789,7 +1792,7 @@ export function handleHanHuaTpl(tpl: any[], data: any[]) {
 					const str = '$' + gz + '{' + key + '}'
 					switch (gz) {
 						case 'n':
-						case 'n_f':
+						case 't_n':
 							if (goodsPriceMap[key] !== undefined) {
 								replace[str] = coverPriceW(goodsPriceMap[key])
 							} else {

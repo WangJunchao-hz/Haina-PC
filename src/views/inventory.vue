@@ -1072,6 +1072,7 @@ function getPageData() {
 		goodsTable.value.data = []
 		goodsTable.value.rawData = []
 		goodsType.value = []
+		typeChecked.value = []
 		const m = config.value.user.mobile
 		getInventoryData(goodsMap, m, activeTab.value)
 			.then((result) => {
@@ -1085,6 +1086,8 @@ function getPageData() {
 					const hhR = Cache.get('HanHua-Record', m)
 					if (hhR) {
 						hhModal.value.hhRecord = hhR
+					} else {
+						hhModal.value.hhRecord[activeTab.value] = []
 					}
 				})
 			})
@@ -1305,8 +1308,7 @@ function hanHua() {
 			config.value.hanhuaTpl[activeTab.value],
 			goodsTable.value.rawData
 		)
-		const hhRecord = hhModal.value.hhRecord[activeTab.value]
-		hhRecord.unshift(...text)
+		hhModal.value.hhRecord[activeTab.value] = text
 		Cache.set('HanHua-Record', config.value.user.mobile, hhModal.value.hhRecord)
 		hhModal.value.visible = true
 	} else {
