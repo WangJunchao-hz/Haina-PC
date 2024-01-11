@@ -809,6 +809,41 @@ export function resolutionEmotionZT(data: any) {
 	}
 	return res
 }
+export function resolutionStock(data: any) {
+	let res = null
+	if (data) {
+		try {
+			const extra =
+				data.data.answer[0].txt[0].content.components[2].data.meta.extra
+			const datas = data.data.answer[0].txt[0].content.components[2].data.datas
+			const iwc_column_info = extra.iwc_column_info
+			const indexID = Object.keys(iwc_column_info)
+			let zzztsjIndex: string, // 最终涨停时间
+				name: string
+			indexID.forEach((item: any) => {
+				if (item.includes('最终涨停时间[')) {
+					zzztsjIndex = item
+				}
+				if (item.includes('股票简称')) {
+					name = item
+				}
+			})
+			res = []
+			datas.forEach((item: any) => {
+				const zzztsj = item[zzztsjIndex] || ''
+				const name = item[name] || ''
+				res.push({
+					name,
+					zzztsj: dayjs(Number(zzztsj)).format('YYYY-MM-DD HH:mm:ss'),
+				})
+			})
+		} catch (error) {
+			console.error(error)
+			res = false as any
+		}
+	}
+	return res
+}
 export function resolutionEmotionDT(data: any) {
 	let res = null
 	if (data) {
