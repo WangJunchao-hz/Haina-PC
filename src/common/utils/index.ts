@@ -810,7 +810,7 @@ export function resolutionEmotionZT(data: any) {
 	return res
 }
 export function resolutionStock(data: any) {
-	let res = null
+	let res: any = null
 	if (data) {
 		try {
 			const extra =
@@ -819,24 +819,123 @@ export function resolutionStock(data: any) {
 			const iwc_column_info = extra.iwc_column_info
 			const indexID = Object.keys(iwc_column_info)
 			let zzztsjIndex: string, // 最终涨停时间
-				name: string
+				nameIndex: string,
+				jtjbIndex: string,
+				priceIndex: string,
+				maxVolIndex: string,
+				gnIndex: string,
+				lxztIndex: string,
+				jjzfIndex: string
 			indexID.forEach((item: any) => {
 				if (item.includes('最终涨停时间[')) {
 					zzztsjIndex = item
 				}
-				if (item.includes('股票简称')) {
-					name = item
+				if (item === '股票简称') {
+					nameIndex = item
+				}
+				if (item.includes('几天几板[')) {
+					jtjbIndex = item
+				}
+				if (item === '最新价') {
+					priceIndex = item
+				}
+				if (item.includes('最高封单量[')) {
+					maxVolIndex = item
+				}
+				if (item === '所属概念') {
+					gnIndex = item
+				}
+				if (item.includes('连续涨停天数[')) {
+					lxztIndex = item
+				}
+				if (item.includes('竞价涨幅[')) {
+					jjzfIndex = item
 				}
 			})
 			res = []
-			datas.forEach((item: any) => {
+			const gnMap = new Map()
+			const jbMap = new Map()
+			datas.forEach((item: any, i: any) => {
 				const zzztsj = item[zzztsjIndex] || ''
-				const name = item[name] || ''
-				res.push({
+				const jtjb = item[jtjbIndex]
+				const ztts = item[lxztIndex]
+				const jjzf = item[jjzfIndex]
+				let jb = jtjb === '首板涨停' ? '1' : '0'
+				if (jtjb != '首板涨停') {
+					const j = jtjb.replace('板', '').split('天')
+					// console.log(jtjb.replace('板', ''))
+					if (j[0] === j[1]) {
+						jb = j[1]
+					} else {
+						jb = j[0] + '-' + j[1]
+					}
+				}
+				const price = item[priceIndex]
+				const maxVol = item[maxVolIndex]
+				const maxMoney =
+					((Number(price) * Number(maxVol)) / 100000000).toFixed(2) + '亿'
+				// console.log(maxMoney)
+				const name = i + 1 + (item[nameIndex] || '') + '(' + jb + '板)'
+				const time = dayjs(Number(zzztsj)).format('HH:mm:ss')
+				const stock = {
+					zrSort: i + 1,
 					name,
-					zzztsj: dayjs(Number(zzztsj)).format('YYYY-MM-DD HH:mm:ss'),
+					price,
+					jb,
+					maxMoney,
+					jjzf,
+					zzztsj: time,
+				}
+				res.push(stock)
+				const hasjb = jbMap.get(ztts)
+				if (hasjb) {
+					hasjb.push(stock)
+				} else {
+					jbMap.set(ztts, [stock])
+				}
+				const gn = item[gnIndex].split(';')
+				gn.forEach((g: any) => {
+					if (
+						![
+							'融资融券',
+							'转融券标的',
+							'深股通',
+							'沪股通',
+							'富时罗素概念',
+							'标普道琼斯A股',
+						].includes(g)
+					) {
+						const has = gnMap.get(g)
+						if (has) {
+							has.push(stock)
+						} else {
+							gnMap.set(g, [stock])
+						}
+					}
 				})
 			})
+			res
+				.sort((a: any, b: any) => {
+					return b.jjzf - a.jjzf
+				})
+				.forEach((s: any, i: any) => {
+					s.jrSort = i + 1
+					s.zf = s.zrSort - (i + 1)
+				})
+			res.sort((a: any, b: any) => {
+				return a.zrSort - b.zrSort
+			})
+			const gns = Array.from(gnMap)
+				.map((gn) => {
+					return {
+						gn: gn[0],
+						stocks: gn[1],
+					}
+				})
+				.sort((a: any, b: any) => {
+					return b.stocks.length - a.stocks.length
+				})
+			console.log(gns)
 		} catch (error) {
 			console.error(error)
 			res = false as any
