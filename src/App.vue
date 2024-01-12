@@ -1,7 +1,10 @@
 <template>
 	<a-config-provider :locale="zhCN">
 		<a-layout style="height: 100vh">
-			<a-layout-sider v-model:collapsed="collapsed" collapsible>
+			<div class="main">
+				<router-view></router-view>
+			</div>
+			<!-- <a-layout-sider v-model:collapsed="collapsed" collapsible>
 				<a-menu
 					v-model:selectedKeys="selectedKeys"
 					theme="dark"
@@ -38,7 +41,7 @@
 						<router-view></router-view>
 					</div>
 				</a-layout-content>
-			</a-layout>
+			</a-layout> -->
 		</a-layout>
 	</a-config-provider>
 </template>
@@ -119,6 +122,10 @@ function menuClick(item: any) {
 		margin-bottom: 18px;
 		height: calc(100% - 72px);
 	}
+}
+.main {
+	background-color: #fff;
+	height: 100vh;
 }
 </style>
 <style>

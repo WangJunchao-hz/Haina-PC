@@ -852,7 +852,7 @@ export function resolutionStock(data: any) {
 					jjzfIndex = item
 				}
 			})
-			res = []
+			const stocks: any[] = []
 			const gnMap = new Map()
 			const jbMap = new Map()
 			datas.forEach((item: any, i: any) => {
@@ -875,7 +875,7 @@ export function resolutionStock(data: any) {
 				const maxMoney =
 					((Number(price) * Number(maxVol)) / 100000000).toFixed(2) + '亿'
 				// console.log(maxMoney)
-				const name = i + 1 + (item[nameIndex] || '') + '(' + jb + '板)'
+				const name = item[nameIndex] || ''
 				const time = dayjs(Number(zzztsj)).format('HH:mm:ss')
 				const stock = {
 					zrSort: i + 1,
@@ -886,7 +886,7 @@ export function resolutionStock(data: any) {
 					jjzf,
 					zzztsj: time,
 				}
-				res.push(stock)
+				stocks.push(stock)
 				const hasjb = jbMap.get(ztts)
 				if (hasjb) {
 					hasjb.push(stock)
@@ -903,6 +903,7 @@ export function resolutionStock(data: any) {
 							'沪股通',
 							'富时罗素概念',
 							'标普道琼斯A股',
+							'富时罗素概念股',
 						].includes(g)
 					) {
 						const has = gnMap.get(g)
@@ -914,7 +915,7 @@ export function resolutionStock(data: any) {
 					}
 				})
 			})
-			res
+			stocks
 				.sort((a: any, b: any) => {
 					return b.jjzf - a.jjzf
 				})
@@ -922,7 +923,7 @@ export function resolutionStock(data: any) {
 					s.jrSort = i + 1
 					s.zf = s.zrSort - (i + 1)
 				})
-			res.sort((a: any, b: any) => {
+			stocks.sort((a: any, b: any) => {
 				return a.zrSort - b.zrSort
 			})
 			const gns = Array.from(gnMap)
@@ -935,7 +936,45 @@ export function resolutionStock(data: any) {
 				.sort((a: any, b: any) => {
 					return b.stocks.length - a.stocks.length
 				})
-			console.log(gns)
+			const lbs = Array.from(jbMap)
+				.map((lb) => {
+					return {
+						lb: lb[0],
+						stocks: lb[1],
+					}
+				})
+				.sort((a: any, b: any) => {
+					return b.lb - a.lb
+				})
+			gns.forEach((gn) => {
+				const len = gn.stocks.length
+				gn.stocks.forEach((s: any) => {
+					if (!s.ztGn) {
+						s.ztGn = gn.gn
+						s.gns = [`${gn.gn}(${len})`]
+					} else {
+						s.gns.push(`${gn.gn}(${len})`)
+					}
+				})
+			})
+			const hasZtGns: any[] = []
+			lbs.forEach((lb: any) => {
+				lb.ztGns = []
+				lb.stocks.forEach((s: any) => {
+					if (!hasZtGns.includes(s.ztGn)) {
+						lb.ztGns.push({
+							ztGn: s.ztGn,
+							stocks: stocks.filter((stock) => stock.ztGn === s.ztGn),
+						})
+						hasZtGns.push(s.ztGn)
+					}
+				})
+				lb.ztGns = lb.ztGns.sort((a: any, b: any) => {
+					return b.stocks.length - a.stocks.length
+				})
+			})
+			// console.log(gns, lbs)
+			res = lbs
 		} catch (error) {
 			console.error(error)
 			res = false as any

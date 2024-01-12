@@ -19,21 +19,21 @@ const routersConfig: Readonly<RouteRecordRaw[]> = [
 		path: '/stock',
 		component: Stock,
 	},
-	{
-		name: 'inventory',
-		path: '/inventory',
-		component: Inventory,
-	},
-	{
-		name: 'priceAnalysis',
-		path: '/price-analysis',
-		component: PriceAnalysis,
-	},
-	{
-		name: 'dataMap',
-		path: '/data-map',
-		component: DataMap,
-	},
+	// {
+	// 	name: 'inventory',
+	// 	path: '/inventory',
+	// 	component: Inventory,
+	// },
+	// {
+	// 	name: 'priceAnalysis',
+	// 	path: '/price-analysis',
+	// 	component: PriceAnalysis,
+	// },
+	// {
+	// 	name: 'dataMap',
+	// 	path: '/data-map',
+	// 	component: DataMap,
+	// },
 
 	// {
 	// 	name: 'emotionalCycle',
