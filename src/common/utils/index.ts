@@ -883,7 +883,7 @@ export function resolutionStock(data: any) {
 					price,
 					jb,
 					maxMoney,
-					jjzf: Number(jjzf.toFixed(2)),
+					jjzf: jjzf && Number(jjzf.toFixed(2)),
 					zzztsj: time,
 				}
 				stocks.push(stock)
@@ -904,6 +904,7 @@ export function resolutionStock(data: any) {
 							'富时罗素概念',
 							'标普道琼斯A股',
 							'富时罗素概念股',
+							'MSCI概念',
 						].includes(g)
 					) {
 						const has = gnMap.get(g)
@@ -949,6 +950,7 @@ export function resolutionStock(data: any) {
 					})
 					return {
 						gn: gn[0],
+						hpl: 0,
 						stocks: gn[1],
 					}
 				})
@@ -970,6 +972,7 @@ export function resolutionStock(data: any) {
 				})
 			gns.forEach((gn) => {
 				const len = gn.stocks.length
+				let hp = 0
 				gn.stocks.forEach((s: any) => {
 					if (!s.ztGn) {
 						s.ztGn = gn.gn
@@ -977,27 +980,36 @@ export function resolutionStock(data: any) {
 					} else {
 						s.gns.push(`${gn.gn}(${len})`)
 					}
+					if (s.jjzf > 0) {
+						hp++
+					}
 				})
+				gn.hpl = Number(((hp / len) * 100).toFixed(2))
 			})
 			const hasZtGns: any[] = []
 			lbs.forEach((lb: any) => {
 				lb.ztGns = []
 				lb.stocks.forEach((s: any) => {
 					if (!hasZtGns.includes(s.ztGn)) {
-						const ztInfo = {
-							ztGn: s.ztGn,
-							stocks: stocks.filter((stock) => stock.ztGn === s.ztGn),
+						const ztInfo = gns.find((item) => item.gn === s.ztGn)
+						if (ztInfo) {
+							lb.ztGns.push(ztInfo)
 						}
-						ztInfo.stocks.sort((a: any, b: any) => {
-							return a.zrSort - b.zrSort
-						})
-						lb.ztGns.push(ztInfo)
 						hasZtGns.push(s.ztGn)
 					}
 				})
 				lb.ztGns = lb.ztGns.sort((a: any, b: any) => {
 					return b.stocks.length - a.stocks.length
 				})
+			})
+			stocks.forEach((s) => {
+				const new_gns: any[] = []
+				s.gns.forEach((g: any) => {
+					const gn = g.split('(')[0]
+					const gnInfo = gns.find((item) => item.gn === gn)
+					new_gns.push(gnInfo?.stocks.length > 1 ? `${g}${gnInfo?.hpl}%` : g)
+				})
+				s.gns = new_gns
 			})
 			// console.log(gns)
 			res = {
