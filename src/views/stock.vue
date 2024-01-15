@@ -9,78 +9,60 @@
 		查询
 	</el-button>
 	<div class="table">
-		<div class="header">
-			<div class="column item-lb">高度</div>
-			<div class="column fz-column">
-				<div class="sub-column">昨日强度</div>
-				<div class="sub-column">今日强度</div>
-				<div class="sub-column">强弱变化</div>
-				<div class="sub-column w-name">个股</div>
-				<div class="sub-column w-jb">几天几板</div>
-				<div class="sub-column w-time">最终涨停时间</div>
-				<div class="sub-column w-je">最大封单金额</div>
-				<div class="sub-column">今日竞价涨幅</div>
-				<!-- <div class="sub-column w-gn">最强涨停概念</div> -->
-			</div>
-			<div class="column w-gn">
-				涨停概念
-				<!-- <div class="sub-column item-gn w-gn">涨停概念</div> -->
-				<!-- <div class="sub-column fz-sub-column">
-					<div class="third-column">昨日强度</div>
-					<div class="third-column">今日强度</div>
-					<div class="third-column">强弱变化</div>
-					<div class="third-column">个股</div>
-					<div class="third-column">几天几板</div>
-					<div class="third-column">最终涨停时间</div>
-					<div class="third-column">最大封单金额</div>
-				</div> -->
-			</div>
-		</div>
-		<div class="body">
-			<div class="row" v-for="item in lists">
-				<div class="cell item-lb">{{ item.lb }}</div>
-				<div class="cell fz-cell">
-					<div
-						class="stock-item"
-						v-for="s in item.stocks"
-						:class="s.zf > 0 ? 'red' : ''"
-					>
-						<div class="sub-cell">{{ s.zrSort }}</div>
-						<div class="sub-cell">{{ s.jrSort }}</div>
-						<div class="sub-cell">{{ s.zf }}</div>
-						<div class="sub-cell w-name">{{ s.name }}</div>
-						<div class="sub-cell w-jb">{{ s.jb }}板</div>
-						<div class="sub-cell w-time">{{ s.zzztsj }}</div>
-						<div class="sub-cell w-je">{{ s.maxMoney }}</div>
-						<div
-							class="sub-cell"
-							:class="s.jjzf > 0 ? 'red' : s.jjzf < 0 ? 'green' : ''"
-						>
-							{{ s.jjzf }}
+		<div class="row" v-for="item in lists.lbs">
+			<div class="cell" style="width: 25px; flex-shrink: 0">{{ item.lb }}</div>
+			<div class="cell fz-cell" style="width: 290px; flex-shrink: 0">
+				<div
+					class="stock-item"
+					v-for="s in item.stocks"
+					:class="s.zf > 0 ? 'red' : ''"
+				>
+					<el-popover placement="top-start" :width="288" trigger="click">
+						<template #reference>
+							<div class="sub-cell" style="width: 68px; flex-shrink: 0">
+								<div>{{ s.name }}</div>
+								<div>{{ s.jb }}板</div>
+							</div>
+						</template>
+						<div>
+							<span
+								class="link"
+								v-for="gn in s.gns"
+								style="padding-right: 6px"
+								@click="lookGnStock(gn)"
+								>{{ gn }}</span
+							>
 						</div>
+					</el-popover>
+					<div class="sub-cell" style="width: 68px; flex-shrink: 0">
+						<div>{{ s.zzztsj }}</div>
+						<div>{{ s.maxMoney }}亿</div>
+					</div>
+					<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+						{{ s.zrSort }}
+					</div>
+					<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+						{{ s.jrSort }}
+					</div>
+					<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+						{{ s.zf }}
+					</div>
+					<div
+						class="sub-cell"
+						:class="s.jjzf > 0 ? 'red' : s.jjzf < 0 ? 'green' : ''"
+						style="width: 58px; flex-shrink: 0"
+					>
+						{{ s.jjzf }}%
 					</div>
 				</div>
-				<div class="cell fz-cell w-gn">
-					<el-button
-						class="w-gn"
-						type="text"
-						v-for="g in item.ztGns"
-						@click="lookGnStock(g.stocks)"
-					>
-						{{ g.ztGn }}
-						<!-- <div class="sub-cell item-gn w-gn">{{ g.ztGn }}</div> -->
-						<!-- <div class="sub-cell fz-sub-cell">
-							<div class="gn-item" v-for="gs in g.stocks">
-								<div class="third-cell">{{ gs.zrSort }}</div>
-								<div class="third-cell">{{ gs.jrSort }}</div>
-								<div class="third-cell">{{ gs.zf }}</div>
-								<div class="third-cell">{{ gs.name }}</div>
-								<div class="third-cell">{{ gs.jb }}板</div>
-								<div class="third-cell">{{ gs.zzztsj }}</div>
-								<div class="third-cell">{{ gs.maxMoney }}</div>
-							</div>
-						</div> -->
-					</el-button>
+			</div>
+			<div class="cell fz-cell" style="flex-grow: 1">
+				<div
+					class="gn-item link"
+					v-for="g in item.ztGns"
+					@click="lookGnStock(g)"
+				>
+					{{ g.ztGn }}
 				</div>
 			</div>
 		</div>
@@ -89,39 +71,49 @@
 		:fullscreen="true"
 		class="dialog"
 		v-model="gnStocks.visible"
-		title="强度排序"
+		:title="gnStocks.title"
 	>
-		<div class="table">
-			<div class="header">
-				<div class="column">昨日强度</div>
-				<div class="column">今日强度</div>
-				<div class="column">强弱变化</div>
-				<div class="column w-name">个股</div>
-				<div class="column w-jb">几天几板</div>
-				<div class="column w-time">最终涨停时间</div>
-				<div class="column w-je">最大封单金额</div>
-				<div class="column">今日竞价涨幅</div>
-			</div>
-			<div class="body">
-				<div
-					class="row"
-					v-for="gs in gnStocks.data"
-					:class="gs.zf > 0 ? 'red' : ''"
-				>
-					<div class="cell">{{ gs.zrSort }}</div>
-					<div class="cell">{{ gs.jrSort }}</div>
-					<div class="cell">{{ gs.zf }}</div>
-					<div class="cell">{{ gs.name }}</div>
-					<div class="cell">{{ gs.jb }}板</div>
-					<div class="cell">{{ gs.zzztsj }}</div>
-					<div class="cell">{{ gs.maxMoney }}</div>
-					<div
-						class="cell"
-						:class="gs.jjzf > 0 ? 'red' : gs.jjzf < 0 ? 'green' : ''"
-					>
-						{{ gs.jjzf }}
+		<div
+			class="dialog-stock"
+			v-for="s in gnStocks.data"
+			:class="s.zf > 0 ? 'red' : ''"
+		>
+			<el-popover placement="top-start" :width="288" trigger="click">
+				<template #reference>
+					<div class="sub-cell" style="width: 68px; flex-shrink: 0">
+						<div>{{ s.name }}</div>
+						<div>{{ s.jb }}板</div>
 					</div>
+				</template>
+				<div>
+					<span
+						class="link"
+						v-for="gn in s.gns"
+						style="padding-right: 6px"
+						@click="lookGnStock(gn)"
+						>{{ gn }}</span
+					>
 				</div>
+			</el-popover>
+			<div class="sub-cell" style="width: 68px; flex-shrink: 0">
+				<div>{{ s.zzztsj }}</div>
+				<div>{{ s.maxMoney }}亿</div>
+			</div>
+			<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+				{{ s.zrSort }}
+			</div>
+			<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+				{{ s.jrSort }}
+			</div>
+			<div class="sub-cell" style="width: 22px; flex-shrink: 0">
+				{{ s.zf }}
+			</div>
+			<div
+				class="sub-cell"
+				:class="s.jjzf > 0 ? 'red' : s.jjzf < 0 ? 'green' : ''"
+				style="width: 58px; flex-shrink: 0"
+			>
+				{{ s.jjzf }}%
 			</div>
 		</div>
 	</el-dialog>
@@ -135,14 +127,23 @@ import dayjs from 'dayjs'
 const q =
 	'昨日涨停最终涨停时间从早到晚排序，非st，非北交所，昨日涨停最大封单量，概念，昨日几天几板，昨日连续涨停天数，今日竞价涨跌幅'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
-const lists = ref<any[]>([])
+const lists = ref<{
+	lbs: any[]
+	gns: any[]
+}>({
+	lbs: [],
+	gns: [],
+})
 const gnStocks = ref<{
 	visible: boolean
 	data: any[]
+	title: string
 }>({
 	visible: false,
 	data: [],
+	title: '',
 })
+
 function dateChange(d: any) {
 	date.value = d
 }
@@ -152,93 +153,71 @@ function query() {
 		console.log(lists.value)
 	})
 }
-function lookGnStock(stocks: any[]) {
+function lookGnStock(ztGn: any) {
 	gnStocks.value.visible = true
-	gnStocks.value.data = stocks
+	if (typeof ztGn === 'string') {
+		gnStocks.value.title = ztGn
+		const gn = ztGn.split('(')[0]
+		const gnInfo = lists.value.gns.find((item) => item.gn === gn)
+		if (gnInfo) {
+			gnStocks.value.data = gnInfo.stocks
+		}
+	} else {
+		gnStocks.value.title = ztGn.ztGn
+		const gnInfo = lists.value.gns.find((item) => item.gn === ztGn.ztGn)
+		if (gnInfo) {
+			gnStocks.value.data = gnInfo.stocks
+		}
+	}
 }
 </script>
 <style scoped lang="scss">
 .table {
-	// height: calc(100% - 32px);
-	.header {
+	border: 1px solid #cdd0d6;
+	.row {
 		display: flex;
-		justify-content: space-between;
-		padding-right: 6px;
-		border-top: 1px solid #cdd0d6;
-		border-left: 1px solid #cdd0d6;
-		.column {
+		.cell {
 			display: flex;
 			align-items: center;
 			justify-content: center;
 			padding: 0 8px;
-			width: 100%;
 			border-right: 1px solid #cdd0d6;
 			border-bottom: 1px solid #cdd0d6;
 		}
-		.fz-column {
-			justify-content: space-between;
+		.fz-cell {
+			flex-wrap: wrap;
 			padding: 0;
-			border-right: unset;
-			.sub-column {
+			align-items: unset;
+			.stock-item {
+				position: relative;
 				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 0 8px;
-				width: 100%;
-				height: 100%;
-				border-right: 1px solid #cdd0d6;
-			}
-			.fz-sub-column {
 				justify-content: space-between;
-				padding: 0;
-				border-right: unset;
-				.third-column {
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					padding: 0 8px;
-					width: 100%;
-					height: 100%;
-					border-right: 1px solid #cdd0d6;
-				}
-			}
-		}
-	}
-	.body {
-		// height: calc(100% - 22px);
-		// overflow: auto;
-		border-bottom: 1px solid #cdd0d6;
-		border-left: 1px solid #cdd0d6;
-		.row {
-			display: flex;
-			justify-content: space-between;
-			.cell {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 0 8px;
 				width: 100%;
-				border-right: 1px solid #cdd0d6;
 				border-bottom: 1px solid #cdd0d6;
 			}
-			.fz-cell {
+			.gn-item {
+				display: flex;
+				width: 100%;
+				border-bottom: 1px solid #cdd0d6;
+				align-items: center;
+			}
+			.sub-cell {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-wrap: wrap;
+				width: 100%;
+				border-right: 1px solid #cdd0d6;
+				div {
+					width: 100%;
+					text-align: center;
+				}
+			}
+			.fz-sub-cell {
 				flex-wrap: wrap;
 				padding: 0;
 				align-items: unset;
-				justify-content: space-between;
-				flex-shrink: 1;
-				.stock-item {
-					display: flex;
-					justify-content: space-between;
-					width: 100%;
-					border-bottom: 1px solid #cdd0d6;
-				}
-				.gn-item {
-					display: flex;
-					width: 100%;
-					border-bottom: 1px solid #cdd0d6;
-				}
-				.sub-cell {
+				.third-cell {
 					display: flex;
 					align-items: center;
 					justify-content: center;
@@ -246,53 +225,12 @@ function lookGnStock(stocks: any[]) {
 					width: 100%;
 					border-right: 1px solid #cdd0d6;
 				}
-				.fz-sub-cell {
-					flex-wrap: wrap;
-					padding: 0;
-					align-items: unset;
-					.third-cell {
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						padding: 0 8px;
-						width: 100%;
-						border-right: 1px solid #cdd0d6;
-					}
-				}
 			}
 		}
 	}
 }
-.item-lb {
-	width: 28px !important;
-	flex-shrink: 0;
-}
-.item-gn {
-	width: 188px !important;
-	border-bottom: 1px solid #cdd0d6;
-}
-.w-38 {
-	width: 38px !important;
-	flex-shrink: 0;
-}
-.w-name {
-	width: 78px !important;
-	flex-shrink: 0;
-}
-.w-time {
-	width: 58px !important;
-	flex-shrink: 0;
-}
 .w-gn {
-	width: 78px !important;
-	flex-shrink: 0;
-}
-.w-jb {
-	width: 58px !important;
-	flex-shrink: 0;
-}
-.w-je {
-	width: 58px !important;
+	width: 72px;
 	flex-shrink: 0;
 }
 .red {
@@ -300,5 +238,25 @@ function lookGnStock(stocks: any[]) {
 }
 .green {
 	color: green;
+}
+.dialog-stock {
+	display: flex;
+	border: 1px solid #cdd0d6;
+	.sub-cell {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-wrap: wrap;
+		width: 100%;
+		border-right: 1px solid #cdd0d6;
+		div {
+			width: 100%;
+			text-align: center;
+		}
+	}
+}
+.link {
+	cursor: pointer;
+	color: #409eff;
 }
 </style>

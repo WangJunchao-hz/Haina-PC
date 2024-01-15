@@ -872,18 +872,18 @@ export function resolutionStock(data: any) {
 				}
 				const price = item[priceIndex]
 				const maxVol = item[maxVolIndex]
-				const maxMoney =
-					((Number(price) * Number(maxVol)) / 100000000).toFixed(2) + '亿'
+				const maxMoney = ((Number(price) * Number(maxVol)) / 100000000).toFixed(
+					2
+				)
 				// console.log(maxMoney)
 				const name = item[nameIndex] || ''
 				const time = dayjs(Number(zzztsj)).format('HH:mm:ss')
 				const stock = {
-					zrSort: i + 1,
 					name,
 					price,
 					jb,
 					maxMoney,
-					jjzf,
+					jjzf: Number(jjzf.toFixed(2)),
 					zzztsj: time,
 				}
 				stocks.push(stock)
@@ -917,17 +917,36 @@ export function resolutionStock(data: any) {
 			})
 			stocks
 				.sort((a: any, b: any) => {
+					if (a.zzztsj < b.zzztsj) {
+						return -1
+					}
+					if (a.zzztsj > b.zzztsj) {
+						return 1
+					}
+					if (Number(a.maxMoney) < Number(b.maxMoney)) {
+						return 1
+					}
+					if (Number(a.maxMoney) > Number(b.maxMoney)) {
+						return -1
+					}
+					return 0
+				})
+				.forEach((s: any, i: any) => {
+					s.zrSort = i + 1
+				})
+			stocks
+				.sort((a: any, b: any) => {
 					return b.jjzf - a.jjzf
 				})
 				.forEach((s: any, i: any) => {
 					s.jrSort = i + 1
 					s.zf = s.zrSort - (i + 1)
 				})
-			stocks.sort((a: any, b: any) => {
-				return a.zrSort - b.zrSort
-			})
 			const gns = Array.from(gnMap)
 				.map((gn) => {
+					gn[1].sort((a: any, b: any) => {
+						return a.zrSort - b.zrSort
+					})
 					return {
 						gn: gn[0],
 						stocks: gn[1],
@@ -938,6 +957,9 @@ export function resolutionStock(data: any) {
 				})
 			const lbs = Array.from(jbMap)
 				.map((lb) => {
+					lb[1].sort((a: any, b: any) => {
+						return a.zrSort - b.zrSort
+					})
 					return {
 						lb: lb[0],
 						stocks: lb[1],
@@ -962,10 +984,14 @@ export function resolutionStock(data: any) {
 				lb.ztGns = []
 				lb.stocks.forEach((s: any) => {
 					if (!hasZtGns.includes(s.ztGn)) {
-						lb.ztGns.push({
+						const ztInfo = {
 							ztGn: s.ztGn,
 							stocks: stocks.filter((stock) => stock.ztGn === s.ztGn),
+						}
+						ztInfo.stocks.sort((a: any, b: any) => {
+							return a.zrSort - b.zrSort
 						})
+						lb.ztGns.push(ztInfo)
 						hasZtGns.push(s.ztGn)
 					}
 				})
@@ -973,8 +999,11 @@ export function resolutionStock(data: any) {
 					return b.stocks.length - a.stocks.length
 				})
 			})
-			// console.log(gns, lbs)
-			res = lbs
+			// console.log(gns)
+			res = {
+				lbs,
+				gns,
+			}
 		} catch (error) {
 			console.error(error)
 			res = false as any
