@@ -21,7 +21,8 @@
 		"text-encoding": "^0.7.0",
 		"uuid": "^9.0.0",
 		"vue": "^3.3.2",
-		"vue-clipboard3": "^2.0.0"
+		"vue-clipboard3": "^2.0.0",
+		"xlsx": "xlsx-0.20.1.tgz"
 	},
 	"devDependencies": {
 		"@tsconfig/node18": "^2.0.1",

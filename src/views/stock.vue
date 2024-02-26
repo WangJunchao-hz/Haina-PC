@@ -16,6 +16,14 @@
 	>
 		首板
 	</el-button>
+	<el-button
+		@click="query(888)"
+		size="small"
+		type="primary"
+		style="margin-left: 8px"
+	>
+		主题
+	</el-button>
 	<div v-if="showType === 88" class="table">
 		<div class="row" v-for="item in lists.lbs">
 			<div class="cell" style="width: 25px; flex-shrink: 0">{{ item.lb }}</div>
@@ -95,6 +103,19 @@
 			</div>
 		</div>
 	</div>
+	<div v-if="showType === 888" class="zt-table">
+		<div class="zt-item" v-for="gn in lists.gns" @click="lookGnStock(gn)">
+			<span style="width: 180px">{{ gn.gn }}({{ gn.stocks.length }})</span>
+			<span
+				style="width: 68px"
+				:class="gn.pjzf > 0 ? 'red' : gn.pjzf < 0 ? 'green' : ''"
+			>
+				{{ gn.pjzf }}%
+			</span>
+			<span style="width: 68px">{{ gn.hpl }}%</span>
+		</div>
+	</div>
+
 	<el-dialog
 		:fullscreen="true"
 		class="dialog"
@@ -185,11 +206,16 @@ const gnStocks = ref<{
 function dateChange(d: any) {
 	date.value = d
 }
-function query(type: 8 | 88) {
+function query(type: 8 | 88 | 888) {
 	showType.value = type
 	const question = replaceTpl(type === 8 ? sq : q, date.value)
 	GetRobotData({ question }).then((res) => {
 		lists.value = resolutionStock(res.data)
+		if (type === 888) {
+			lists.value.gns.sort((a, b) => {
+				return b.pjzf - a.pjzf
+			})
+		}
 		console.log(lists.value)
 	})
 }
@@ -203,7 +229,7 @@ function lookGnStock(ztGn: any) {
 			gnStocks.value.data = gnInfo.stocks
 		}
 	} else {
-		gnStocks.value.title = `${ztGn.gn}(${ztGn.stocks.length})${ztGn.hpl}%`
+		gnStocks.value.title = `${ztGn.gn}(${ztGn.stocks.length}) ${ztGn.pjzf}% ${ztGn.hpl}%`
 		gnStocks.value.data = ztGn.stocks
 	}
 }
@@ -322,6 +348,19 @@ function getQ(gn: string) {
 				text-align: center;
 				width: 100%;
 			}
+		}
+	}
+}
+.zt-table {
+	border-right: 1px solid #cdd0d6;
+	border-left: 1px solid #cdd0d6;
+	border-top: 1px solid #cdd0d6;
+	.zt-item {
+		display: flex;
+		border-bottom: 1px solid #cdd0d6;
+		span {
+			padding: 0 8px;
+			border-right: 1px solid #cdd0d6;
 		}
 	}
 }

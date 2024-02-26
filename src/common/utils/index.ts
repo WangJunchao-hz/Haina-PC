@@ -861,7 +861,7 @@ export function resolutionStock(data: any) {
 				const ztts = item[lxztIndex]
 				const jjzf = item[jjzfIndex]
 				let jb = jtjb === '首板涨停' ? '1' : '0'
-				if (jtjb != '首板涨停') {
+				if (jtjb && jtjb != '首板涨停') {
 					const j = jtjb.replace('板', '').split('天')
 					// console.log(jtjb.replace('板', ''))
 					if (j[0] === j[1]) {
@@ -951,12 +951,14 @@ export function resolutionStock(data: any) {
 					return {
 						gn: gn[0],
 						hpl: 0,
+						pjzf: 0,
 						stocks: gn[1],
 					}
 				})
 				.sort((a: any, b: any) => {
 					return b.stocks.length - a.stocks.length
 				})
+				.filter((gn) => gn.stocks.length >= 3)
 			const lbs = Array.from(jbMap)
 				.map((lb) => {
 					lb[1].sort((a: any, b: any) => {
@@ -973,6 +975,7 @@ export function resolutionStock(data: any) {
 			gns.forEach((gn) => {
 				const len = gn.stocks.length
 				let hp = 0
+				let totalZf = 0
 				gn.stocks.forEach((s: any) => {
 					if (!s.ztGn) {
 						s.ztGn = gn.gn
@@ -983,8 +986,10 @@ export function resolutionStock(data: any) {
 					if (s.jjzf > 0) {
 						hp++
 					}
+					totalZf += s.jjzf
 				})
 				gn.hpl = Number(((hp / len) * 100).toFixed(2))
+				gn.pjzf = Number((totalZf / len).toFixed(2))
 			})
 			const hasZtGns: any[] = []
 			lbs.forEach((lb: any) => {
@@ -1004,18 +1009,140 @@ export function resolutionStock(data: any) {
 			})
 			stocks.forEach((s) => {
 				const new_gns: any[] = []
-				s.gns.forEach((g: any) => {
-					const gn = g.split('(')[0]
-					const gnInfo = gns.find((item) => item.gn === gn)
-					new_gns.push(gnInfo?.stocks.length > 1 ? `${g}${gnInfo?.hpl}%` : g)
-				})
-				s.gns = new_gns
+				if (s.gns) {
+					s.gns.forEach((g: any) => {
+						const gn = g.split('(')[0]
+						const gnInfo = gns.find((item) => item.gn === gn)
+						new_gns.push(gnInfo?.stocks.length > 1 ? `${g}${gnInfo?.hpl}%` : g)
+					})
+					s.gns = new_gns
+				}
 			})
 			// console.log(gns)
 			res = {
 				lbs,
 				gns,
 			}
+		} catch (error) {
+			console.error(error)
+			res = false as any
+		}
+	}
+	return res
+}
+export function resolutionReplayStock(data: any) {
+	let res: any = null
+	if (data) {
+		try {
+			const extra =
+				data.data.answer[0].txt[0].content.components[2].data.meta.extra
+			const datas = data.data.answer[0].txt[0].content.components[2].data.datas
+			const iwc_column_info = extra.iwc_column_info
+			const indexID = Object.keys(iwc_column_info)
+			let scztsjIndex: string, // 首次涨停时间
+				zzztsjIndex: string, // 最终涨停时间
+				nameIndex: string, // 股票名称
+				jtjbIndex: string, // 今天几板
+				priceIndex: string, // 价格
+				maxVolIndex: string, // 封单最大量
+				jjzfIndex: string, // 竞价涨幅
+				cjeIndex: string, // 成交额
+				ztyylbIndex: string, //涨停原因类别
+				zdfIndex: string, // 涨跌幅:前复权[
+				kbcsIndex: string, // 涨停开板次数[
+				fdeIndex: string // 涨停封单额[
+			indexID.forEach((item: any) => {
+				if (item.includes('涨停封单额[')) {
+					fdeIndex = item
+				}
+				if (item.includes('涨停开板次数[')) {
+					kbcsIndex = item
+				}
+				if (item.includes('涨跌幅:前复权[')) {
+					zdfIndex = item
+				}
+				if (item.includes('涨停原因类别[')) {
+					ztyylbIndex = item
+				}
+				if (item.includes('成交额[')) {
+					cjeIndex = item
+				}
+				if (item.includes('首次涨停时间[')) {
+					scztsjIndex = item
+				}
+				if (item.includes('最终涨停时间[')) {
+					zzztsjIndex = item
+				}
+				if (item === '股票简称') {
+					nameIndex = item
+				}
+				if (item.includes('几天几板[')) {
+					jtjbIndex = item
+				}
+				if (item === '最新价') {
+					priceIndex = item
+				}
+				if (item.includes('最高封单量[')) {
+					maxVolIndex = item
+				}
+				if (item.includes('竞价涨幅[')) {
+					jjzfIndex = item
+				}
+			})
+			console.log('datas', datas)
+			const stocks: any[] = []
+			datas.forEach((item: any) => {
+				const fde = (Number(item[fdeIndex]) / (10000 * 10000)).toFixed(2)
+				const kbcs = item[kbcsIndex]
+				const zdf = Number(item[zdfIndex]).toFixed(2)
+				const cje = (Number(item[cjeIndex] || '0') / (10000 * 10000)).toFixed(2)
+				const ztyylb = item[ztyylbIndex] || ''
+				const scztsj = item[scztsjIndex] || ''
+				const scTime = dayjs(Number(scztsj)).format('HH:mm:ss')
+				const zzztsj = item[zzztsjIndex] || ''
+				const zzTime = dayjs(Number(zzztsj)).format('HH:mm:ss')
+				let jtjb = item[jtjbIndex]
+				let jb = jtjb === '首板涨停' ? '首' : '0'
+				if (jtjb && jtjb != '首板涨停') {
+					const j = jtjb.replace('板', '').split('天')
+					if (j[0] === j[1]) {
+						jb = j[1]
+					} else {
+						jb = j[0] + '-' + j[1]
+					}
+				}
+				jtjb = jb + '板'
+				const jjzf = item[jjzfIndex].toFixed(2)
+				const price = item[priceIndex]
+				const maxVol = item[maxVolIndex]
+				const maxMoney = ((Number(price) * Number(maxVol)) / 100000000).toFixed(
+					2
+				)
+				// console.log(maxMoney)
+				const name = item[nameIndex] || ''
+				const fdb =
+					(((Number(maxMoney) - Number(fde)) / Number(maxMoney)) * 100).toFixed(
+						2
+					) + '%'
+				const stock = {
+					name,
+					price,
+					scztsj: scTime,
+					zzztsj: zzTime,
+					maxMoney,
+					jjzf: jjzf,
+					jjlx: jjzf === zdf ? '一字' : jjzf + '%',
+					jtjb,
+					cje,
+					ztyylb,
+					zdf,
+					fde,
+					kbcs,
+					fdb,
+				}
+				stocks.push(stock)
+			})
+			return stocks
 		} catch (error) {
 			console.error(error)
 			res = false as any

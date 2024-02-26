@@ -9,15 +9,21 @@ const PriceAnalysis = () => import('@/views/price-analysis.vue')
 const DataMap = () => import('@/views/data-map.vue')
 const Inventory = () => import('@/views/inventory.vue')
 const Stock = () => import('@/views/stock.vue')
+const Replay = () => import('@/views/replay.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
-		redirect: '/stock',
+		redirect: '/replay',
 	},
 	{
 		name: 'stock',
 		path: '/stock',
 		component: Stock,
+	},
+	{
+		name: 'replay',
+		path: '/replay',
+		component: Replay,
 	},
 	// {
 	// 	name: 'inventory',
