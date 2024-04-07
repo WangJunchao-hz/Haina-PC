@@ -16,13 +16,52 @@
 	>
 		导出表格
 	</el-button>
-	<el-table :data="lists" style="width: 100%">
+	<el-button
+		@click="sortLists"
+		size="small"
+		type="primary"
+		style="margin-left: 8px"
+	>
+		排序
+	</el-button>
+	<el-table
+		:data="lists"
+		style="width: 100%"
+		size="small"
+		border
+		:span-method="spanMethod"
+	>
 		<el-table-column
 			v-for="column in columns"
 			:key="column.prop"
 			:prop="column.prop"
 			:label="column.label"
-		/>
+			:width="column.width"
+		>
+			<template v-if="column.prop === 'sourceSName'" #default="{ row }">
+				<div class="zynr">{{ row.sourceSName }}</div>
+				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
+				<div>
+					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
+				</div>
+			</template>
+			<template v-if="column.prop === 'sourceSGn'" #default="{ row }">
+				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
+			</template>
+			<template v-if="column.prop === 'sName'" #default="{ row }">
+				<div style="display: flex">
+					<div
+						:class="{
+							zynr: row.lxztts > 1,
+							red: row.isdd,
+						}"
+					>
+						{{ row.sName }}
+					</div>
+					<div class="cynr" style="margin-left: 8px">{{ row.ztyylb }}</div>
+				</div>
+			</template>
+		</el-table-column>
 	</el-table>
 </template>
 <script setup lang="ts">
@@ -32,56 +71,26 @@ import { GetRobotData } from '@/common/api/ths-wen-cai-api'
 import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
-const fixed = '，非st，非北交所，非停牌'
-const q =
-	'今日涨停，今日涨停最终涨停时间从早到晚排序，今日涨停最大封单量，今日涨停原因，今日几天几板，今日涨停成交额，今日竞价涨跌幅，今日涨跌幅' +
-	fixed
+const fixed = '，非停牌，非ST'
+const q = '今日涨停，今日涨停原因，概念' + fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
+let sLists: any[] = []
+let sortGZ = 'lb'
 const columns = ref<any[]>([
 	{
-		prop: 'name',
+		prop: 'sourceSName',
+		label: '梯队',
+		width: 118,
+	},
+	{
+		prop: 'sourceSGn',
+		label: '概念',
+		width: 98,
+	},
+	{
+		prop: 'sName',
 		label: '股票',
-	},
-	{
-		prop: 'jtjb',
-		label: '高度',
-	},
-	{
-		prop: 'jjlx',
-		label: '竞价涨幅',
-	},
-	{
-		prop: 'scztsj',
-		label: '首次涨停',
-	},
-	{
-		prop: 'zzztsj',
-		label: '最终涨停',
-	},
-	{
-		prop: 'kbcs',
-		label: '开板次数',
-	},
-	{
-		prop: 'maxMoney',
-		label: '最大封单额',
-	},
-	{
-		prop: 'fde',
-		label: '封单额',
-	},
-	{
-		prop: 'fdb',
-		label: '封单比',
-	},
-	{
-		prop: 'cje',
-		label: '成交额',
-	},
-	{
-		prop: 'ztyylb',
-		label: '涨停原因',
 	},
 ])
 function dateChange(d: any) {
@@ -90,9 +99,81 @@ function dateChange(d: any) {
 function query() {
 	const question = replaceTpl(q, date.value)
 	GetRobotData({ question }).then((res) => {
-		lists.value = resolutionReplayStock(res.data)
-		console.log(lists.value)
+		sLists = resolutionReplayStock(res.data)
+		sortLists()
 	})
+}
+function sortLists() {
+	if (sortGZ === 'lb') {
+		sLists.sort((a: any, b: any) => {
+			return b.lxztts - a.lxztts
+		})
+		sortGZ = 'td'
+	} else {
+		sLists.sort((a: any, b: any) => {
+			return b.gnTd.length - a.gnTd.length
+		})
+		sortGZ = 'lb'
+	}
+	const list: any[] = []
+	sLists.forEach((s: any) => {
+		s.gnTd.forEach((g: any) => {
+			g.stocks.forEach((st: any) => {
+				list.push({
+					...st,
+					sName: `${st.name}(${st.jtjb})`,
+					sourceSName: `${s.name}(${s.jtjb})`,
+					sourceS: s,
+					sourceSGfNum: s.gfNum,
+					sourceSGn: `${g.gn}`,
+					sourceSGnSNum: g.stocks.length,
+					sourceG: g,
+					isdd: st.lxztts >= s.lxztts,
+				})
+			})
+		})
+	})
+	lists.value = list
+	// console.log(lists.value)
+}
+let sSpanIndex = 0
+let gSpanIndex = 0
+function spanMethod({ row, column, rowIndex, columnIndex }: any) {
+	if (columnIndex === 0) {
+		const rs = row.sourceSGfNum
+		if (rowIndex === 0) {
+			sSpanIndex = 0
+		}
+		if (rowIndex === sSpanIndex) {
+			sSpanIndex = sSpanIndex + rs
+			return {
+				rowspan: rs,
+				colspan: 1,
+			}
+		} else if (rowIndex < sSpanIndex) {
+			return {
+				rowspan: 0,
+				colspan: 0,
+			}
+		}
+	} else if (columnIndex === 1) {
+		const rs = row.sourceSGnSNum
+		if (rowIndex === 0) {
+			gSpanIndex = 0
+		}
+		if (rowIndex === gSpanIndex) {
+			gSpanIndex = gSpanIndex + rs
+			return {
+				rowspan: rs,
+				colspan: 1,
+			}
+		} else if (rowIndex < gSpanIndex) {
+			return {
+				rowspan: 0,
+				colspan: 0,
+			}
+		}
+	}
 }
 function exportTable() {
 	const rows: any = []
@@ -110,6 +191,13 @@ function exportTable() {
 }
 </script>
 <style scoped lang="scss">
+.zynr {
+	font-size: 14px;
+	color: #303133;
+}
+.cynr {
+	color: #909399;
+}
 .table {
 	border: 1px solid #cdd0d6;
 	.row {
