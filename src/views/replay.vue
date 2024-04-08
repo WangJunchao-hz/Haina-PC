@@ -49,17 +49,15 @@
 				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
 			</template>
 			<template v-if="column.prop === 'sName'" #default="{ row }">
-				<div style="display: flex">
-					<div
-						:class="{
-							zynr: row.lxztts > 1,
-							red: row.isdd,
-						}"
-					>
-						{{ row.sName }}
-					</div>
-					<div class="cynr" style="margin-left: 8px">{{ row.ztyylb }}</div>
+				<div
+					:class="{
+						zynr: row.lxztts > 1,
+						red: row.isdd,
+					}"
+				>
+					{{ row.sName }}
 				</div>
+				<div class="cynr">{{ row.ztyylb }}</div>
 			</template>
 		</el-table-column>
 	</el-table>
