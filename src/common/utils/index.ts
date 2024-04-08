@@ -1084,7 +1084,7 @@ export function resolutionReplayStock(data: any) {
 				'国企改革',
 				'参股券商',
 			]
-			console.log('datas', datas)
+			// console.log('datas', datas)
 			datas.forEach((item: any) => {
 				const ztyylb = item[ztyylbIndex] || ''
 				let jtjb = item[jtjbIndex]
@@ -1141,18 +1141,31 @@ export function resolutionReplayStock(data: any) {
 				})
 			// console.log(gnArray)
 			stocks.forEach((stock) => {
-				const { gnArray, name } = stock
+				const { gnArray, name, lxztts } = stock
 				const gnTd: any = []
 				let gfNum = 0
+				let sQd = 0
 				gnArray.forEach((gn: string) => {
 					if (!notGns.includes(gn)) {
 						const gnItem = gnMap.get(gn)
-						const s = gnItem.stocks.filter((item: any) => item.name !== name)
+						let gQd = 0
+						const s: any[] = []
+						gnItem.stocks.forEach((item: any) => {
+							if (item.name !== name) {
+								s.push(item)
+								if (lxztts !== item.lxztts) {
+									gQd += item.jjzdf
+								}
+							}
+						})
 						if (s.length !== 0) {
+							const qd = Number((gQd / s.length).toFixed(2))
+							sQd += qd
 							gnTd.push({
 								gn: gnItem.gn,
 								num: gnItem.stocks.length,
 								stocks: s,
+								qd,
 							})
 							gfNum += s.length
 						}
@@ -1163,6 +1176,7 @@ export function resolutionReplayStock(data: any) {
 				})
 				stock.gfNum = gfNum
 				stock.gnTd = gnTd
+				stock.qd = Number((sQd / gnTd.length).toFixed(2))
 			})
 			stocks.sort((a, b) => {
 				return b.lxztts - a.lxztts

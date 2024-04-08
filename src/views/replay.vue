@@ -22,7 +22,7 @@
 		type="primary"
 		style="margin-left: 8px"
 	>
-		排序
+		排序({{ gzTxt }})
 	</el-button>
 	<el-table
 		:data="lists"
@@ -39,20 +39,28 @@
 			:width="column.width"
 		>
 			<template v-if="column.prop === 'sourceSName'" #default="{ row }">
-				<div class="zynr">{{ row.sourceSName }}</div>
+				<div class="zynr">
+					{{ row.sourceSName }}
+					<span :class="row.sourceS.jjzdf < 0 ? 'green' : 'red'">
+						{{ row.sourceS.jjzdf }}%
+					</span>
+				</div>
 				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
 				<div>
 					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
 				</div>
 				<div>
-					开盘
-					<span :class="row.sourceS.jjzdf < 0 ? 'green' : 'red'"
-						>{{ row.sourceS.jjzdf }}%</span
-					>
+					竞价强度
+					<span :class="row.sourceS.qd < 0 ? 'green' : 'red'">
+						{{ row.sourceS.qd }}%
+					</span>
 				</div>
 			</template>
 			<template v-if="column.prop === 'sourceSGn'" #default="{ row }">
 				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
+				<span :class="row.sourceG.qd < 0 ? 'green' : 'red'">
+					{{ row.sourceG.qd }}%
+				</span>
 			</template>
 			<template v-if="column.prop === 'sName'" #default="{ row }">
 				<div
@@ -62,8 +70,13 @@
 					}"
 				>
 					{{ row.sName }}
+					<span :class="row.jjzdf < 0 ? 'green' : 'red'">
+						{{ row.jjzdf }}%
+					</span>
 				</div>
 				<div class="cynr">{{ row.ztyylb }}</div>
+				竞价强度
+				<span :class="row.qd < 0 ? 'green' : 'red'"> {{ row.qd }}% </span>
 			</template>
 		</el-table-column>
 	</el-table>
@@ -80,12 +93,14 @@ const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅' +
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []
-let sortGZ = 'lb'
+const sortGZ = ref<string>('lb')
+const gzTxt = ref<string>('连板')
+
 const columns = ref<any[]>([
 	{
 		prop: 'sourceSName',
 		label: '梯队',
-		width: 118,
+		width: 108,
 	},
 	{
 		prop: 'sourceSGn',
@@ -108,16 +123,30 @@ function query() {
 	})
 }
 function sortLists() {
-	if (sortGZ === 'lb') {
+	if (sortGZ.value === 'lb') {
 		sLists.sort((a: any, b: any) => {
 			return b.lxztts - a.lxztts
 		})
-		sortGZ = 'td'
-	} else {
+		sortGZ.value = 'td'
+		gzTxt.value = '连板'
+	} else if (sortGZ.value === 'td') {
 		sLists.sort((a: any, b: any) => {
 			return b.gnTd.length - a.gnTd.length
 		})
-		sortGZ = 'lb'
+		sortGZ.value = 'qd'
+		gzTxt.value = '关联概念数'
+	} else if (sortGZ.value === 'qd') {
+		sLists.sort((a: any, b: any) => {
+			return b.qd - a.qd
+		})
+		sortGZ.value = 'zdf'
+		gzTxt.value = '竞价强度'
+	} else {
+		sLists.sort((a: any, b: any) => {
+			return b.jjzdf - a.jjzdf
+		})
+		sortGZ.value = 'lb'
+		gzTxt.value = '竞价涨跌幅'
 	}
 	const list: any[] = []
 	sLists.forEach((s: any) => {
