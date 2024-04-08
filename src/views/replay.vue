@@ -44,6 +44,12 @@
 				<div>
 					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
 				</div>
+				<div>
+					开盘
+					<span :class="row.sourceS.jjzdf < 0 ? 'green' : 'red'"
+						>{{ row.sourceS.jjzdf }}%</span
+					>
+				</div>
 			</template>
 			<template v-if="column.prop === 'sourceSGn'" #default="{ row }">
 				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
@@ -72,7 +78,7 @@ import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
-const q = '今日涨停，今日涨停原因，概念' + fixed
+const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅' + fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []

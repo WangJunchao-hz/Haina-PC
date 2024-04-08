@@ -1044,6 +1044,7 @@ export function resolutionReplayStock(data: any) {
 				priceIndex: string, // 价格
 				ztyylbIndex: string, //涨停原因类别
 				lxzttsIndex: string, // 连续涨停天数
+				jjzdfIndex: string, // 竞价涨跌幅
 				gnIndex: string //概念
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
@@ -1054,6 +1055,9 @@ export function resolutionReplayStock(data: any) {
 				}
 				if (item.includes('涨停原因类别[')) {
 					ztyylbIndex = item
+				}
+				if (item.includes('分时涨跌幅:前复权[')) {
+					jjzdfIndex = item
 				}
 				if (item === '股票简称') {
 					nameIndex = item
@@ -1080,6 +1084,7 @@ export function resolutionReplayStock(data: any) {
 				'国企改革',
 				'参股券商',
 			]
+			console.log('datas', datas)
 			datas.forEach((item: any) => {
 				const ztyylb = item[ztyylbIndex] || ''
 				let jtjb = item[jtjbIndex]
@@ -1099,6 +1104,7 @@ export function resolutionReplayStock(data: any) {
 				const gn = item[gnIndex]
 				const gnArray = gn.split(';')
 				const lxztts = item[lxzttsIndex]
+				const jjzdf = Number(item[jjzdfIndex]).toFixed(2)
 				const stock = {
 					name,
 					price,
@@ -1106,6 +1112,7 @@ export function resolutionReplayStock(data: any) {
 					ztyylb,
 					gnArray,
 					lxztts,
+					jjzdf: Number(jjzdf),
 				}
 				gnArray.forEach((gn: string) => {
 					if (!notGns.includes(gn)) {
