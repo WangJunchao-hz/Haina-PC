@@ -1045,10 +1045,18 @@ export function resolutionReplayStock(data: any) {
 				ztyylbIndex: string, //涨停原因类别
 				lxzttsIndex: string, // 连续涨停天数
 				jjzdfIndex: string, // 竞价涨跌幅
+				zzztTimeIndex: string, // 最终涨停时间
+				scztTimeIndex: string, // 首次涨停时间
 				gnIndex: string //概念
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
 					gnIndex = item
+				}
+				if (item.includes('最终涨停时间[')) {
+					zzztTimeIndex = item
+				}
+				if (item.includes('首次涨停时间[')) {
+					scztTimeIndex = item
 				}
 				if (item.includes('连续涨停天数[')) {
 					lxzttsIndex = item
@@ -1105,6 +1113,8 @@ export function resolutionReplayStock(data: any) {
 				const gnArray = gn.split(';')
 				const lxztts = item[lxzttsIndex]
 				const jjzdf = Number(item[jjzdfIndex]).toFixed(2)
+				const zzztTime = Number(item[zzztTimeIndex])
+				const scztTime = Number(item[scztTimeIndex])
 				const stock = {
 					name,
 					price,
@@ -1113,6 +1123,8 @@ export function resolutionReplayStock(data: any) {
 					gnArray,
 					lxztts,
 					jjzdf: Number(jjzdf),
+					scztTime,
+					zzztTime,
 				}
 				gnArray.forEach((gn: string) => {
 					if (!notGns.includes(gn)) {
@@ -1159,15 +1171,22 @@ export function resolutionReplayStock(data: any) {
 							}
 						})
 						if (s.length !== 0) {
+							s.sort((a, b) => {
+								return a.zzztTime - b.zzztTime
+							})
+							const showS = s.filter((item) => item.lxztts > 1)
+							if (!showS.length) {
+								showS.push(s[0])
+							}
 							const qd = Number((gQd / s.length).toFixed(2))
 							sQd += qd
 							gnTd.push({
 								gn: gnItem.gn,
 								num: gnItem.stocks.length,
-								stocks: s,
+								stocks: showS,
 								qd,
 							})
-							gfNum += s.length
+							gfNum += showS.length
 						}
 					}
 				})
@@ -1177,7 +1196,9 @@ export function resolutionReplayStock(data: any) {
 				stock.gfNum = gfNum
 				stock.gnTd = gnTd
 				stock.qd = Number((sQd / gnTd.length).toFixed(2))
+				stock.showTime = dayjs(stock.zzztTime).format('HH:mm:ss')
 			})
+			// console.log(stocks)
 			stocks.sort((a, b) => {
 				return b.lxztts - a.lxztts
 			})

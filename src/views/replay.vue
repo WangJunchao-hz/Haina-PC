@@ -24,6 +24,14 @@
 	>
 		排序({{ gzTxt }})
 	</el-button>
+	<el-button
+		@click="isSS = !isSS"
+		size="small"
+		type="primary"
+		style="margin-left: 8px"
+	>
+		当日({{ isSS ? '开' : '关' }})
+	</el-button>
 	<el-table
 		:data="lists"
 		style="width: 100%"
@@ -45,16 +53,17 @@
 						{{ row.sourceS.jjzdf }}%
 					</span>
 				</div>
-				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
-				<div>
-					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
-				</div>
 				<div>
 					竞价强度
 					<span :class="row.sourceS.qd < 0 ? 'green' : 'red'">
 						{{ row.sourceS.qd }}%
 					</span>
 				</div>
+				<div>
+					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
+				</div>
+				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
+				<div class="cynr">{{ row.sourceS.showTime }}</div>
 			</template>
 			<template v-if="column.prop === 'sourceSGn'" #default="{ row }">
 				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
@@ -74,9 +83,10 @@
 						{{ row.jjzdf }}%
 					</span>
 				</div>
-				<div class="cynr">{{ row.ztyylb }}</div>
 				竞价强度
 				<span :class="row.qd < 0 ? 'green' : 'red'"> {{ row.qd }}% </span>
+				<div class="cynr">{{ row.ztyylb }}</div>
+				<div class="cynr">{{ row.showTime }}</div>
 			</template>
 		</el-table-column>
 	</el-table>
@@ -90,12 +100,13 @@ import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
 const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅' + fixed
+const sq = '今日涨停，今日涨停原因，概念，今日竞价涨跌幅' + fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []
 const sortGZ = ref<string>('lb')
 const gzTxt = ref<string>('连板')
-
+const isSS = ref<boolean>(false)
 const columns = ref<any[]>([
 	{
 		prop: 'sourceSName',
@@ -116,7 +127,7 @@ function dateChange(d: any) {
 	date.value = d
 }
 function query() {
-	const question = replaceTpl(q, date.value)
+	const question = replaceTpl(isSS.value ? sq : q, date.value)
 	GetRobotData({ question }).then((res) => {
 		sLists = resolutionReplayStock(res.data)
 		sortLists()
@@ -152,6 +163,7 @@ function sortLists() {
 	sLists.forEach((s: any) => {
 		s.gnTd.forEach((g: any) => {
 			g.stocks.forEach((st: any) => {
+				// if (st.lxztts > 1) {
 				list.push({
 					...st,
 					sName: `${st.name}(${st.jtjb})`,
@@ -163,6 +175,7 @@ function sortLists() {
 					sourceG: g,
 					isdd: st.lxztts >= s.lxztts,
 				})
+				// }
 			})
 		})
 	})
