@@ -1047,10 +1047,14 @@ export function resolutionReplayStock(data: any) {
 				jjzdfIndex: string, // 竞价涨跌幅
 				zzztTimeIndex: string, // 最终涨停时间
 				scztTimeIndex: string, // 首次涨停时间
-				gnIndex: string //概念
+				gnIndex: string, //概念
+				hyIndex: string // 行业
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
 					gnIndex = item
+				}
+				if (item === '所属同花顺二级行业') {
+					hyIndex = item
 				}
 				if (item.includes('最终涨停时间[')) {
 					zzztTimeIndex = item
@@ -1091,6 +1095,7 @@ export function resolutionReplayStock(data: any) {
 				'地方国企改革',
 				'国企改革',
 				'参股券商',
+				'专精特新'
 			]
 			// console.log('datas', datas)
 			datas.forEach((item: any) => {
@@ -1115,16 +1120,19 @@ export function resolutionReplayStock(data: any) {
 				const jjzdf = Number(item[jjzdfIndex]).toFixed(2)
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
+				const hy = item[hyIndex] || ''
 				const stock = {
 					name,
 					price,
 					jtjb,
+					hy,
 					ztyylb,
 					gnArray,
 					lxztts,
 					jjzdf: Number(jjzdf),
 					scztTime,
 					zzztTime,
+					showTime: dayjs(zzztTime).format('HH:mm:ss')
 				}
 				gnArray.forEach((gn: string) => {
 					if (!notGns.includes(gn)) {
@@ -1141,68 +1149,121 @@ export function resolutionReplayStock(data: any) {
 				})
 				stocks.push(stock)
 			})
-			const gnArray = Array.from(gnMap.values())
-				.sort((a, b) => {
-					return b.stocks.length - a.stocks.length
-				})
-				.map((gnItem) => {
-					gnItem.stocks.sort((a: any, b: any) => {
-						return b.lxztts - a.lxztts
-					})
-					return gnItem
-				})
-			// console.log(gnArray)
-			stocks.forEach((stock) => {
-				const { gnArray, name, lxztts } = stock
-				const gnTd: any = []
-				let gfNum = 0
-				let sQd = 0
-				gnArray.forEach((gn: string) => {
-					if (!notGns.includes(gn)) {
-						const gnItem = gnMap.get(gn)
-						let gQd = 0
-						const s: any[] = []
-						gnItem.stocks.forEach((item: any) => {
-							if (item.name !== name) {
-								s.push(item)
-								if (lxztts !== item.lxztts) {
-									gQd += item.jjzdf
-								}
-							}
-						})
-						if (s.length !== 0) {
-							s.sort((a, b) => {
+			const maxGnMap: any = {}
+			stocks.forEach(s => {
+				let maxGn = {
+					gn: '',
+					num: 0,
+					stocks: []
+				}
+				s.gnArray.forEach((gn: string) => {
+					const has = gnMap.get(gn)
+					if (has) {
+						const len = has.stocks.length
+						if (len > maxGn.num) {
+							maxGn.gn = gn
+							maxGn.num = len
+							has.stocks.sort((a: any, b: any) => {
 								return a.zzztTime - b.zzztTime
 							})
-							const showS = s.filter((item) => item.lxztts > 1)
-							if (!showS.length) {
-								showS.push(s[0])
-							}
-							const qd = Number((gQd / s.length).toFixed(2))
-							sQd += qd
-							gnTd.push({
-								gn: gnItem.gn,
-								num: gnItem.stocks.length,
-								stocks: showS,
-								qd,
-							})
-							gfNum += showS.length
+							maxGn.stocks = has.stocks
 						}
 					}
 				})
-				gnTd.sort((a: any, b: any) => {
-					return b.stocks.length - a.stocks.length
+				s.maxGn = `${maxGn.gn}(${maxGn.num})`
+				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
+				if (!maxGnMap[s.maxGn]) {
+					maxGnMap[s.maxGn] = maxGn
+				}
+			})
+			console.log(maxGnMap);
+			const maxGnArray = Object.values(maxGnMap)
+			console.log(maxGnArray);
+
+			maxGnArray.sort((a: any, b: any) => {
+				return b.num - a.num
+			})
+			const lists: any[] = []
+			maxGnArray.forEach((m: any) => {
+				m.stocks.forEach((s: any) => {
+					if (s.gl) {
+						s.gl.push(`${m.gn}(${m.num})`)
+					} else {
+						s.gl = [`${m.gn}(${m.num})`]
+					}
 				})
-				stock.gfNum = gfNum
-				stock.gnTd = gnTd
-				stock.qd = Number((sQd / gnTd.length).toFixed(2))
-				stock.showTime = dayjs(stock.zzztTime).format('HH:mm:ss')
 			})
-			// console.log(stocks)
-			stocks.sort((a, b) => {
-				return b.lxztts - a.lxztts
+			maxGnArray.forEach((m: any) => {
+				const copy = JSON.parse(JSON.stringify(m.stocks))
+				copy.forEach((s: any) => {
+					s.gl = s.gl.filter((g: any) => s.maxGn !== g).join(',')
+					s.maxGn = `${m.gn}(${m.num})`
+					lists.push(s)
+				})
 			})
-			return stocks.filter((s) => s.lxztts > 1)
+			return lists
+			// const gnArray = Array.from(gnMap.values())
+			// 	.sort((a, b) => {
+			// 		return b.stocks.length - a.stocks.length
+			// 	})
+			// 	.map((gnItem) => {
+			// 		gnItem.stocks.sort((a: any, b: any) => {
+			// 			return b.lxztts - a.lxztts
+			// 		})
+			// 		return gnItem
+			// 	})
+			// // console.log(gnArray)
+			// stocks.forEach((stock) => {
+			// 	const { gnArray, name, lxztts } = stock
+			// 	const gnTd: any = []
+			// 	let gfNum = 0
+			// 	let sQd = 0
+			// 	gnArray.forEach((gn: string) => {
+			// 		if (!notGns.includes(gn)) {
+			// 			const gnItem = gnMap.get(gn)
+			// 			let gQd = 0
+			// 			const s: any[] = []
+			// 			gnItem.stocks.forEach((item: any) => {
+			// 				if (item.name !== name) {
+			// 					s.push(item)
+			// 					if (lxztts !== item.lxztts) {
+			// 						gQd += item.jjzdf
+			// 					}
+			// 				}
+			// 			})
+			// 			if (s.length !== 0) {
+			// 				s.sort((a, b) => {
+			// 					return a.zzztTime - b.zzztTime
+			// 				})
+			// 				const showS = s.filter((item) => item.lxztts > 1)
+			// 				if (!showS.length) {
+			// 					showS.push(s[0])
+			// 				}
+			// 				const qd = Number((gQd / s.length).toFixed(2))
+			// 				sQd += qd
+			// 				gnTd.push({
+			// 					gn: gnItem.gn,
+			// 					num: gnItem.stocks.length,
+			// 					stocks: showS,
+			// 					qd,
+			// 				})
+			// 				gfNum += showS.length
+			// 			}
+			// 		}
+			// 	})
+			// 	gnTd.sort((a: any, b: any) => {
+			// 		return b.stocks.length - a.stocks.length
+			// 	})
+			// 	stock.gfNum = gfNum
+			// 	stock.gnTd = gnTd
+			// 	stock.qd = Number((sQd / gnTd.length).toFixed(2))
+			// 	stock.showTime = dayjs(stock.zzztTime).format('HH:mm:ss')
+			// })
+			// // console.log(stocks)
+			// stocks.sort((a, b) => {
+			// 	return b.lxztts - a.lxztts
+			// })
+			// return stocks.filter((s) => s.lxztts > 1)
 		} catch (error) {
 			console.error(error)
 			res = false as any
@@ -1852,7 +1913,7 @@ export function resolutionTrendData(trendData: {
 		zhishu.loss.lpb = Number((zhishu.lp / len).toFixed(2))
 		zhishu.loss.d5b = Number((zhishu.d5 / len).toFixed(2))
 		zhishu.loss.d9_8b = Number((zhishu.d9_8 / len).toFixed(2))
-		;(trendData.today as any).zhishu = zhishu
+			; (trendData.today as any).zhishu = zhishu
 	}
 	const TGns = trendData.today.gnlists
 	const YGns = trendData.yesterday.gnlists
@@ -2229,8 +2290,8 @@ export function handleHanHuaTpl(tpl: any[], data: any[]) {
 			if (errorKey.length) {
 				console.warn(
 					'以下商品未识别成功【' +
-						errorKey.join('、') +
-						'】请核对修改后再重新尝试！'
+					errorKey.join('、') +
+					'】请核对修改后再重新尝试！'
 				)
 			}
 			let text = t.value

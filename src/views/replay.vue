@@ -4,48 +4,37 @@
 		@click="query"
 		size="small"
 		type="primary"
-		style="margin-left: 8px"
-	>
+		style="margin-left: 8px">
 		复盘
 	</el-button>
 	<el-button
 		@click="exportTable"
 		size="small"
 		type="primary"
-		style="margin-left: 8px"
-	>
+		style="margin-left: 8px">
 		导出表格
 	</el-button>
 	<el-button
 		@click="sortLists"
 		size="small"
 		type="primary"
-		style="margin-left: 8px"
-	>
+		style="margin-left: 8px">
 		排序({{ gzTxt }})
 	</el-button>
 	<el-button
 		@click="isSS = !isSS"
 		size="small"
 		type="primary"
-		style="margin-left: 8px"
-	>
+		style="margin-left: 8px">
 		当日({{ isSS ? '开' : '关' }})
 	</el-button>
-	<el-table
-		:data="lists"
-		style="width: 100%"
-		size="small"
-		border
-		:span-method="spanMethod"
-	>
+	<el-table :data="lists" style="width: 100%" size="small" border>
 		<el-table-column
 			v-for="column in columns"
 			:key="column.prop"
 			:prop="column.prop"
 			:label="column.label"
-			:width="column.width"
-		>
+			:width="column.width">
 			<template v-if="column.prop === 'sourceSName'" #default="{ row }">
 				<div class="zynr">
 					{{ row.sourceSName }}
@@ -76,8 +65,7 @@
 					:class="{
 						zynr: row.lxztts > 1,
 						red: row.isdd,
-					}"
-				>
+					}">
 					{{ row.sName }}
 					<span :class="row.jjzdf < 0 ? 'green' : 'red'">
 						{{ row.jjzdf }}%
@@ -99,8 +87,8 @@ import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
-const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅' + fixed
-const sq = '今日涨停，今日涨停原因，概念，今日竞价涨跌幅' + fixed
+const q = '昨日涨停，昨日涨停原因，概念，同花顺二级行业' + fixed
+const sq = '今日涨停，今日涨停原因，概念，同花顺二级行业' + fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []
@@ -109,18 +97,39 @@ const gzTxt = ref<string>('连板')
 const isSS = ref<boolean>(false)
 const columns = ref<any[]>([
 	{
-		prop: 'sourceSName',
-		label: '梯队',
-		width: 108,
+		prop: 'jtjb',
+		label: '高度',
+		width: 88,
 	},
 	{
-		prop: 'sourceSGn',
-		label: '概念',
+		prop: 'name',
+		label: '股票',
+		width: 88,
+	},
+	{
+		prop: 'ztyylb',
+		label: '涨停原因',
+		width: 218,
+	},
+	{
+		prop: 'showTime',
+		label: '最终涨停时间',
 		width: 98,
 	},
 	{
-		prop: 'sName',
-		label: '股票',
+		prop: 'hy',
+		label: '相关板块',
+		width: 98,
+	},
+	{
+		prop: 'gl',
+		label: '重复主题',
+		width: 188,
+	},
+	{
+		prop: 'maxGn',
+		label: '最强概念',
+		width: 98,
 	},
 ])
 function dateChange(d: any) {
@@ -130,7 +139,8 @@ function query() {
 	const question = replaceTpl(isSS.value ? sq : q, date.value)
 	GetRobotData({ question }).then((res) => {
 		sLists = resolutionReplayStock(res.data)
-		sortLists()
+		lists.value = sLists
+		// sortLists()
 	})
 }
 function sortLists() {

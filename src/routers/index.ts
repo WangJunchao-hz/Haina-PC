@@ -13,7 +13,7 @@ const Replay = () => import('@/views/replay.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
-		redirect: '/replay',
+		redirect: '/stock',
 	},
 	{
 		name: 'stock',
@@ -25,52 +25,52 @@ const routersConfig: Readonly<RouteRecordRaw[]> = [
 		path: '/replay',
 		component: Replay,
 	},
-	// {
-	// 	name: 'inventory',
-	// 	path: '/inventory',
-	// 	component: Inventory,
-	// },
-	// {
-	// 	name: 'priceAnalysis',
-	// 	path: '/price-analysis',
-	// 	component: PriceAnalysis,
-	// },
-	// {
-	// 	name: 'dataMap',
-	// 	path: '/data-map',
-	// 	component: DataMap,
-	// },
+	{
+		name: 'inventory',
+		path: '/inventory',
+		component: Inventory,
+	},
+	{
+		name: 'priceAnalysis',
+		path: '/price-analysis',
+		component: PriceAnalysis,
+	},
+	{
+		name: 'dataMap',
+		path: '/data-map',
+		component: DataMap,
+	},
 
-	// {
-	// 	name: 'emotionalCycle',
-	// 	path: '/emotional-cycle',
-	// 	component: EmotionalCycle,
-	// },
-	// {
-	// 	name: 'mainlineCycle',
-	// 	path: '/mainline-cycle',
-	// 	component: MainlineCycle,
-	// },
-	// {
-	// 	name: 'trendCycle',
-	// 	path: '/trend-cycle',
-	// 	component: TrendCycle,
-	// },
-	// {
-	// 	name: 'emotionStatistics',
-	// 	path: '/emotion-statistics',
-	// 	component: EmotionStatistics,
-	// },
-	// {
-	// 	name: 'trendStatistics',
-	// 	path: '/trend-statistics',
-	// 	component: TrendStatistics,
-	// },
-	// {
-	// 	name: 'themeStatistics',
-	// 	path: '/theme-statistics',
-	// 	component: ThemeStatistics,
-	// },
+	{
+		name: 'emotionalCycle',
+		path: '/emotional-cycle',
+		component: EmotionalCycle,
+	},
+	{
+		name: 'mainlineCycle',
+		path: '/mainline-cycle',
+		component: MainlineCycle,
+	},
+	{
+		name: 'trendCycle',
+		path: '/trend-cycle',
+		component: TrendCycle,
+	},
+	{
+		name: 'emotionStatistics',
+		path: '/emotion-statistics',
+		component: EmotionStatistics,
+	},
+	{
+		name: 'trendStatistics',
+		path: '/trend-statistics',
+		component: TrendStatistics,
+	},
+	{
+		name: 'themeStatistics',
+		path: '/theme-statistics',
+		component: ThemeStatistics,
+	},
 ]
 const router = createRouter({
 	history: createWebHashHistory(),
