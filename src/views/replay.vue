@@ -28,14 +28,28 @@
 		style="margin-left: 8px">
 		当日({{ isSS ? '开' : '关' }})
 	</el-button>
-	<el-table :data="lists" style="width: 100%" size="small" border>
+	<el-table
+		:data="lists"
+		style="width: 100%"
+		size="small"
+		border
+		:span-method="spanMethod">
 		<el-table-column
 			v-for="column in columns"
 			:key="column.prop"
 			:prop="column.prop"
 			:label="column.label"
 			:width="column.width">
-			<template v-if="column.prop === 'sourceSName'" #default="{ row }">
+			<template v-if="column.prop === 'showName'" #default="{ row }">
+				<div>
+					{{ row.name }}(
+					<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+						{{ row.jjzdf }}%
+					</span>
+					)
+				</div>
+			</template>
+			<!-- <template v-if="column.prop === 'sourceSName'" #default="{ row }">
 				<div class="zynr">
 					{{ row.sourceSName }}
 					<span :class="row.sourceS.jjzdf < 0 ? 'green' : 'red'">
@@ -53,8 +67,8 @@
 				</div>
 				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
 				<div class="cynr">{{ row.sourceS.showTime }}</div>
-			</template>
-			<template v-if="column.prop === 'sourceSGn'" #default="{ row }">
+			</template> -->
+			<!-- <template v-if="column.prop === 'sourceSGn'" #default="{ row }">
 				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
 				<span :class="row.sourceG.qd < 0 ? 'green' : 'red'">
 					{{ row.sourceG.qd }}%
@@ -75,7 +89,7 @@
 				<span :class="row.qd < 0 ? 'green' : 'red'"> {{ row.qd }}% </span>
 				<div class="cynr">{{ row.ztyylb }}</div>
 				<div class="cynr">{{ row.showTime }}</div>
-			</template>
+			</template> -->
 		</el-table-column>
 	</el-table>
 </template>
@@ -87,8 +101,9 @@ import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
-const q = '昨日涨停，昨日涨停原因，概念，同花顺二级行业' + fixed
-const sq = '今日涨停，今日涨停原因，概念，同花顺二级行业' + fixed
+const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅，同花顺二级行业' + fixed
+const sq =
+	'今日涨停，今日涨停原因，概念，今日竞价涨跌幅，同花顺二级行业' + fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []
@@ -97,14 +112,19 @@ const gzTxt = ref<string>('连板')
 const isSS = ref<boolean>(false)
 const columns = ref<any[]>([
 	{
+		prop: 'maxGn',
+		label: '最强概念',
+		width: 98,
+	},
+	{
 		prop: 'jtjb',
 		label: '高度',
 		width: 88,
 	},
 	{
-		prop: 'name',
+		prop: 'showName',
 		label: '股票',
-		width: 88,
+		width: 118,
 	},
 	{
 		prop: 'ztyylb',
@@ -125,11 +145,6 @@ const columns = ref<any[]>([
 		prop: 'gl',
 		label: '重复主题',
 		width: 188,
-	},
-	{
-		prop: 'maxGn',
-		label: '最强概念',
-		width: 98,
 	},
 ])
 function dateChange(d: any) {
@@ -193,40 +208,27 @@ function sortLists() {
 	// console.log(lists.value)
 }
 let sSpanIndex = 0
-let gSpanIndex = 0
 function spanMethod({ row, column, rowIndex, columnIndex }: any) {
-	if (columnIndex === 0) {
-		const rs = row.sourceSGfNum
-		if (rowIndex === 0) {
-			sSpanIndex = 0
-		}
-		if (rowIndex === sSpanIndex) {
-			sSpanIndex = sSpanIndex + rs
-			return {
-				rowspan: rs,
-				colspan: 1,
+	const regex = /\((\d+)\)/
+	const match = row.maxGn.match(regex)
+	if (match) {
+		const num = Number(match[1])
+		if (columnIndex === 0) {
+			if (rowIndex === 0) {
+				sSpanIndex = 0
 			}
-		} else if (rowIndex < sSpanIndex) {
-			return {
-				rowspan: 0,
-				colspan: 0,
-			}
-		}
-	} else if (columnIndex === 1) {
-		const rs = row.sourceSGnSNum
-		if (rowIndex === 0) {
-			gSpanIndex = 0
-		}
-		if (rowIndex === gSpanIndex) {
-			gSpanIndex = gSpanIndex + rs
-			return {
-				rowspan: rs,
-				colspan: 1,
-			}
-		} else if (rowIndex < gSpanIndex) {
-			return {
-				rowspan: 0,
-				colspan: 0,
+			// console.log(rowIndex, sSpanIndex, num)
+			if (rowIndex === sSpanIndex) {
+				sSpanIndex += num
+				return {
+					rowspan: num,
+					colspan: 1,
+				}
+			} else if (rowIndex < sSpanIndex) {
+				return {
+					rowspan: 0,
+					colspan: 0,
+				}
 			}
 		}
 	}

@@ -13,7 +13,7 @@ const Replay = () => import('@/views/replay.vue')
 const routersConfig: Readonly<RouteRecordRaw[]> = [
 	{
 		path: '/',
-		redirect: '/stock',
+		redirect: '/replay',
 	},
 	{
 		name: 'stock',

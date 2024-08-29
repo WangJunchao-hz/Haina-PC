@@ -1117,7 +1117,7 @@ export function resolutionReplayStock(data: any) {
 				const gn = item[gnIndex]
 				const gnArray = gn.split(';')
 				const lxztts = item[lxzttsIndex]
-				const jjzdf = Number(item[jjzdfIndex]).toFixed(2)
+				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : ''
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
 				const hy = item[hyIndex] || ''
@@ -1129,7 +1129,7 @@ export function resolutionReplayStock(data: any) {
 					ztyylb,
 					gnArray,
 					lxztts,
-					jjzdf: Number(jjzdf),
+					jjzdf,
 					scztTime,
 					zzztTime,
 					showTime: dayjs(zzztTime).format('HH:mm:ss')
@@ -1172,17 +1172,17 @@ export function resolutionReplayStock(data: any) {
 				})
 				s.maxGn = `${maxGn.gn}(${maxGn.num})`
 				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
-				if (!maxGnMap[s.maxGn]) {
-					maxGnMap[s.maxGn] = maxGn
+				s.showName = `${s.name}(${s.jjzdf}%)`
+				if (!maxGnMap[maxGn.gn]) {
+					maxGnMap[maxGn.gn] = maxGn
 				}
 			})
-			console.log(maxGnMap);
+			// console.log(maxGnMap);
 			const maxGnArray = Object.values(maxGnMap)
-			console.log(maxGnArray);
-
 			maxGnArray.sort((a: any, b: any) => {
 				return b.num - a.num
 			})
+			// console.log(maxGnArray, stocks);
 			const lists: any[] = []
 			maxGnArray.forEach((m: any) => {
 				m.stocks.forEach((s: any) => {
@@ -1196,7 +1196,7 @@ export function resolutionReplayStock(data: any) {
 			maxGnArray.forEach((m: any) => {
 				const copy = JSON.parse(JSON.stringify(m.stocks))
 				copy.forEach((s: any) => {
-					s.gl = s.gl.filter((g: any) => s.maxGn !== g).join(',')
+					s.gl = s.gl.filter((g: any) => !g.includes(m.gn)).join(',')
 					s.maxGn = `${m.gn}(${m.num})`
 					lists.push(s)
 				})
