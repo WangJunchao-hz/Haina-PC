@@ -1048,7 +1048,10 @@ export function resolutionReplayStock(data: any) {
 				zzztTimeIndex: string, // 最终涨停时间
 				scztTimeIndex: string, // 首次涨停时间
 				gnIndex: string, //概念
-				hyIndex: string // 行业
+				hyIndex: string, // 行业
+				ztfdeIndex: string, //涨停封单额
+				jjwppjeIndex: string, // 竞价未匹配金额
+				jjjeIndex: string // 竞价金额
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
 					gnIndex = item
@@ -1068,8 +1071,17 @@ export function resolutionReplayStock(data: any) {
 				if (item.includes('涨停原因类别[')) {
 					ztyylbIndex = item
 				}
-				if (item.includes('分时涨跌幅:前复权[')) {
+				if (item.includes('竞价涨幅[')) {
 					jjzdfIndex = item
+				}
+				if (item.includes('涨停封单额[')) {
+					ztfdeIndex = item
+				}
+				if (item.includes('竞价未匹配金额[')) {
+					jjwppjeIndex = item
+				}
+				if (item.includes('竞价金额[')) {
+					jjjeIndex = item
 				}
 				if (item === '股票简称') {
 					nameIndex = item
@@ -1120,6 +1132,18 @@ export function resolutionReplayStock(data: any) {
 				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : ''
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
+				let jjwppje: any = 0
+				if (item[jjwppjeIndex]) {
+					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+				}
+				let jjje: any = 0
+				if (item[jjjeIndex]) {
+					jjje = (Number(item[jjjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+				}
+				let ztfde: any = 0
+				if (item[ztfdeIndex]) {
+					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+				}
 				const hy = item[hyIndex] || ''
 				const stock = {
 					name,
@@ -1130,8 +1154,12 @@ export function resolutionReplayStock(data: any) {
 					gnArray,
 					lxztts,
 					jjzdf,
+					jjje,
+					jjwppje,
+					ztfde,
 					scztTime,
 					zzztTime,
+					fistTime: dayjs(scztTime).format('HH:mm:ss'),
 					showTime: dayjs(zzztTime).format('HH:mm:ss')
 				}
 				gnArray.forEach((gn: string) => {
@@ -1172,7 +1200,7 @@ export function resolutionReplayStock(data: any) {
 				})
 				s.maxGn = `${maxGn.gn}(${maxGn.num})`
 				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
-				s.showName = `${s.name}(${s.jjzdf}%)`
+				s.showName = `${s.name} ${s.ztfde} ${s.jjzdf}% ${s.jjje} ${s.jjwppje}`
 				if (!maxGnMap[maxGn.gn]) {
 					maxGnMap[maxGn.gn] = maxGn
 				}

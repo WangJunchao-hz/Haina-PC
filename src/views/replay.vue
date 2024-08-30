@@ -42,11 +42,12 @@
 			:width="column.width">
 			<template v-if="column.prop === 'showName'" #default="{ row }">
 				<div>
-					{{ row.name }}(
+					{{ row.name }}&nbsp;&nbsp; <span class="red">{{ row.ztfde }}</span
+					>&nbsp;&nbsp;
 					<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
 						{{ row.jjzdf }}%
 					</span>
-					)
+					&nbsp;&nbsp;{{ row.jjje }}&nbsp;&nbsp;{{ row.jjwppje }}
 				</div>
 			</template>
 			<!-- <template v-if="column.prop === 'sourceSName'" #default="{ row }">
@@ -101,9 +102,12 @@ import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
-const q = '昨日涨停，昨日涨停原因，概念，今日竞价涨跌幅，同花顺二级行业' + fixed
+const q =
+	'昨日涨停，昨日涨停封单额，昨日几天几板，昨日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
+	fixed
 const sq =
-	'今日涨停，今日涨停原因，概念，今日竞价涨跌幅，同花顺二级行业' + fixed
+	'今日涨停，今日涨停封单额，今日几天几板，今日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
+	fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 let sLists: any[] = []
@@ -124,7 +128,7 @@ const columns = ref<any[]>([
 	{
 		prop: 'showName',
 		label: '股票',
-		width: 118,
+		width: 288,
 	},
 	{
 		prop: 'ztyylb',
@@ -137,14 +141,19 @@ const columns = ref<any[]>([
 		width: 98,
 	},
 	{
-		prop: 'hy',
-		label: '相关板块',
+		prop: 'fistTime',
+		label: '首次涨停时间',
 		width: 98,
 	},
 	{
 		prop: 'gl',
 		label: '重复主题',
 		width: 188,
+	},
+	{
+		prop: 'hy',
+		label: '相关板块',
+		width: 98,
 	},
 ])
 function dateChange(d: any) {
