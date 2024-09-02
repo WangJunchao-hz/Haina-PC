@@ -2,6 +2,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { GetHoliday } from '@/common/api/third-party-api'
 import { UniCloudGet } from '@/common/api/uni-cloud-api'
 import { TextEncoder, TextDecoder } from 'text-encoding'
+import { cloneDeep } from 'lodash'
 export const Cache = {
 	set(type: string, key: string | number, value: any) {
 		let newValue: any = {}
@@ -1051,10 +1052,14 @@ export function resolutionReplayStock(data: any) {
 				hyIndex: string, // 行业
 				ztfdeIndex: string, //涨停封单额
 				jjwppjeIndex: string, // 竞价未匹配金额
+				zdfIndex: string, // 涨跌幅
 				jjjeIndex: string // 竞价金额
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
 					gnIndex = item
+				}
+				if (item === '最新涨跌幅') {
+					zdfIndex = item
 				}
 				if (item === '所属同花顺二级行业') {
 					hyIndex = item
@@ -1096,6 +1101,7 @@ export function resolutionReplayStock(data: any) {
 			// console.log('datas', datas)
 			const stocks: any[] = []
 			const gnMap = new Map()
+			const yyMap = new Map()
 			const notGns = [
 				'融资融券',
 				'转融券标的',
@@ -1111,15 +1117,22 @@ export function resolutionReplayStock(data: any) {
 			]
 			// console.log('datas', datas)
 			datas.forEach((item: any) => {
+				let lxztts = item[lxzttsIndex]
 				const ztyylb = item[ztyylbIndex] || ''
 				let jtjb = item[jtjbIndex]
 				let jb = jtjb === '首板涨停' ? '1' : '0'
+				if (!lxztts) {
+					lxztts = Number(jb)
+				}
 				if (jtjb && jtjb != '首板涨停') {
 					const j = jtjb.replace('板', '').split('天')
 					if (j[0] === j[1]) {
 						jb = j[1]
 					} else {
 						jb = j[0] + '-' + j[1]
+					}
+					if (!lxztts) {
+						lxztts = Number(j[1])
 					}
 				}
 				jtjb = jb + '板'
@@ -1128,10 +1141,10 @@ export function resolutionReplayStock(data: any) {
 				const name = item[nameIndex] || ''
 				const gn = item[gnIndex]
 				const gnArray = gn.split(';')
-				const lxztts = item[lxzttsIndex]
 				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : ''
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
+				const zdf = item[zdfIndex]
 				let jjwppje: any = 0
 				if (item[jjwppjeIndex]) {
 					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
@@ -1145,15 +1158,18 @@ export function resolutionReplayStock(data: any) {
 					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
 				const hy = item[hyIndex] || ''
+				const ztyyArray = ztyylb.split('+')
 				const stock = {
 					name,
 					price,
 					jtjb,
 					hy,
 					ztyylb,
+					ztyyArray,
 					gnArray,
 					lxztts,
 					jjzdf,
+					zdf,
 					jjje,
 					jjwppje,
 					ztfde,
@@ -1162,6 +1178,17 @@ export function resolutionReplayStock(data: any) {
 					fistTime: dayjs(scztTime).format('HH:mm:ss'),
 					showTime: dayjs(zzztTime).format('HH:mm:ss')
 				}
+				ztyyArray.forEach((yy: string) => {
+					const yyItem = yyMap.get(yy)
+					if (yyItem) {
+						yyItem.stocks.push(stock)
+					} else {
+						yyMap.set(yy, {
+							gn,
+							stocks: [stock],
+						})
+					}
+				})
 				gnArray.forEach((gn: string) => {
 					if (!notGns.includes(gn)) {
 						const gnItem = gnMap.get(gn)
@@ -1184,6 +1211,15 @@ export function resolutionReplayStock(data: any) {
 					num: 0,
 					stocks: []
 				}
+				s.ztyyArray = s.ztyyArray.map((yy: string) => {
+					const item = yyMap.get(yy)
+					return {
+						yy,
+						num: item.stocks.length,
+						stocks: item.stocks
+					}
+				})
+
 				s.gnArray.forEach((gn: string) => {
 					const has = gnMap.get(gn)
 					if (has) {
@@ -1216,21 +1252,31 @@ export function resolutionReplayStock(data: any) {
 			maxGnArray.forEach((m: any) => {
 				m.stocks.forEach((s: any) => {
 					if (s.gl) {
-						s.gl.push(`${m.gn}(${m.num})`)
+						s.gl.push({
+							...m
+						})
 					} else {
-						s.gl = [`${m.gn}(${m.num})`]
+						s.gl = [{
+							...m
+						}]
 					}
 				})
 			})
+			console.log(stocks);
 			maxGnArray.forEach((m: any) => {
-				const copy = JSON.parse(JSON.stringify(m.stocks))
+				const copy = cloneDeep(m.stocks)
 				copy.forEach((s: any) => {
-					s.gl = s.gl.filter((g: any) => !g.includes(m.gn)).join(',')
+					s.gl = s.gl.filter((g: any) => {
+						return g.gn !== m.gn
+					})
 					s.maxGn = `${m.gn}(${m.num})`
 					lists.push(s)
 				})
 			})
-			return lists
+			return {
+				lists,
+				stocks
+			}
 			// const gnArray = Array.from(gnMap.values())
 			// 	.sort((a, b) => {
 			// 		return b.stocks.length - a.stocks.length

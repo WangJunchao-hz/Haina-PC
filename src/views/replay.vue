@@ -14,12 +14,19 @@
 		style="margin-left: 8px">
 		导出表格
 	</el-button>
-	<el-button
+	<!-- <el-button
 		@click="sortLists"
 		size="small"
 		type="primary"
 		style="margin-left: 8px">
 		排序({{ gzTxt }})
+	</el-button> -->
+	<el-button
+		@click="switchModel"
+		size="small"
+		type="primary"
+		style="margin-left: 8px">
+		切换
 	</el-button>
 	<el-button
 		@click="isSS = !isSS"
@@ -29,11 +36,13 @@
 		当日({{ isSS ? '开' : '关' }})
 	</el-button>
 	<el-table
+		v-if="currentShow === 0"
 		:data="lists"
 		style="width: 100%"
 		size="small"
 		border
-		:span-method="spanMethod">
+		:span-method="spanMethod"
+		:row-class-name="tableRowClassName">
 		<el-table-column
 			v-for="column in columns"
 			:key="column.prop"
@@ -45,49 +54,88 @@
 					{{ row.jjzdf }}%
 				</span>
 			</template>
-			<!-- <template v-if="column.prop === 'sourceSName'" #default="{ row }">
-				<div class="zynr">
-					{{ row.sourceSName }}
-					<span :class="row.sourceS.jjzdf < 0 ? 'green' : 'red'">
-						{{ row.sourceS.jjzdf }}%
-					</span>
-				</div>
-				<div>
-					竞价强度
-					<span :class="row.sourceS.qd < 0 ? 'green' : 'red'">
-						{{ row.sourceS.qd }}%
-					</span>
-				</div>
-				<div>
-					关联 <span class="red">{{ row.sourceS.gnTd.length }}</span> 个概念
-				</div>
-				<div class="cynr">{{ row.sourceS.ztyylb }}</div>
-				<div class="cynr">{{ row.sourceS.showTime }}</div>
-			</template> -->
-			<!-- <template v-if="column.prop === 'sourceSGn'" #default="{ row }">
-				<div>{{ row.sourceSGn }} ({{ row.sourceG.stocks.length }})</div>
-				<span :class="row.sourceG.qd < 0 ? 'green' : 'red'">
-					{{ row.sourceG.qd }}%
-				</span>
+			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
+				<el-link
+					style="font-size: 12px; margin-right: 8px"
+					v-for="yy in row.ztyyArray"
+					@click="getYYDetail(yy.stocks)">
+					{{ yy.yy }}({{ yy.num }})
+				</el-link>
 			</template>
-			<template v-if="column.prop === 'sName'" #default="{ row }">
-				<div
-					:class="{
-						zynr: row.lxztts > 1,
-						red: row.isdd,
-					}">
-					{{ row.sName }}
-					<span :class="row.jjzdf < 0 ? 'green' : 'red'">
-						{{ row.jjzdf }}%
-					</span>
-				</div>
-				竞价强度
-				<span :class="row.qd < 0 ? 'green' : 'red'"> {{ row.qd }}% </span>
-				<div class="cynr">{{ row.ztyylb }}</div>
-				<div class="cynr">{{ row.showTime }}</div>
-			</template> -->
+			<template v-if="column.prop === 'gl'" #default="{ row }">
+				<el-link
+					style="font-size: 12px; margin-right: 8px"
+					v-for="g in row.gl"
+					@click="getYYDetail(g.stocks)">
+					{{ g.gn }}({{ g.num }})
+				</el-link>
+			</template>
 		</el-table-column>
 	</el-table>
+	<el-table
+		v-if="currentShow === 1"
+		:data="lists2"
+		style="width: 100%"
+		size="small"
+		border>
+		<el-table-column
+			v-for="column in columns"
+			:key="column.prop"
+			:prop="column.prop"
+			:label="column.label"
+			:width="column.width">
+			<template v-if="column.prop === 'jjzdf'" #default="{ row }">
+				<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+					{{ row.jjzdf }}%
+				</span>
+			</template>
+			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
+				<el-link
+					style="font-size: 12px; margin-right: 8px"
+					v-for="yy in row.ztyyArray"
+					@click="getYYDetail(yy.stocks)">
+					{{ yy.yy }}({{ yy.num }})
+				</el-link>
+			</template>
+			<template v-if="column.prop === 'gl'" #default="{ row }">
+				<el-link
+					style="font-size: 12px; margin-right: 8px"
+					v-for="g in row.gl"
+					@click="getYYDetail(g.stocks)">
+					{{ g.gn }}({{ g.num }})
+				</el-link>
+			</template>
+		</el-table-column>
+	</el-table>
+	<el-dialog v-model="dialogVisible" title="梯队" width="80%">
+		<el-table :data="subLists" style="width: 100%" size="small" border>
+			<el-table-column
+				v-for="column in subColumns"
+				:key="column.prop"
+				:prop="column.prop"
+				:label="column.label"
+				:width="column.width">
+				<template v-if="column.prop === 'jjzdf'" #default="{ row }">
+					<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+						{{ row.jjzdf }}%
+					</span>
+				</template>
+				<template v-if="column.prop === 'zdf'" #default="{ row }">
+					<span :class="row.zdf && row.zdf < 0 ? 'green' : 'red'">
+						{{ row.zdf }}%
+					</span>
+				</template>
+				<template v-if="column.prop === 'ztyylb'" #default="{ row }">
+					<el-link
+						style="font-size: 12px; margin-right: 8px"
+						v-for="yy in row.ztyyArray"
+						@click="getYYDetail(yy.stocks)">
+						{{ yy.yy }}({{ yy.num }})
+					</el-link>
+				</template>
+			</el-table-column>
+		</el-table>
+	</el-dialog>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -104,11 +152,21 @@ const sq =
 	'今日涨停，今日涨停封单额，今日最终涨停时间，今日几天几板，今日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
 	fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
+const currentShow = ref<number>(1)
 const lists = ref<any[]>([])
-let sLists: any[] = []
+const lists2 = ref<any[]>([])
+const subLists = ref<any[]>([])
+let sLists: {
+	lists: any[]
+	stocks: any[]
+} = {
+	lists: [],
+	stocks: [],
+}
 const sortGZ = ref<string>('lb')
 const gzTxt = ref<string>('连板')
 const isSS = ref<boolean>(false)
+const dialogVisible = ref<boolean>(false)
 const columns = ref<any[]>([
 	{
 		prop: 'maxGn',
@@ -171,6 +229,63 @@ const columns = ref<any[]>([
 		width: 98,
 	},
 ])
+const subColumns = ref<any[]>([
+	{
+		prop: 'showName',
+		label: '股票',
+		width: 118,
+	},
+	{
+		prop: 'showTime',
+		label: '最终涨停时间',
+		width: 98,
+	},
+	{
+		prop: 'fistTime',
+		label: '首次涨停时间',
+		width: 98,
+	},
+	{
+		prop: 'ztfde',
+		label: '封单额',
+		width: 88,
+	},
+	{
+		prop: 'jjzdf',
+		label: '开盘',
+		width: 88,
+	},
+	{
+		prop: 'zdf',
+		label: '最新',
+		width: 88,
+	},
+	{
+		prop: 'jjje',
+		label: '竞价额',
+		width: 88,
+	},
+	{
+		prop: 'jjwppje',
+		label: '竞价未',
+		width: 88,
+	},
+	{
+		prop: 'ztyylb',
+		label: '涨停原因',
+		width: 218,
+	},
+	{
+		prop: 'maxGn',
+		label: '最强概念',
+		width: 98,
+	},
+	{
+		prop: 'hy',
+		label: '相关板块',
+		width: 98,
+	},
+])
 function dateChange(d: any) {
 	date.value = d
 }
@@ -178,9 +293,23 @@ function query() {
 	const question = replaceTpl(isSS.value ? sq : q, date.value)
 	GetRobotData({ question }).then((res) => {
 		sLists = resolutionReplayStock(res.data)
-		lists.value = sLists
+		lists.value = sLists.lists
+		sLists.stocks.sort((a, b) => {
+			return b.lxztts - a.lxztts
+		})
+		lists2.value = sLists.stocks
 		// sortLists()
 	})
+}
+function switchModel() {
+	currentShow.value = currentShow.value === 0 ? 1 : 0
+}
+function getYYDetail(stocks: any[]) {
+	dialogVisible.value = true
+	stocks.sort((a: any, b: any) => {
+		return a.zzztTime - b.zzztTime
+	})
+	subLists.value = stocks
 }
 function sortLists() {
 	if (sortGZ.value === 'lb') {
@@ -230,6 +359,32 @@ function sortLists() {
 	})
 	lists.value = list
 	// console.log(lists.value)
+}
+let sRowIndex = 0
+let lastRowClass = ''
+function tableRowClassName({ row, rowIndex }: any) {
+	const regex = /\((\d+)\)/
+	const match = row.maxGn.match(regex)
+	if (match) {
+		const num = Number(match[1])
+		if (rowIndex === 0) {
+			sRowIndex = 0
+		}
+		// console.log(rowIndex, sSpanIndex, num)
+		if (rowIndex === sRowIndex) {
+			if (lastRowClass === 'row-bg-1') {
+				lastRowClass = 'row-bg-2'
+			} else if (lastRowClass === 'row-bg-2') {
+				lastRowClass = 'row-bg-1'
+			} else {
+				lastRowClass = 'row-bg-1'
+			}
+			sRowIndex += num
+			return lastRowClass
+		} else if (rowIndex < sRowIndex) {
+			return lastRowClass
+		}
+	}
 }
 let sSpanIndex = 0
 function spanMethod({ row, column, rowIndex, columnIndex }: any) {
@@ -399,5 +554,16 @@ function exportTable() {
 			border-right: 1px solid #cdd0d6;
 		}
 	}
+}
+</style>
+<style>
+.row-bg-1 {
+	background-color: #fbe5d6 !important;
+}
+.el-table__body td {
+	border-color: black !important;
+}
+.row-bg-2 {
+	background-color: #fff2cc !important;
 }
 </style>

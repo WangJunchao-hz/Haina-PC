@@ -17,6 +17,7 @@
 		"axios": "^1.4.0",
 		"echarts": "^5.4.2",
 		"element-plus": "^2.3.12",
+		"lodash": "^4.17.21",
 		"qs": "^6.11.2",
 		"text-encoding": "^0.7.0",
 		"uuid": "^9.0.0",
