@@ -1113,7 +1113,7 @@ export function resolutionReplayStock(data: any) {
 			datas.forEach((item: any) => {
 				const ztyylb = item[ztyylbIndex] || ''
 				let jtjb = item[jtjbIndex]
-				let jb = jtjb === '首板涨停' ? '首' : '0'
+				let jb = jtjb === '首板涨停' ? '1' : '0'
 				if (jtjb && jtjb != '首板涨停') {
 					const j = jtjb.replace('板', '').split('天')
 					if (j[0] === j[1]) {
@@ -1200,7 +1200,8 @@ export function resolutionReplayStock(data: any) {
 				})
 				s.maxGn = `${maxGn.gn}(${maxGn.num})`
 				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
-				s.showName = `${s.name} ${s.ztfde} ${s.jjzdf}% ${s.jjje} ${s.jjwppje}`
+				// s.showName = `${s.name} ${s.ztfde} ${s.jjzdf}% ${s.jjje} ${s.jjwppje}`
+				s.showName = `${s.name} (${s.jtjb})`
 				if (!maxGnMap[maxGn.gn]) {
 					maxGnMap[maxGn.gn] = maxGn
 				}

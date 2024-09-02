@@ -40,15 +40,10 @@
 			:prop="column.prop"
 			:label="column.label"
 			:width="column.width">
-			<template v-if="column.prop === 'showName'" #default="{ row }">
-				<div>
-					{{ row.name }}&nbsp;&nbsp; <span class="red">{{ row.ztfde }}</span
-					>&nbsp;&nbsp;
-					<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
-						{{ row.jjzdf }}%
-					</span>
-					&nbsp;&nbsp;{{ row.jjje }}&nbsp;&nbsp;{{ row.jjwppje }}
-				</div>
+			<template v-if="column.prop === 'jjzdf'" #default="{ row }">
+				<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+					{{ row.jjzdf }}%
+				</span>
 			</template>
 			<!-- <template v-if="column.prop === 'sourceSName'" #default="{ row }">
 				<div class="zynr">
@@ -103,10 +98,10 @@ import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 const fixed = '，非停牌，非ST'
 const q =
-	'昨日涨停，昨日涨停封单额，昨日几天几板，昨日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
+	'昨日涨停，昨日涨停封单额，昨日最终涨停时间，昨日几天几板，昨日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
 	fixed
 const sq =
-	'今日涨停，今日涨停封单额，今日几天几板，今日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
+	'今日涨停，今日涨停封单额，今日最终涨停时间，今日几天几板，今日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
 	fixed
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
@@ -120,20 +115,15 @@ const columns = ref<any[]>([
 		label: '最强概念',
 		width: 98,
 	},
-	{
-		prop: 'jtjb',
-		label: '高度',
-		width: 88,
-	},
+	// {
+	// 	prop: 'jtjb',
+	// 	label: '高度',
+	// 	width: 88,
+	// },
 	{
 		prop: 'showName',
 		label: '股票',
-		width: 288,
-	},
-	{
-		prop: 'ztyylb',
-		label: '涨停原因',
-		width: 218,
+		width: 118,
 	},
 	{
 		prop: 'showTime',
@@ -144,6 +134,31 @@ const columns = ref<any[]>([
 		prop: 'fistTime',
 		label: '首次涨停时间',
 		width: 98,
+	},
+	{
+		prop: 'ztfde',
+		label: '封单额',
+		width: 88,
+	},
+	{
+		prop: 'jjzdf',
+		label: '开盘',
+		width: 88,
+	},
+	{
+		prop: 'jjje',
+		label: '竞价额',
+		width: 88,
+	},
+	{
+		prop: 'jjwppje',
+		label: '竞价未',
+		width: 88,
+	},
+	{
+		prop: 'ztyylb',
+		label: '涨停原因',
+		width: 218,
 	},
 	{
 		prop: 'gl',
