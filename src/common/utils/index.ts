@@ -1220,6 +1220,10 @@ export function resolutionReplayStock(data: any) {
 					}
 				})
 
+				s.ztyyArray.sort((a: any, b: any) => {
+					return b.num - a.num
+				})
+
 				s.gnArray.forEach((gn: string) => {
 					const has = gnMap.get(gn)
 					if (has) {

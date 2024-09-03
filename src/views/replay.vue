@@ -89,6 +89,11 @@
 					{{ row.jjzdf }}%
 				</span>
 			</template>
+			<template v-if="column.prop === 'zdf'" #default="{ row }">
+				<span :class="row.zdf && row.zdf < 0 ? 'green' : 'red'">
+					{{ row.zdf }}%
+				</span>
+			</template>
 			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
 				<el-link
 					style="font-size: 12px; margin-right: 8px"
@@ -201,6 +206,11 @@ const columns = ref<any[]>([
 	{
 		prop: 'jjzdf',
 		label: '开盘',
+		width: 88,
+	},
+	{
+		prop: 'zdf',
+		label: '最新',
 		width: 88,
 	},
 	{
