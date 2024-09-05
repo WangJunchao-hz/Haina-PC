@@ -1053,10 +1053,14 @@ export function resolutionReplayStock(data: any) {
 				ztfdeIndex: string, //涨停封单额
 				jjwppjeIndex: string, // 竞价未匹配金额
 				zdfIndex: string, // 涨跌幅
+				scIndex: string,// 市场
 				jjjeIndex: string // 竞价金额
 			indexID.forEach((item: any) => {
 				if (item === '所属概念') {
 					gnIndex = item
+				}
+				if (item === '股票市场类型') {
+					scIndex = item
 				}
 				if (item === '最新涨跌幅') {
 					zdfIndex = item
@@ -1141,7 +1145,7 @@ export function resolutionReplayStock(data: any) {
 				const name = item[nameIndex] || ''
 				const gn = item[gnIndex]
 				const gnArray = gn.split(';')
-				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : ''
+				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : '0.00'
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
 				const zdf = item[zdfIndex]
@@ -1159,11 +1163,22 @@ export function resolutionReplayStock(data: any) {
 				}
 				const hy = item[hyIndex] || ''
 				const ztyyArray = ztyylb.split('+')
+				let sc = item[scIndex]
+				if (sc) {
+					if (sc.includes('科创')) {
+						sc = '科'
+					} else if (sc.includes('创业')) {
+						sc = '创'
+					} else if (sc.includes('主板')) {
+						sc = ''
+					}
+				}
 				const stock = {
 					name,
 					price,
 					jtjb,
 					hy,
+					sc,
 					ztyylb,
 					ztyyArray,
 					gnArray,
@@ -1241,7 +1256,7 @@ export function resolutionReplayStock(data: any) {
 				s.maxGn = `${maxGn.gn}(${maxGn.num})`
 				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
 				// s.showName = `${s.name} ${s.ztfde} ${s.jjzdf}% ${s.jjje} ${s.jjwppje}`
-				s.showName = `${s.name} (${s.jtjb})`
+				s.showName = `${s.name}(${s.jtjb})(${s.sc})`
 				if (!maxGnMap[maxGn.gn]) {
 					maxGnMap[maxGn.gn] = maxGn
 				}

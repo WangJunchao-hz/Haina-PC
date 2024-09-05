@@ -50,8 +50,29 @@
 			:label="column.label"
 			:width="column.width">
 			<template v-if="column.prop === 'jjzdf'" #default="{ row }">
-				<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+				<span :class="row.jjzdf && row.jjzdf > 0 ? 'red' : 'green'">
 					{{ row.jjzdf }}%
+				</span>
+			</template>
+			<template v-if="column.prop === 'zdf'" #default="{ row }">
+				<span :class="row.zdf && row.zdf > 0 ? 'red' : 'green'">
+					{{ row.zdf }}%
+				</span>
+			</template>
+			<template v-if="column.prop === 'showName'" #default="{ row }">
+				<span>
+					{{ row.name }}({{ row.jtjb }})
+					<span :class="row.sc !== '' ? 'red' : ''">
+						{{ row.sc }}
+					</span>
+				</span>
+			</template>
+			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
+				<span
+					:class="
+						row.jjwppje.includes('-') || row.jjwppje.includes('0.') ? '' : 'red'
+					">
+					{{ row.jjwppje }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
@@ -85,13 +106,29 @@
 			:label="column.label"
 			:width="column.width">
 			<template v-if="column.prop === 'jjzdf'" #default="{ row }">
-				<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+				<span :class="row.jjzdf && row.jjzdf > 0 ? 'red' : 'green'">
 					{{ row.jjzdf }}%
 				</span>
 			</template>
 			<template v-if="column.prop === 'zdf'" #default="{ row }">
-				<span :class="row.zdf && row.zdf < 0 ? 'green' : 'red'">
+				<span :class="row.zdf && row.zdf > 0 ? 'red' : 'green'">
 					{{ row.zdf }}%
+				</span>
+			</template>
+			<template v-if="column.prop === 'showName'" #default="{ row }">
+				<span>
+					{{ row.name }}({{ row.jtjb }})
+					<span :class="row.sc !== '' ? 'red' : ''">
+						{{ row.sc }}
+					</span>
+				</span>
+			</template>
+			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
+				<span
+					:class="
+						row.jjwppje.includes('-') || row.jjwppje.includes('0.') ? '' : 'red'
+					">
+					{{ row.jjwppje }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
@@ -121,13 +158,31 @@
 				:label="column.label"
 				:width="column.width">
 				<template v-if="column.prop === 'jjzdf'" #default="{ row }">
-					<span :class="row.jjzdf && row.jjzdf < 0 ? 'green' : 'red'">
+					<span :class="row.jjzdf && row.jjzdf > 0 ? 'red' : 'green'">
 						{{ row.jjzdf }}%
 					</span>
 				</template>
 				<template v-if="column.prop === 'zdf'" #default="{ row }">
-					<span :class="row.zdf && row.zdf < 0 ? 'green' : 'red'">
+					<span :class="row.zdf && row.zdf > 0 ? 'red' : 'green'">
 						{{ row.zdf }}%
+					</span>
+				</template>
+				<template v-if="column.prop === 'showName'" #default="{ row }">
+					<span>
+						{{ row.name }}({{ row.jtjb }})
+						<span :class="row.sc !== '' ? 'red' : ''">
+							{{ row.sc }}
+						</span>
+					</span>
+				</template>
+				<template v-if="column.prop === 'jjwppje'" #default="{ row }">
+					<span
+						:class="
+							row.jjwppje.includes('-') || row.jjwppje.includes('0.')
+								? ''
+								: 'red'
+						">
+						{{ row.jjwppje }}
 					</span>
 				</template>
 				<template v-if="column.prop === 'ztyylb'" #default="{ row }">
@@ -149,13 +204,13 @@ import { GetRobotData } from '@/common/api/ths-wen-cai-api'
 import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
-const fixed = '，非停牌，非ST'
+const fixed = '非停牌，非ST，概念，市场，同花顺二级行业，'
 const q =
-	'昨日涨停，昨日涨停封单额，昨日最终涨停时间，昨日几天几板，昨日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
-	fixed
+	fixed +
+	'昨日涨停，昨日涨停封单额，昨日最终涨停时间，昨日首次涨停时间，昨日几天几板，昨日涨停原因，今日竞价成交额，今日竞价未匹配金额'
 const sq =
-	'今日涨停，今日涨停封单额，今日最终涨停时间，今日几天几板，今日涨停原因，今日竞价成交额，概念，同花顺二级行业' +
-	fixed
+	fixed +
+	'今日涨停，今日涨停封单额，今日最终涨停时间，今日首次涨停时间，今日几天几板，今日涨停原因，今日竞价成交额，今日竞价未匹配金额'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const currentShow = ref<number>(1)
 const lists = ref<any[]>([])
@@ -444,6 +499,9 @@ function exportTable() {
 }
 .cynr {
 	color: #909399;
+}
+.sc {
+	position: absolute;
 }
 .table {
 	border: 1px solid #cdd0d6;
