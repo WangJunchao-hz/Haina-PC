@@ -67,6 +67,22 @@
 					</span>
 				</span>
 			</template>
+			<template v-if="column.prop === 'jjje'" #default="{ row }">
+				<span
+					:class="
+						row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
+					">
+					{{ row.jjje }}
+				</span>
+			</template>
+			<template v-if="column.prop === 'ztfde'" #default="{ row }">
+				<span
+					:class="
+						row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
+					">
+					{{ row.ztfde }}
+				</span>
+			</template>
 			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
 				<span
 					:class="
@@ -123,6 +139,22 @@
 					</span>
 				</span>
 			</template>
+			<template v-if="column.prop === 'jjje'" #default="{ row }">
+				<span
+					:class="
+						row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
+					">
+					{{ row.jjje }}
+				</span>
+			</template>
+			<template v-if="column.prop === 'ztfde'" #default="{ row }">
+				<span
+					:class="
+						row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
+					">
+					{{ row.ztfde }}
+				</span>
+			</template>
 			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
 				<span
 					:class="
@@ -173,6 +205,22 @@
 						<span :class="row.sc !== '' ? 'red' : ''">
 							{{ row.sc }}
 						</span>
+					</span>
+				</template>
+				<template v-if="column.prop === 'jjje'" #default="{ row }">
+					<span
+						:class="
+							row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
+						">
+						{{ row.jjje }}
+					</span>
+				</template>
+				<template v-if="column.prop === 'ztfde'" #default="{ row }">
+					<span
+						:class="
+							row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
+						">
+						{{ row.ztfde }}
 					</span>
 				</template>
 				<template v-if="column.prop === 'jjwppje'" #default="{ row }">

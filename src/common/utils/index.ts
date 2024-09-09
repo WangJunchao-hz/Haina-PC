@@ -1149,15 +1149,15 @@ export function resolutionReplayStock(data: any) {
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
 				const zdf = item[zdfIndex]
-				let jjwppje: any = 0
+				let jjwppje: any = '0'
 				if (item[jjwppjeIndex]) {
 					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
-				let jjje: any = 0
+				let jjje: any = '0'
 				if (item[jjjeIndex]) {
 					jjje = (Number(item[jjjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
-				let ztfde: any = 0
+				let ztfde: any = '0'
 				if (item[ztfdeIndex]) {
 					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
