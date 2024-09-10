@@ -1106,6 +1106,7 @@ export function resolutionReplayStock(data: any) {
 			const stocks: any[] = []
 			const gnMap = new Map()
 			const yyMap = new Map()
+			const hyMap = new Map()
 			const notGns = [
 				'融资融券',
 				'转融券标的',
@@ -1114,10 +1115,7 @@ export function resolutionReplayStock(data: any) {
 				'标普道琼斯A股',
 				'富时罗素概念',
 				'沪股通',
-				'地方国企改革',
-				'国企改革',
 				'参股券商',
-				'专精特新'
 			]
 			// console.log('datas', datas)
 			datas.forEach((item: any) => {
@@ -1149,15 +1147,15 @@ export function resolutionReplayStock(data: any) {
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
 				const zdf = item[zdfIndex]
-				let jjwppje: any = '0'
+				let jjwppje: any = '0.00亿'
 				if (item[jjwppjeIndex]) {
 					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
-				let jjje: any = '0'
+				let jjje: any = '0.00亿'
 				if (item[jjjeIndex]) {
 					jjje = (Number(item[jjjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
-				let ztfde: any = '0'
+				let ztfde: any = '0.00亿'
 				if (item[ztfdeIndex]) {
 					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
@@ -1193,13 +1191,23 @@ export function resolutionReplayStock(data: any) {
 					fistTime: dayjs(scztTime).format('HH:mm:ss'),
 					showTime: dayjs(zzztTime).format('HH:mm:ss')
 				}
+
+				const hyItem = hyMap.get(hy)
+				if (hyItem) {
+					hyItem.stocks.push(stock)
+				} else {
+					hyMap.set(hy, {
+						hy,
+						stocks: [stock],
+					})
+				}
 				ztyyArray.forEach((yy: string) => {
 					const yyItem = yyMap.get(yy)
 					if (yyItem) {
 						yyItem.stocks.push(stock)
 					} else {
 						yyMap.set(yy, {
-							gn,
+							yy,
 							stocks: [stock],
 						})
 					}
@@ -1235,10 +1243,17 @@ export function resolutionReplayStock(data: any) {
 					}
 				})
 
+				const hy = hyMap.get(s.hy)
+				s.hytj = {
+					...hy,
+					num: hy.stocks.length
+				}
+
 				s.ztyyArray.sort((a: any, b: any) => {
 					return b.num - a.num
 				})
 
+				const gns: any[] = []
 				s.gnArray.forEach((gn: string) => {
 					const has = gnMap.get(gn)
 					if (has) {
@@ -1251,8 +1266,16 @@ export function resolutionReplayStock(data: any) {
 							})
 							maxGn.stocks = has.stocks
 						}
+						gns.push({
+							...has,
+							num: has.stocks.length
+						})
 					}
 				})
+				gns.sort((a, b) => {
+					return b.stocks.length - a.stocks.length
+				})
+				s.gns = gns.filter(st => st.stocks.length > 1)
 				s.maxGn = `${maxGn.gn}(${maxGn.num})`
 				s.show = `${s.name}/${s.ztyylb}/${s.showTime}`
 				// s.showName = `${s.name} ${s.ztfde} ${s.jjzdf}% ${s.jjje} ${s.jjwppje}`
@@ -1281,7 +1304,17 @@ export function resolutionReplayStock(data: any) {
 					}
 				})
 			})
-			console.log(stocks);
+			stocks.forEach(stock => {
+				stock.gns = stock.gns.map((g: any) => {
+					const has = stock.gl.find((gl: any) => gl.gn == g.gn)
+					if (has) {
+						g.isRepeat = true
+					} else {
+						g.isRepeat = false
+					}
+					return g
+				})
+			})
 			maxGnArray.forEach((m: any) => {
 				const copy = cloneDeep(m.stocks)
 				copy.forEach((s: any) => {

@@ -114,9 +114,10 @@
 		:data="lists2"
 		style="width: 100%"
 		size="small"
-		border>
+		border
+		stripe>
 		<el-table-column
-			v-for="column in columns"
+			v-for="column in columns1"
 			:key="column.prop"
 			:prop="column.prop"
 			:label="column.label"
@@ -174,9 +175,15 @@
 			<template v-if="column.prop === 'gl'" #default="{ row }">
 				<el-link
 					style="font-size: 12px; margin-right: 8px"
-					v-for="g in row.gl"
+					v-for="g in row.gns"
+					:class="g.isRepeat ? 'red' : ''"
 					@click="getYYDetail(g.stocks)">
 					{{ g.gn }}({{ g.num }})
+				</el-link>
+			</template>
+			<template v-if="column.prop === 'hy'" #default="{ row }">
+				<el-link @click="getYYDetail(row.hytj.stocks)">
+					{{ row.hytj.hy }}({{ row.hytj.num }})
 				</el-link>
 			</template>
 		</el-table-column>
@@ -342,6 +349,73 @@ const columns = ref<any[]>([
 		width: 98,
 	},
 ])
+const columns1 = ref<any[]>([
+	// {
+	// 	prop: 'maxGn',
+	// 	label: '最强概念',
+	// 	width: 98,
+	// },
+	// {
+	// 	prop: 'jtjb',
+	// 	label: '高度',
+	// 	width: 88,
+	// },
+	{
+		prop: 'showName',
+		label: '股票',
+		width: 118,
+	},
+	{
+		prop: 'showTime',
+		label: '最终时间',
+		width: 68,
+	},
+	{
+		prop: 'fistTime',
+		label: '首次时间',
+		width: 68,
+	},
+	{
+		prop: 'ztfde',
+		label: '封单额',
+		width: 68,
+	},
+	{
+		prop: 'jjzdf',
+		label: '开盘',
+		width: 68,
+	},
+	{
+		prop: 'zdf',
+		label: '最新',
+		width: 68,
+	},
+	{
+		prop: 'jjje',
+		label: '竞价额',
+		width: 68,
+	},
+	{
+		prop: 'jjwppje',
+		label: '竞价未',
+		width: 68,
+	},
+	{
+		prop: 'ztyylb',
+		label: '涨停原因',
+		width: 218,
+	},
+	{
+		prop: 'gl',
+		label: '相关概念',
+		width: 388,
+	},
+	{
+		prop: 'hy',
+		label: '相关板块',
+		width: 98,
+	},
+])
 const subColumns = ref<any[]>([
 	{
 		prop: 'showName',
@@ -350,38 +424,38 @@ const subColumns = ref<any[]>([
 	},
 	{
 		prop: 'showTime',
-		label: '最终涨停时间',
-		width: 98,
+		label: '最终时间',
+		width: 68,
 	},
 	{
 		prop: 'fistTime',
-		label: '首次涨停时间',
-		width: 98,
+		label: '首次时间',
+		width: 68,
 	},
 	{
 		prop: 'ztfde',
 		label: '封单额',
-		width: 88,
+		width: 68,
 	},
 	{
 		prop: 'jjzdf',
 		label: '开盘',
-		width: 88,
+		width: 68,
 	},
 	{
 		prop: 'zdf',
 		label: '最新',
-		width: 88,
+		width: 68,
 	},
 	{
 		prop: 'jjje',
 		label: '竞价额',
-		width: 88,
+		width: 68,
 	},
 	{
 		prop: 'jjwppje',
 		label: '竞价未',
-		width: 88,
+		width: 68,
 	},
 	{
 		prop: 'ztyylb',
@@ -411,6 +485,8 @@ function query() {
 			return b.lxztts - a.lxztts
 		})
 		lists2.value = sLists.stocks
+		console.log('stocks', sLists.stocks)
+
 		// sortLists()
 	})
 }
