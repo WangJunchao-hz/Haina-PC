@@ -1142,7 +1142,7 @@ export function resolutionReplayStock(data: any) {
 				// console.log(maxMoney)
 				const name = item[nameIndex] || ''
 				const gn = item[gnIndex]
-				const gnArray = gn.split(';')
+				const gnArray = gn ? gn.split(';') : []
 				const jjzdf = item[jjzdfIndex] ? Number(item[jjzdfIndex]).toFixed(2) : '0.00'
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
@@ -1160,7 +1160,7 @@ export function resolutionReplayStock(data: any) {
 					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
 				}
 				const hy = item[hyIndex] || ''
-				const ztyyArray = ztyylb.split('+')
+				const ztyyArray = ztyylb ? ztyylb.split('+') : []
 				let sc = item[scIndex]
 				if (sc) {
 					if (sc.includes('科创')) {
