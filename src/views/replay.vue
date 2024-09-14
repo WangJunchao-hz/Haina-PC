@@ -5,7 +5,7 @@
 		size="small"
 		type="primary"
 		style="margin-left: 8px">
-		复盘
+		查询
 	</el-button>
 	<el-button
 		@click="exportTable"
@@ -14,13 +14,13 @@
 		style="margin-left: 8px">
 		导出表格
 	</el-button>
-	<!-- <el-button
-		@click="sortLists"
+	<el-button
+		@click="backTest"
 		size="small"
 		type="primary"
 		style="margin-left: 8px">
-		排序({{ gzTxt }})
-	</el-button> -->
+		回测
+	</el-button>
 	<el-button
 		@click="switchModel"
 		size="small"
@@ -259,6 +259,8 @@ import { GetRobotData } from '@/common/api/ths-wen-cai-api'
 import { replaceTpl, resolutionReplayStock } from '@/common/utils'
 import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 const fixed = '非停牌，非ST，概念，市场，同花顺二级行业，'
 const q =
 	fixed +
@@ -475,6 +477,11 @@ const subColumns = ref<any[]>([
 ])
 function dateChange(d: any) {
 	date.value = d
+}
+function backTest() {
+	router.push({
+		name: 'stock',
+	})
 }
 function query() {
 	const question = replaceTpl(isSS.value ? sq : q, date.value)

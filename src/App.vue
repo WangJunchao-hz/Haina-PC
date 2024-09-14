@@ -65,6 +65,11 @@ const selectedKeys = ref<string[]>([])
 const menus = ref<MenuItem[]>([
 	{
 		icon: LineChartOutlined,
+		label: '复盘',
+		key: 'replay',
+	},
+	{
+		icon: LineChartOutlined,
 		label: '悟道',
 		key: 'stock',
 	},
