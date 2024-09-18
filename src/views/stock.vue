@@ -44,17 +44,17 @@
 					{{ row.jjzdf }}%
 				</span>
 			</template>
-			<template v-if="column.prop === 'zdf'" #default="{ row }">
-				<span :class="row.zdf && row.zdf > 0 ? 'red' : 'green'">
-					{{ row.zdf }}%
-				</span>
-			</template>
 			<template v-if="column.prop === 'showName'" #default="{ row }">
 				<span>
 					{{ row.name }}({{ row.jtjb }})
 					<span :class="row.sc !== '' ? 'red' : ''">
 						{{ row.sc }}
 					</span>
+				</span>
+			</template>
+			<template v-if="column.prop === 'zdf'" #default="{ row }">
+				<span :class="row.zdf && row.zdf > 0 ? 'red' : 'green'">
+					{{ row.zdf }}%
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjje'" #default="{ row }">
@@ -80,28 +80,6 @@
 					">
 					{{ row.jjwppje }}
 				</span>
-			</template>
-			<template v-if="column.prop === 'ztyylb'" #default="{ row }">
-				<el-link
-					style="font-size: 12px; margin-right: 8px"
-					v-for="yy in row.ztyyArray"
-					@click="getYYDetail(yy.stocks)">
-					{{ yy.yy }}({{ yy.num }})
-				</el-link>
-			</template>
-			<template v-if="column.prop === 'gl'" #default="{ row }">
-				<el-link
-					style="font-size: 12px; margin-right: 8px"
-					v-for="g in row.gns"
-					:class="g.isRepeat ? 'red' : ''"
-					@click="getYYDetail(g.stocks)">
-					{{ g.gn }}({{ g.num }})
-				</el-link>
-			</template>
-			<template v-if="column.prop === 'hy'" #default="{ row }">
-				<el-link @click="getYYDetail(row.hytj.stocks)">
-					{{ row.hytj.hy }}({{ row.hytj.num }})
-				</el-link>
 			</template>
 		</el-table-column>
 	</el-table>
@@ -178,7 +156,7 @@ import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 import { useRouter } from 'vue-router'
 const router = useRouter()
-const fixed = '非停牌，非ST，概念，市场，同花顺二级行业，'
+const fixed = '非停牌，非ST，市场，今日涨跌幅，'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 const subLists = ref<any[]>([])
@@ -193,24 +171,30 @@ let sLists: {
 	lists: [],
 	stocks: [],
 }
+const ztFixed =
+	'昨日涨停原因，昨日几天几板，昨日首次涨停时间，昨日最终涨停时间，昨日涨停封单额，今日竞价成交额，今日竞价未匹配金额，'
 const strategyOptions = ref<any[]>([
 	{
-		label: '',
-		value: '',
+		label: '竞价分歧',
+		value:
+			ztFixed +
+			'昨日涨停，今日竞价成交额大于0.99亿，今日竞价成交额从大到小排序',
+	},
+	{
+		label: '烂板转强',
+		value: ztFixed + '昨日涨停，昨日开板次数不小于3，昨日开板次数从大到小排序',
+	},
+	{
+		label: '炸板转强',
+		value: '昨日炸板，今日竞价涨幅大于0且竞价涨幅从大到小排序',
+	},
+	{
+		label: '竞价异动',
+		value: '昨天非涨停，今日竞价成交额大于0.99亿，今日竞价成交额从大到小排序',
 	},
 ])
 const dialogVisible = ref<boolean>(false)
 const columns = ref<any[]>([
-	{
-		prop: 'maxGn',
-		label: '最强概念',
-		width: 98,
-	},
-	// {
-	// 	prop: 'jtjb',
-	// 	label: '高度',
-	// 	width: 88,
-	// },
 	{
 		prop: 'showName',
 		label: '股票',
@@ -255,16 +239,6 @@ const columns = ref<any[]>([
 		prop: 'ztyylb',
 		label: '涨停原因',
 		width: 218,
-	},
-	{
-		prop: 'gl',
-		label: '重复主题',
-		width: 188,
-	},
-	{
-		prop: 'hy',
-		label: '相关板块',
-		width: 98,
 	},
 ])
 
@@ -334,15 +308,11 @@ function backTest() {
 	})
 }
 function query() {
-	console.log('q', q.value)
-
 	const question = replaceTpl(q.value, date.value)
+	console.log('q', question)
 	GetRobotData({ question }).then((res) => {
 		sLists = resolutionReplayStock(res.data)
-		lists.value = sLists.lists
-		sLists.stocks.sort((a, b) => {
-			return b.lxztts - a.lxztts
-		})
+		lists.value = sLists.stocks
 		console.log('stocks', sLists.stocks)
 
 		// sortLists()

@@ -1062,7 +1062,7 @@ export function resolutionReplayStock(data: any) {
 				if (item === '股票市场类型') {
 					scIndex = item
 				}
-				if (item === '最新涨跌幅') {
+				if (item.includes('涨跌幅:前复权[')) {
 					zdfIndex = item
 				}
 				if (item === '所属同花顺二级行业') {
