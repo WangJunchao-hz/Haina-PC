@@ -1167,6 +1167,8 @@ export function resolutionReplayStock(data: any) {
 						sc = '科'
 					} else if (sc.includes('创业')) {
 						sc = '创'
+					} else if (sc.includes('北')) {
+						sc = '北'
 					} else if (sc.includes('主板')) {
 						sc = ''
 					}

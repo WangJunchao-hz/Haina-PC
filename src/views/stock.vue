@@ -156,7 +156,8 @@ import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 import { useRouter } from 'vue-router'
 const router = useRouter()
-const fixed = '非停牌，非ST，市场，今日涨跌幅，今日竞价涨跌幅，'
+const fixed =
+	'非停牌，非ST，流通市值不超过300亿，市场，今日涨跌幅，今日竞价涨跌幅，'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 const subLists = ref<any[]>([])
@@ -176,7 +177,8 @@ const ztFixed =
 const strategyOptions = ref<any[]>([
 	{
 		label: '竞价分歧',
-		value: ztFixed + '今日竞价成交额大于0.99亿且从大到小排序',
+		value:
+			'今日竞价成交额大于0.99亿，今日竞价未匹配金额，今日竞价成交额从大到小排序',
 	},
 	{
 		label: '烂板转强',
