@@ -1053,6 +1053,7 @@ export function resolutionReplayStock(data: any) {
 				ztfdeIndex: string, //涨停封单额
 				jjwppjeIndex: string, // 竞价未匹配金额
 				zdfIndex: string, // 涨跌幅
+				qjzdfIndex: string,// 区间涨跌幅
 				scIndex: string,// 市场
 				jjjeIndex: string // 竞价金额
 			indexID.forEach((item: any) => {
@@ -1062,8 +1063,11 @@ export function resolutionReplayStock(data: any) {
 				if (item === '股票市场类型') {
 					scIndex = item
 				}
-				if (item.includes('涨跌幅:前复权[') && !item.includes('分时')) {
+				if (item.includes('涨跌幅:前复权[') && !item.includes('分时') && !item.includes('区间')) {
 					zdfIndex = item
+				}
+				if (item.includes('区间涨跌幅:前复权[')) {
+					qjzdfIndex = item
 				}
 				if (item === '所属同花顺二级行业') {
 					hyIndex = item
@@ -1121,10 +1125,11 @@ export function resolutionReplayStock(data: any) {
 			datas.forEach((item: any) => {
 				let lxztts = item[lxzttsIndex]
 				const ztyylb = item[ztyylbIndex] || ''
+				let totalztts = 0
 				let jtjb = item[jtjbIndex]
 				let jb = jtjb === '首板涨停' ? '1' : '0'
-				if (!lxztts) {
-					lxztts = Number(jb)
+				if (!totalztts) {
+					totalztts = Number(jb)
 				}
 				if (jtjb && jtjb != '首板涨停') {
 					const j = jtjb.replace('板', '').split('天')
@@ -1133,8 +1138,8 @@ export function resolutionReplayStock(data: any) {
 					} else {
 						jb = j[0] + '-' + j[1]
 					}
-					if (!lxztts) {
-						lxztts = Number(j[1])
+					if (!totalztts) {
+						totalztts = Number(j[1])
 					}
 				}
 				jtjb = jb + '板'
@@ -1147,6 +1152,7 @@ export function resolutionReplayStock(data: any) {
 				const zzztTime = Number(item[zzztTimeIndex])
 				const scztTime = Number(item[scztTimeIndex])
 				const zdf = item[zdfIndex]
+				const qjzdf = item[qjzdfIndex]
 				let jjwppje: any = '0.00亿'
 				if (item[jjwppjeIndex]) {
 					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
@@ -1183,8 +1189,10 @@ export function resolutionReplayStock(data: any) {
 					ztyyArray,
 					gnArray,
 					lxztts,
+					totalztts,
 					jjzdf,
 					zdf,
+					qjzdf,
 					jjje,
 					jjwppje,
 					ztfde,

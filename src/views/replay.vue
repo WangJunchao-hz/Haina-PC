@@ -265,10 +265,10 @@ const fixed =
 	'非停牌，非ST，概念，市场，同花顺二级行业，今日竞价成交额，今日竞价未匹配金额，今日涨跌幅，今日竞价涨跌幅，'
 const q =
 	fixed +
-	'昨日涨停，昨日涨停封单额，昨日最终涨停时间，昨日首次涨停时间，昨日几天几板，昨日涨停原因'
+	'昨日连续涨停天数从大到小排序，昨日涨停封单额，昨日最终涨停时间，昨日首次涨停时间，昨日几天几板，昨日涨停原因'
 const sq =
 	fixed +
-	'今日涨停，今日涨停封单额，今日最终涨停时间，今日首次涨停时间，今日几天几板，今日涨停原因'
+	'今日连续涨停天数从大到小排序，今日涨停封单额，今日最终涨停时间，今日首次涨停时间，今日几天几板，今日涨停原因'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const currentShow = ref<number>(1)
 const lists = ref<any[]>([])
@@ -490,7 +490,7 @@ function query() {
 		sLists = resolutionReplayStock(res.data)
 		lists.value = sLists.lists
 		sLists.stocks.sort((a, b) => {
-			return b.lxztts - a.lxztts
+			return b.totalztts - a.totalztts
 		})
 		lists2.value = sLists.stocks
 		console.log('stocks', sLists.stocks)
