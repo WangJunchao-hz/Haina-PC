@@ -93,11 +93,11 @@ export function replaceTpl(str: string, reStr: string) {
 			}
 		}
 	}
-	if (str.includes('10日区间')) {
+	if (str.includes('13日区间')) {
 		let index = 1
 		if (str.includes('今日') && !str.includes('昨日')) {
 			let start = ''
-			while (index < 10) {
+			while (index < 13) {
 				start = dayjs(start ? start : reStr)
 					.subtract(1, 'd')
 					.format('YYYY-MM-DD')
@@ -114,11 +114,11 @@ export function replaceTpl(str: string, reStr: string) {
 					index++
 				}
 			}
-			str = str.replace('10日区间', `${start}到${reStr}`)
+			str = str.replaceAll('13日区间', `${start}到${reStr}`)
 		}
 		if (str.includes('昨日')) {
 			let start = ''
-			while (index < 10) {
+			while (index < 13) {
 				start = dayjs(start ? start : q1)
 					.subtract(1, 'd')
 					.format('YYYY-MM-DD')
@@ -136,7 +136,7 @@ export function replaceTpl(str: string, reStr: string) {
 					// console.log(index, start)
 				}
 			}
-			str = str.replace('10日区间', `${start}到${q1}`)
+			str = str.replaceAll('13日区间', `${start}到${q1}`)
 		}
 	}
 	return str
@@ -1084,7 +1084,7 @@ export function resolutionReplayStock(data: any) {
 				if (item.includes('涨停原因类别[')) {
 					ztyylbIndex = item
 				}
-				if (item.includes('竞价涨幅[')) {
+				if (item.includes('分时涨跌幅:前复权[')) {
 					jjzdfIndex = item
 				}
 				if (item.includes('涨停封单额[')) {
@@ -1153,17 +1153,17 @@ export function resolutionReplayStock(data: any) {
 				const scztTime = Number(item[scztTimeIndex])
 				const zdf = item[zdfIndex]
 				const qjzdf = item[qjzdfIndex]
-				let jjwppje: any = '0.00亿'
+				let jjwppje: any = 0
 				if (item[jjwppjeIndex]) {
-					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+					jjwppje = (Number(item[jjwppjeIndex]) / 10000 / 10000).toFixed(2)
 				}
-				let jjje: any = '0.00亿'
+				let jjje: any = 0
 				if (item[jjjeIndex]) {
-					jjje = (Number(item[jjjeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+					jjje = (Number(item[jjjeIndex]) / 10000 / 10000).toFixed(2)
 				}
-				let ztfde: any = '0.00亿'
+				let ztfde: any = 0
 				if (item[ztfdeIndex]) {
-					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2) + '亿'
+					ztfde = (Number(item[ztfdeIndex]) / 10000 / 10000).toFixed(2)
 				}
 				const hy = item[hyIndex] || ''
 				const ztyyArray = ztyylb ? ztyylb.split('+') : []
@@ -1237,6 +1237,7 @@ export function resolutionReplayStock(data: any) {
 				})
 				stocks.push(stock)
 			})
+			console.log('gnMap', Array.from(gnMap.values()))
 			const maxGnMap: any = {}
 			stocks.forEach(s => {
 				let maxGn = {

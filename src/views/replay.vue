@@ -36,6 +36,13 @@
 		切换
 	</el-button>
 	<el-button
+		@click="compare()"
+		size="small"
+		type="primary"
+		style="margin-left: 8px">
+		对比
+	</el-button>
+	<el-button
 		@click="isSS = !isSS"
 		size="small"
 		type="primary"
@@ -75,26 +82,17 @@
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjje'" #default="{ row }">
-				<span
-					:class="
-						row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjje < 1 ? '' : 'red'">
 					{{ row.jjje }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'ztfde'" #default="{ row }">
-				<span
-					:class="
-						row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.ztfde < 1 ? '' : 'red'">
 					{{ row.ztfde }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
-				<span
-					:class="
-						row.jjwppje.includes('-') || row.jjwppje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjwppje < 1 ? '' : 'red'">
 					{{ row.jjwppje }}
 				</span>
 			</template>
@@ -102,7 +100,7 @@
 				<el-link
 					style="font-size: 12px; margin-right: 8px"
 					v-for="yy in row.ztyyArray"
-					@click="getYYDetail(yy.stocks)">
+					@click="getYYDetail(yy)">
 					{{ yy.yy }}({{ yy.num }})
 				</el-link>
 			</template>
@@ -110,7 +108,7 @@
 				<el-link
 					style="font-size: 12px; margin-right: 8px"
 					v-for="g in row.gl"
-					@click="getYYDetail(g.stocks)">
+					@click="getYYDetail(g)">
 					{{ g.gn }}({{ g.num }})
 				</el-link>
 			</template>
@@ -148,26 +146,17 @@
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjje'" #default="{ row }">
-				<span
-					:class="
-						row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjje < 1 ? '' : 'red'">
 					{{ row.jjje }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'ztfde'" #default="{ row }">
-				<span
-					:class="
-						row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.ztfde < 1 ? '' : 'red'">
 					{{ row.ztfde }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
-				<span
-					:class="
-						row.jjwppje.includes('-') || row.jjwppje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjwppje < 1 ? '' : 'red'">
 					{{ row.jjwppje }}
 				</span>
 			</template>
@@ -175,7 +164,7 @@
 				<el-link
 					style="font-size: 12px; margin-right: 8px"
 					v-for="yy in row.ztyyArray"
-					@click="getYYDetail(yy.stocks)">
+					@click="getYYDetail(yy)">
 					{{ yy.yy }}({{ yy.num }})
 				</el-link>
 			</template>
@@ -184,18 +173,28 @@
 					style="font-size: 12px; margin-right: 8px"
 					v-for="g in row.gns"
 					:class="g.isRepeat ? 'red' : ''"
-					@click="getYYDetail(g.stocks)">
+					@click="getYYDetail(g)">
 					{{ g.gn }}({{ g.num }})
 				</el-link>
 			</template>
 			<template v-if="column.prop === 'hy'" #default="{ row }">
-				<el-link @click="getYYDetail(row.hytj.stocks)">
+				<el-link @click="getYYDetail(row.hytj)">
 					{{ row.hytj.hy }}({{ row.hytj.num }})
 				</el-link>
 			</template>
 		</el-table-column>
 	</el-table>
 	<el-dialog v-model="dialogVisible" title="梯队" width="80%">
+		<template #header>
+			<span>梯队</span>
+			<el-button
+				@click="compare('add')"
+				size="small"
+				type="primary"
+				style="margin-left: 8px">
+				添加对比
+			</el-button>
+		</template>
 		<el-table :data="subLists" style="width: 100%" size="small" border>
 			<el-table-column
 				v-for="column in subColumns"
@@ -222,28 +221,17 @@
 					</span>
 				</template>
 				<template v-if="column.prop === 'jjje'" #default="{ row }">
-					<span
-						:class="
-							row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
-						">
+					<span :class="row.jjje < 1 ? '' : 'red'">
 						{{ row.jjje }}
 					</span>
 				</template>
 				<template v-if="column.prop === 'ztfde'" #default="{ row }">
-					<span
-						:class="
-							row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
-						">
+					<span :class="row.ztfde < 1 ? '' : 'red'">
 						{{ row.ztfde }}
 					</span>
 				</template>
 				<template v-if="column.prop === 'jjwppje'" #default="{ row }">
-					<span
-						:class="
-							row.jjwppje.includes('-') || row.jjwppje.includes('0.')
-								? ''
-								: 'red'
-						">
+					<span :class="row.jjwppje < 1 ? '' : 'red'">
 						{{ row.jjwppje }}
 					</span>
 				</template>
@@ -251,7 +239,7 @@
 					<el-link
 						style="font-size: 12px; margin-right: 8px"
 						v-for="yy in row.ztyyArray"
-						@click="getYYDetail(yy.stocks)">
+						@click="getYYDetail(yy)">
 						{{ yy.yy }}({{ yy.num }})
 					</el-link>
 				</template>
@@ -502,72 +490,56 @@ function query(type?: any) {
 		sLists = resolutionReplayStock(res.data)
 		lists.value = sLists.lists
 		sLists.stocks.sort((a, b) => {
-			return b.totalztts - a.totalztts
+			return b.jjwppje - a.jjwppje
 		})
 		lists2.value = sLists.stocks
-		console.log('stocks', sLists.stocks)
+		console.log('stocks', sLists)
 
 		// sortLists()
 	})
 }
+
 function switchModel() {
 	currentShow.value = currentShow.value === 0 ? 1 : 0
 }
-function getYYDetail(stocks: any[]) {
-	dialogVisible.value = true
-	stocks.sort((a: any, b: any) => {
-		return a.zzztTime - b.zzztTime
-	})
-	subLists.value = stocks
-}
-function sortLists() {
-	if (sortGZ.value === 'lb') {
-		sLists.sort((a: any, b: any) => {
-			return b.lxztts - a.lxztts
-		})
-		sortGZ.value = 'td'
-		gzTxt.value = '连板'
-	} else if (sortGZ.value === 'td') {
-		sLists.sort((a: any, b: any) => {
-			return b.gnTd.length - a.gnTd.length
-		})
-		sortGZ.value = 'qd'
-		gzTxt.value = '关联概念数'
-	} else if (sortGZ.value === 'qd') {
-		sLists.sort((a: any, b: any) => {
-			return b.qd - a.qd
-		})
-		sortGZ.value = 'zdf'
-		gzTxt.value = '竞价强度'
+const compareData = ref<any[]>([])
+function compare(type?: string) {
+	if (type === 'add') {
+		compareData.value.push(currentSubGN.value)
 	} else {
-		sLists.sort((a: any, b: any) => {
-			return b.jjzdf - a.jjzdf
-		})
-		sortGZ.value = 'lb'
-		gzTxt.value = '竞价涨跌幅'
-	}
-	const list: any[] = []
-	sLists.forEach((s: any) => {
-		s.gnTd.forEach((g: any) => {
-			g.stocks.forEach((st: any) => {
-				// if (st.lxztts > 1) {
-				list.push({
-					...st,
-					sName: `${st.name}(${st.jtjb})`,
-					sourceSName: `${s.name}(${s.jtjb})`,
-					sourceS: s,
-					sourceSGfNum: s.gfNum,
-					sourceSGn: `${g.gn}`,
-					sourceSGnSNum: g.stocks.length,
-					sourceG: g,
-					isdd: st.lxztts >= s.lxztts,
-				})
-				// }
+		const cStoksMap = new Map()
+		compareData.value.forEach((g) => {
+			const gn = g.gn
+			g.stocks.forEach((s: any) => {
+				const name = s.name
+				if (cStoksMap.has(name)) {
+					const has = cStoksMap.get(name)
+					has.gns.push(gn)
+					has.num++
+				} else {
+					cStoksMap.set(name, {
+						gns: [gn],
+						num: 1,
+						name,
+					})
+				}
 			})
 		})
+		const res = Array.from(cStoksMap.values()).sort((a, b) => {
+			return b.num - a.num
+		})
+		compareData.value = []
+		console.log(res)
+	}
+}
+const currentSubGN = ref({})
+function getYYDetail(row: any) {
+	dialogVisible.value = true
+	row.stocks.sort((a: any, b: any) => {
+		return a.scztTime - b.scztTime
 	})
-	lists.value = list
-	// console.log(lists.value)
+	subLists.value = row.stocks
+	currentSubGN.value = row
 }
 let sRowIndex = 0
 let lastRowClass = ''

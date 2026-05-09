@@ -58,26 +58,17 @@
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjje'" #default="{ row }">
-				<span
-					:class="
-						row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjje < 0.9 ? '' : 'red'">
 					{{ row.jjje }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'ztfde'" #default="{ row }">
-				<span
-					:class="
-						row.ztfde.includes('-') || row.ztfde.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.ztfde < 0.9 ? '' : 'red'">
 					{{ row.ztfde }}
 				</span>
 			</template>
 			<template v-if="column.prop === 'jjwppje'" #default="{ row }">
-				<span
-					:class="
-						row.jjwppje.includes('-') || row.jjwppje.includes('0.') ? '' : 'red'
-					">
+				<span :class="row.jjwppje < 0.9 ? '' : 'red'">
 					{{ row.jjwppje }}
 				</span>
 			</template>
@@ -110,10 +101,7 @@
 					</span>
 				</template>
 				<template v-if="column.prop === 'jjje'" #default="{ row }">
-					<span
-						:class="
-							row.jjje.includes('-') || row.jjje.includes('0.') ? '' : 'red'
-						">
+					<span :class="row.jjje < 0.9 ? '' : 'red'">
 						{{ row.jjje }}
 					</span>
 				</template>
@@ -156,7 +144,7 @@ import dayjs from 'dayjs'
 import { utils, writeFile } from 'xlsx'
 import { useRouter } from 'vue-router'
 const router = useRouter()
-const fixed = '非ST，非北交所，市场，今日涨跌幅，今日竞价涨跌幅，'
+const fixed = '非ST，非北交所，非科创板，自由流通市值不超过500亿，'
 const date = ref<string>(dayjs().format('YYYY-MM-DD'))
 const lists = ref<any[]>([])
 const subLists = ref<any[]>([])
@@ -175,22 +163,22 @@ const ztFixed =
 	'昨日涨停原因，昨日几天几板，昨日首次涨停时间，昨日最终涨停时间，昨日涨停封单额，今日竞价成交额，今日竞价未匹配金额，'
 const strategyOptions = ref<any[]>([
 	{
+		label: '人气首板',
+		value: '今日首板，今日成交额从大到小排序',
+	},
+	{
 		label: '竞价分歧',
 		value:
-			'今日竞价成交额大于0.99亿，今日竞价未匹配金额，今日竞价成交额从大到小排序',
+			// '今日竞价成交额大于0.99亿，（今日竞价成交量/昨日成交量）从大到小排序',
+			'今日 竞价成交额大于3000万，今日 竞价成交额从大到小排序',
 	},
 	{
-		label: '人气王',
-		value:
-			'今日竞价未匹配金额大于0.99亿，今日竞价未匹配金额从大到小排序，今日几天几板',
+		label: '13日趋势',
+		value: '今日的13日区间涨幅从大到小排序，今日的13日区间涨幅前100',
 	},
 	{
-		label: '炸板转强',
-		value: '昨日炸板，今日竞价涨幅大于0且从大到小排序',
-	},
-	{
-		label: '竞价异动',
-		value: '昨天非涨停，今日竞价成交额大于0.99亿且从大到小排序',
+		label: '炸板',
+		value: '今日炸板，今日主力资金净流入从大到小排序',
 	},
 ])
 const dialogVisible = ref<boolean>(false)
@@ -350,16 +338,21 @@ function exportTable() {
 	font-size: 14px;
 	color: #303133;
 }
+
 .cynr {
 	color: #909399;
 }
+
 .sc {
 	position: absolute;
 }
+
 .table {
 	border: 1px solid #cdd0d6;
+
 	.row {
 		display: flex;
+
 		.cell {
 			display: flex;
 			align-items: center;
@@ -368,10 +361,12 @@ function exportTable() {
 			border-right: 1px solid #cdd0d6;
 			border-bottom: 1px solid #cdd0d6;
 		}
+
 		.fz-cell {
 			flex-wrap: wrap;
 			padding: 0;
 			align-items: unset;
+
 			.stock-item {
 				position: relative;
 				display: flex;
@@ -379,12 +374,14 @@ function exportTable() {
 				width: 100%;
 				border-bottom: 1px solid #cdd0d6;
 			}
+
 			.gn-item {
 				display: flex;
 				width: 100%;
 				border-bottom: 1px solid #cdd0d6;
 				align-items: center;
 			}
+
 			.sub-cell {
 				display: flex;
 				align-items: center;
@@ -392,15 +389,18 @@ function exportTable() {
 				flex-wrap: wrap;
 				width: 100%;
 				border-right: 1px solid #cdd0d6;
+
 				div {
 					width: 100%;
 					text-align: center;
 				}
 			}
+
 			.fz-sub-cell {
 				flex-wrap: wrap;
 				padding: 0;
 				align-items: unset;
+
 				.third-cell {
 					display: flex;
 					align-items: center;
@@ -413,19 +413,24 @@ function exportTable() {
 		}
 	}
 }
+
 .w-gn {
 	width: 72px;
 	flex-shrink: 0;
 }
+
 .red {
 	color: red;
 }
+
 .green {
 	color: green;
 }
+
 .dialog-stock {
 	display: flex;
 	border: 1px solid #cdd0d6;
+
 	.sub-cell {
 		display: flex;
 		align-items: center;
@@ -433,28 +438,33 @@ function exportTable() {
 		flex-wrap: wrap;
 		width: 100%;
 		border-right: 1px solid #cdd0d6;
+
 		div {
 			width: 100%;
 			text-align: center;
 		}
 	}
 }
+
 .link {
 	cursor: pointer;
 	color: #409eff;
 }
+
 .sb-table {
 	.sb-gn-item {
 		.title {
 			padding: 8px 18px;
 			border-bottom: 1px solid #cdd0d6;
 		}
+
 		.stock-item {
 			position: relative;
 			display: flex;
 			justify-content: space-between;
 			width: 100%;
 			border-bottom: 1px solid #cdd0d6;
+
 			.cell {
 				padding: 0 8px;
 				text-align: center;
@@ -463,13 +473,16 @@ function exportTable() {
 		}
 	}
 }
+
 .zt-table {
 	border-right: 1px solid #cdd0d6;
 	border-left: 1px solid #cdd0d6;
 	border-top: 1px solid #cdd0d6;
+
 	.zt-item {
 		display: flex;
 		border-bottom: 1px solid #cdd0d6;
+
 		span {
 			padding: 0 8px;
 			border-right: 1px solid #cdd0d6;
@@ -481,9 +494,11 @@ function exportTable() {
 .row-bg-1 {
 	background-color: #fbe5d6 !important;
 }
+
 .el-table__body td {
 	border-color: black !important;
 }
+
 .row-bg-2 {
 	background-color: #fff2cc !important;
 }

@@ -12,7 +12,7 @@ export function GetRobotData(params: {
 		`${url}/customized/chart/get-robot-data?time=${new Date().getTime()}`,
 		{
 			page: 1,
-			perpage: 200,
+			perpage: 1000,
 			secondary_intent: 'stock',
 			source: 'Ths_iwencai_Xuangu',
 			version: '2.0',
